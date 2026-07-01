@@ -1,0 +1,42 @@
+{
+  "version": 2,
+  "description": "McMaster filtered-browse root routes (path before facet segments). finish_id groups identical thread/length rows that differ only by material finish.",
+  "roots": [
+    {
+      "category_id": "socket_head_screw",
+      "finish_id": "black_oxide",
+      "finish_label": "Black oxide",
+      "route": "/products/screws/socket-head-screws-2~/black-oxide-alloy-steel-socket-head-screws~~/"
+    },
+    {
+      "category_id": "socket_head_screw",
+      "finish_id": "zinc_plated",
+      "finish_label": "Zinc plated",
+      "route": "/products/screws/socket-head-screws-2~/zinc-plated-socket-head-cap-screws~~/"
+    },
+    {
+      "category_id": "socket_head_screw",
+      "finish_id": "stainless",
+      "finish_label": "18-8 stainless",
+      "route": "/products/screws/socket-head-screws-2~/18-8-stainless-steel-socket-head-screws~~/"
+    },
+    {
+      "category_id": "screw",
+      "finish_id": "black_oxide",
+      "finish_label": "Black oxide",
+      "route": "/products/screws/socket-head-screws-2~/black-oxide-alloy-steel-socket-head-screws~~/"
+    },
+    {
+      "category_id": "screw",
+      "finish_id": "zinc_plated",
+      "finish_label": "Zinc plated",
+      "route": "/products/screws/socket-head-screws-2~/zinc-plated-socket-head-cap-screws~~/"
+    },
+    {
+      "category_id": "screw",
+      "finish_id": "stainless",
+      "finish_label": "18-8 stainless",
+      "route": "/products/screws/socket-head-screws-2~/18-8-stainless-steel-socket-head-screws~~/"
+    }
+  ]
+}

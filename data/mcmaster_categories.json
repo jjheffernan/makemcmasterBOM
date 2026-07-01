@@ -1,0 +1,158 @@
+{
+  "version": 1,
+  "description": "McMaster-Carr site category routes for scoped search. Not a full parts library — routes + signals for query classification.",
+  "default_route": "/products/standard-components/",
+  "categories": [
+    {
+      "id": "socket_head_screw",
+      "label": "Socket Head Screws",
+      "route": "/products/socket-head-screws/",
+      "catalog_categories": ["screw"],
+      "priority": 10,
+      "signals": [
+        "socket head",
+        "socket head cap screw",
+        "shcs",
+        "cap screw",
+        "din912",
+        "iso4762"
+      ]
+    },
+    {
+      "id": "screw",
+      "label": "Screws",
+      "route": "/products/screws/",
+      "catalog_categories": ["screw"],
+      "priority": 5,
+      "signals": ["screw", "bolt", "machine screw", "set screw", "bhcs", "fhcs"]
+    },
+    {
+      "id": "nut",
+      "label": "Hex Nuts",
+      "route": "/products/hex-nuts/",
+      "catalog_categories": ["nut"],
+      "priority": 8,
+      "signals": ["hex nut", "lock nut", "nyloc", "nylock", "jam nut", "flange nut", " nut"]
+    },
+    {
+      "id": "washer",
+      "label": "Washers",
+      "route": "/products/flat-washers/",
+      "catalog_categories": ["washer"],
+      "priority": 8,
+      "signals": ["washer", "flat washer", "lock washer", "fender washer"]
+    },
+    {
+      "id": "bearing",
+      "label": "Ball Bearings",
+      "route": "/products/ball-bearings/",
+      "catalog_categories": ["bearing"],
+      "priority": 12,
+      "signals": ["bearing", "ball bearing", "608", "693", "620", "625", "-zz", "-2rs", "2rs"]
+    },
+    {
+      "id": "insert",
+      "label": "Heat-Set Inserts",
+      "route": "/products/heat-set-inserts/",
+      "catalog_categories": ["insert"],
+      "priority": 10,
+      "signals": ["heat insert", "heat-set insert", "threaded insert", "insert"]
+    },
+    {
+      "id": "standoff",
+      "label": "Standoffs",
+      "route": "/products/standoffs/",
+      "catalog_categories": ["standoff"],
+      "priority": 9,
+      "signals": ["standoff", "spacer standoff"]
+    },
+    {
+      "id": "tubing",
+      "label": "Tubing",
+      "route": "/products/tubing/",
+      "catalog_categories": ["tubing", "tube"],
+      "priority": 8,
+      "signals": ["ptfe", "tubing", "tube", "hose"]
+    },
+    {
+      "id": "magnet",
+      "label": "Magnets",
+      "route": "/products/magnets/",
+      "catalog_categories": ["magnet"],
+      "priority": 9,
+      "signals": ["magnet", "neodymium"]
+    },
+    {
+      "id": "spring",
+      "label": "Springs",
+      "route": "/products/springs/",
+      "catalog_categories": ["spring"],
+      "priority": 8,
+      "signals": ["spring", "compression spring", "extension spring"]
+    },
+    {
+      "id": "oring",
+      "label": "O-Rings",
+      "route": "/products/o-rings/",
+      "catalog_categories": ["oring", "o-ring"],
+      "priority": 8,
+      "signals": ["o-ring", "oring", "seal"]
+    },
+    {
+      "id": "pin",
+      "label": "Pins",
+      "route": "/products/pins/",
+      "catalog_categories": ["pin"],
+      "priority": 7,
+      "signals": ["dowel pin", "roll pin", "clevis pin", " pin"]
+    },
+    {
+      "id": "bushing",
+      "label": "Bushings",
+      "route": "/products/bushings/",
+      "catalog_categories": ["bushing"],
+      "priority": 7,
+      "signals": ["bushing", "sleeve bearing"]
+    },
+    {
+      "id": "rivet",
+      "label": "Rivets",
+      "route": "/products/rivets/",
+      "catalog_categories": ["rivet"],
+      "priority": 7,
+      "signals": ["rivet"]
+    },
+    {
+      "id": "coupling",
+      "label": "Shaft Couplings",
+      "route": "/products/shaft-couplings/",
+      "catalog_categories": ["coupling"],
+      "priority": 7,
+      "signals": ["coupling", "shaft coupling"]
+    },
+    {
+      "id": "belt",
+      "label": "Belts",
+      "route": "/products/belts/",
+      "catalog_categories": ["belt"],
+      "priority": 6,
+      "signals": ["belt", "timing belt"]
+    },
+    {
+      "id": "chain",
+      "label": "Chain",
+      "route": "/products/chain/",
+      "catalog_categories": ["chain"],
+      "priority": 6,
+      "signals": ["chain", "roller chain"]
+    },
+    {
+      "id": "pulley",
+      "label": "Pulleys",
+      "route": "/products/pulleys/",
+      "catalog_categories": ["pulley"],
+      "priority": 6,
+      "signals": ["pulley", "sprocket"]
+    }
+  ]
+}

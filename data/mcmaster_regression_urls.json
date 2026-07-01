@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "description": "Curated BOM lines and McMaster browse URLs for cross-testing matcher, pipeline, and vendored mcmaster-scraper.",
+  "cases": [
+    {
+      "label": "M3x16 SHCS — ambiguous finish (dropdown)",
+      "part": {
+        "original_name": "M3x16 Socket Head Cap Screw",
+        "specification": "",
+        "quantity": 6
+      },
+      "expect": {
+        "match_tier": "filtered_browse",
+        "url_contains": ["thread-size~m3", "length~16-mm", "system-of-measurement~metric"],
+        "finish_options_min": 3,
+        "catalog_sku_in_alternatives": "91290A120"
+      },
+      "live": {
+        "expect_part_numbers_contain": ["91290A120"]
+      }
+    },
+    {
+      "label": "M3x16 SHCS — black oxide spec",
+      "part": {
+        "original_name": "M3x16 Socket Head Cap Screw",
+        "specification": "Black oxide",
+        "quantity": 6
+      },
+      "expect": {
+        "match_tier": "filtered_browse",
+        "url_contains": ["black-oxide", "thread-size~m3", "length~16-mm"],
+        "finish_options_max": 1
+      },
+      "live": {
+        "expect_part_numbers_contain": ["91290A120"]
+      }
+    },
+    {
+      "label": "M3x8 SHCS — stainless",
+      "part": {
+        "original_name": "M3x8 socket head cap screw",
+        "specification": "Stainless",
+        "quantity": 4
+      },
+      "expect": {
+        "match_tier": "filtered_browse",
+        "url_contains": ["18-8-stainless", "thread-size~m3", "length~8-mm"],
+        "finish_options_max": 1
+      },
+      "live": {
+        "expect_part_numbers_contain": []
+      }
+    },
+    {
+      "label": "M4x30 SHCS — no catalog key",
+      "part": {
+        "original_name": "M4x30 socket head cap screw",
+        "specification": "",
+        "quantity": 2
+      },
+      "expect": {
+        "match_tier": "filtered_browse",
+        "url_contains": ["thread-size~m4", "length~30-mm"]
+      },
+      "live": {
+        "expect_part_numbers_contain": []
+      }
+    },
+    {
+      "label": "M3 hex nut — catalog primary",
+      "part": {
+        "original_name": "M3 Hex Nut",
+        "specification": "18-8 stainless",
+        "quantity": 4
+      },
+      "expect": {
+        "match_tier": "catalog",
+        "catalog_part_number": "91828A113"
+      },
+      "live": {
+        "skip_browse_fetch": true
+      }
+    },
+    {
+      "label": "608-ZZ bearing — catalog SKU",
+      "part": {
+        "original_name": "608-ZZ Ball Bearing",
+        "specification": "8x22x7",
+        "quantity": 2
+      },
+      "expect": {
+        "match_tier": "rule",
+        "catalog_part_number": "5972K113"
+      },
+      "live": {
+        "skip_browse_fetch": true
+      }
+    },
+    {
+      "label": "Offline fixture — ProductPresentations parse parity",
+      "part": {
+        "original_name": "M3x16 socket head cap screw",
+        "specification": "",
+        "quantity": 1
+      },
+      "expect": {
+        "match_tier": "filtered_browse"
+      },
+      "offline_fixture": "tests/fixtures/mcmaster_product_presentations_min.json",
+      "offline_fixture_expect_part_numbers": ["91290A120"]
+    }
+  ]
+}

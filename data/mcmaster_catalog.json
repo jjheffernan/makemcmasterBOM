@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "description": "Curated BOM phrase → McMaster part number mappings. Verify part numbers against live McMaster before trusting lengths. Keys normalized by backend/services/mcmaster_catalog.py.",
+  "entries": [
+    {
+      "part_number": "91290A109",
+      "title": "M3 × 6 mm Socket Head Screw, Black-Oxide Alloy Steel",
+      "category": "screw",
+      "keys": ["m3x6 socket head cap screw", "m3-6 socket head cap screw", "m3-6 mm socket head cap screw"]
+    },
+    {
+      "part_number": "91290A110",
+      "title": "M3 × 8 mm Socket Head Screw, Black-Oxide Alloy Steel",
+      "category": "screw",
+      "keys": ["m3x8 socket head cap screw", "m3-8 socket head cap screw", "m3-8 mm socket head cap screw"]
+    },
+    {
+      "part_number": "91290A111",
+      "title": "M3 × 10 mm Socket Head Screw, Black-Oxide Alloy Steel",
+      "category": "screw",
+      "keys": ["m3x10 socket head cap screw", "m3-10 socket head cap screw", "m3-10 mm socket head cap screw"]
+    },
+    {
+      "part_number": "91290A112",
+      "title": "M3 × 12 mm Socket Head Screw, Black-Oxide Alloy Steel",
+      "category": "screw",
+      "keys": ["m3x12 socket head cap screw", "m3-12 socket head cap screw", "m3-12 mm socket head cap screw"]
+    },
+    {
+      "part_number": "91290A120",
+      "title": "M3 × 16 mm Socket Head Screw, Black-Oxide Alloy Steel",
+      "category": "screw",
+      "keys": ["m3x16 socket head cap screw", "m3-16 socket head cap screw", "m3-16 mm socket head cap screw"]
+    },
+    {
+      "part_number": "91290A114",
+      "title": "M3 × 20 mm Socket Head Screw, Black-Oxide Alloy Steel",
+      "category": "screw",
+      "keys": ["m3x20 socket head cap screw", "m3-20 socket head cap screw", "m3-20 mm socket head cap screw"]
+    },
+    {
+      "part_number": "91290A115",
+      "title": "M3 × 25 mm Socket Head Screw, Black-Oxide Alloy Steel",
+      "category": "screw",
+      "keys": ["m3x25 socket head cap screw", "m3-25 socket head cap screw", "m3-25 mm socket head cap screw"]
+    },
+    {
+      "part_number": "91290A116",
+      "title": "M3 × 30 mm Socket Head Screw, Black-Oxide Alloy Steel",
+      "category": "screw",
+      "keys": ["m3x30 socket head cap screw", "m3-30 socket head cap screw", "m3-30 mm socket head cap screw"]
+    },
+    {
+      "part_number": "91828A113",
+      "title": "M3 Hex Nut, 18-8 Stainless Steel",
+      "category": "nut",
+      "keys": ["m3 hex nut", "m3 nut"]
+    },
+    {
+      "part_number": "98689A113",
+      "title": "M3 Washer, 18-8 Stainless Steel",
+      "category": "washer",
+      "keys": ["m3 washer", "m3 flat washer"]
+    },
+    {
+      "part_number": "5972K113",
+      "title": "608 Double-Shielded Ball Bearing",
+      "category": "bearing",
+      "keys": ["608-zz bearing", "608 zz bearing", "608zz bearing", "608-2z bearing"]
+    },
+    {
+      "part_number": "5972K42",
+      "title": "693 Double-Shielded Ball Bearing",
+      "category": "bearing",
+      "keys": ["693-zz bearing", "693 zz bearing", "693zz bearing", "693-2z bearing"]
+    },
+    {
+      "part_number": "92313A029",
+      "title": "M4 × 40 mm Socket Head Screw, 18-8 Stainless Steel",
+      "category": "screw",
+      "keys": ["m4x40 socket head cap screw", "m4 screws 40mm", "m4 screw 40mm"]
+    },
+    {
+      "part_number": "94180A331",
+      "title": "M4 Heat-Set Insert for Plastic, 4.6 mm Installed Length",
+      "category": "insert",
+      "keys": ["m4 heat insert", "m4 heat-set insert", "m4 threaded insert"]
+    }
+  ]
+}

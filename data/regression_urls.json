@@ -1,0 +1,39 @@
+{
+  "description": "Curated MakerWorld URLs for manual and automated regression checks",
+  "urls": [
+    {
+      "url": "https://makerworld.com/en/models/972938-mega-python-ultimate-bambu-lab-ams#profileId-1092318",
+      "label": "Mega Python AMS — BOM in project description (M3 fasteners, bearings, PTFE)",
+      "expect_bom": true,
+      "expect_source": "description",
+      "ui_example": true
+    },
+    {
+      "url": "https://makerworld.com/en/models/808247-kumiko-modular-led-lamp-delta-led-lamp-kit-001",
+      "label": "KUMIKO LED lamp — Maker's Supply kit + other parts",
+      "expect_bom": true,
+      "expect_source": "embedded",
+      "ui_example": true
+    },
+    {
+      "url": "https://makerworld.com/en/models/574923-shopping-checklist-print-in-place",
+      "label": "Shopping checklist — magnets in embedded BOM (test only)",
+      "expect_bom": true,
+      "expect_source": "embedded",
+      "ui_example": false
+    },
+    {
+      "url": "https://makerworld.com/en/models/600987-scraper",
+      "label": "Scraper — filaments only in embedded BOM (test only)",
+      "expect_bom": true,
+      "expect_source": "embedded",
+      "ui_example": false
+    },
+    {
+      "url": "https://makerworld.com/en/models/473168-gridfinity-baseplate",
+      "label": "Redirect slug — may have no BOM",
+      "expect_bom": false,
+      "expect_source": "none"
+    }
+  ]
+}

@@ -18,9 +18,11 @@ node_modules/
 frontend/dist/
 frontend/.vite/
 
-# Data & env
+# Data & env (runtime caches ignored; curated fixtures tracked)
 data/*
 !data/.gitkeep
+!data/*.json
+!data/sample_bom.csv
 .env
 .env.*
 
