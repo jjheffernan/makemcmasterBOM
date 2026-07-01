@@ -1,0 +1,40 @@
+{
+  "Name": "ProductPresentations",
+  "Data": [
+    {
+      "Display": { "Title": "Socket Head Screws" },
+      "Children": [],
+      "Table": {
+        "ColumnIds": ["1", "2"],
+        "Transformations": { "PrimaryProductGroup": { "ColumnIds": ["1", "2"] } },
+        "Metadata": {
+          "ColumnIdToMetadata": {
+            "1": {
+              "Type": "PART_NUMBER",
+              "Name": { "Components": [{ "Text": "Part Number" }] }
+            },
+            "2": {
+              "Name": { "Components": [{ "Text": "Length" }] }
+            }
+          },
+          "CellIdToCellMetadata": {
+            "10": { "ValueMetadataIds": [100] },
+            "11": { "ValueMetadataIds": [101] }
+          },
+          "ValueMetadataIdToValueMetadata": {
+            "100": { "Name": { "Components": [{ "Text": "91290A120" }] } },
+            "101": { "Name": { "Components": [{ "Text": "16 mm" }] } }
+          }
+        },
+        "Rows": [
+          {
+            "ColumnIdToCellIdMap": {
+              "1": 10,
+              "2": 11
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "designExtension": {
+    "boms_v2": [
+      {
+        "sku": "b-ca009",
+        "spuName": "Round Magnet",
+        "quantity": 2,
+        "productSkuList": [
+          {
+            "sku": "b-ca009",
+            "skuName": "D10x3 mm Round Magnet (20PCS) - CA009"
+          }
+        ]
+      }
+    ]
+  }
+}

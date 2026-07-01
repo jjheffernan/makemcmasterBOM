@@ -1,0 +1,44 @@
+{
+  "designExtension": {
+    "boms_v2": [
+      {
+        "sku": "mh001",
+        "spuName": "LED Lamp Kit Collection",
+        "quantity": 1,
+        "productSkuList": [
+          {
+            "sku": "mh001",
+            "skuName": "LED Lamp Kit (1pcs) - MH001"
+          }
+        ]
+      }
+    ],
+    "boms_of_filaments_v2": [
+      {
+        "sku": "a01-k1-1.75-1000-splfree",
+        "spuName": "PLA Matte",
+        "quantity": 1,
+        "productSkuList": [
+          {
+            "sku": "a01-k1-1.75-1000-splfree",
+            "skuName": "Matte Charcoal (11101) / Refill / 1kg"
+          }
+        ]
+      }
+    ],
+    "boms_of_other_part_list": [
+      {
+        "name": "E27-light-socket",
+        "nameTranslated": "",
+        "quantity": 1,
+        "note": ""
+      },
+      {
+        "name": "led-light-bulb-low-lumen",
+        "nameTranslated": "",
+        "quantity": 2,
+        "note": "low wattage"
+      }
+    ]
+  }
+}
