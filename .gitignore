@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+.venv/
+uv.lock
+
+# Jupyter
+.ipynb_checkpoints/
+.jupyter/
+
+# Node
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Data & env
+data/*
+!data/.gitkeep
+.env
+.env.*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Test
+.pytest_cache/
+.cache/
+.coverage
+htmlcov/
