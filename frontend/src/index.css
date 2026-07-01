@@ -1,0 +1,180 @@
+:root {
+  /* McMaster — catalog structure */
+  --background: #f5f5f3;
+  --foreground: #1a1a1a;
+  --card: #ffffff;
+  --card-foreground: #1a1a1a;
+  --muted: #eeeee9;
+  --muted-foreground: #5c5c5c;
+  --border: #d4d4cf;
+
+  /* McMaster — header chrome & links */
+  --accent: #ffcc00;
+  --accent-foreground: #1a1a1a;
+  --accent-border: #c9a000;
+  --link: #0b57d0;
+  --link-hover: #0842a0;
+
+  /* MakerWorld — primary actions */
+  --primary: #12b76a;
+  --primary-hover: #0e9a58;
+  --primary-foreground: #ffffff;
+
+  /* Semantic */
+  --destructive: #d92d20;
+  --success: #0e7a43;
+  --success-muted: #e8f5ee;
+  --warning: #b54708;
+  --danger: #b42318;
+  --danger-muted: #fdecec;
+
+  /* Shape & depth */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --shadow-card: 0 1px 3px rgb(0 0 0 / 6%), 0 1px 2px rgb(0 0 0 / 4%);
+  --font-sans: "DM Sans", "Helvetica Neue", Arial, sans-serif;
+}
+
+.dark {
+  --background: #141414;
+  --foreground: #f0f0eb;
+  --card: #1e1e1e;
+  --card-foreground: #f0f0eb;
+  --muted: #2a2a2a;
+  --muted-foreground: #a3a3a0;
+  --border: #3a3a38;
+
+  --accent: #c9a000;
+  --accent-foreground: #f5f5f0;
+  --accent-border: #9a7b00;
+  --link: #6ba3ff;
+  --link-hover: #9bc1ff;
+
+  --primary: #34d399;
+  --primary-hover: #6ee7b7;
+  --primary-foreground: #0a1a12;
+
+  --destructive: #f97066;
+  --success: #6ee7b7;
+  --success-muted: #142820;
+  --warning: #fdb022;
+  --danger: #f97066;
+  --danger-muted: #2a1515;
+
+  --shadow-card: 0 1px 3px rgb(0 0 0 / 35%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --background: #141414;
+    --foreground: #f0f0eb;
+    --card: #1e1e1e;
+    --card-foreground: #f0f0eb;
+    --muted: #2a2a2a;
+    --muted-foreground: #a3a3a0;
+    --border: #3a3a38;
+    --accent: #c9a000;
+    --accent-foreground: #f5f5f0;
+    --accent-border: #9a7b00;
+    --link: #6ba3ff;
+    --link-hover: #9bc1ff;
+    --primary: #34d399;
+    --primary-hover: #6ee7b7;
+    --primary-foreground: #0a1a12;
+    --destructive: #f97066;
+    --success: #6ee7b7;
+    --success-muted: #142820;
+    --warning: #fdb022;
+    --danger: #f97066;
+    --danger-muted: #2a1515;
+    --shadow-card: 0 1px 3px rgb(0 0 0 / 35%);
+  }
+}
+
+@import "tailwindcss";
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-border: var(--accent-border);
+  --color-link: var(--link);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-success-muted: var(--success-muted);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-danger-muted: var(--danger-muted);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --font-sans: var(--font-sans);
+  --shadow-card: var(--shadow-card);
+}
+
+* {
+  border-color: var(--border);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+a:not([class]) {
+  color: var(--link);
+  text-decoration: none;
+}
+
+a:not([class]):hover {
+  color: var(--link-hover);
+  text-decoration: underline;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  letter-spacing: -0.01em;
+}
+
+.catalog-table {
+  table-layout: fixed;
+}
+
+.catalog-table thead th {
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.bom-editor-table {
+  table-layout: fixed;
+}
+
+.bom-editor-table td {
+  overflow: hidden;
+  word-break: break-word;
+}
