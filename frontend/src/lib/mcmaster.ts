@@ -1,4 +1,10 @@
-import type { HardwareMatchStatus, MatchTier, McMasterStatus, Part } from "@/lib/api";
+import type {
+  HardwareMatchStatus,
+  MatchAlternative,
+  MatchTier,
+  McMasterStatus,
+  Part,
+} from "@/lib/api";
 
 const STATUS_LABELS: Record<McMasterStatus, string> = {
   likely: "Likely",
@@ -89,6 +95,20 @@ export function summarizeMcMasterParts(
 
 export function countNeedsVerification(parts: Part[]): number {
   return parts.filter((part) => needsMcMasterVerification(part)).length;
+}
+
+export function guessScopeLabel(scope: MatchAlternative["guess_scope"]): string {
+  if (scope === "same_size") return "Same size";
+  if (scope === "wider_scope") return "Wider search";
+  return "Other";
+}
+
+export function alternativeOptionLabel(alt: MatchAlternative): string {
+  const scope = guessScopeLabel(alt.guess_scope);
+  const detail =
+    alt.guess_label?.trim() ||
+    (alt.mcmaster_part_number ? alt.mcmaster_part_number : matchTierLabel(alt.match_tier));
+  return `${scope} · ${detail}`;
 }
 
 export function formatConfidence(

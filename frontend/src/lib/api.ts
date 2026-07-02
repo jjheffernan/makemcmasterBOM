@@ -75,11 +75,15 @@ export interface MatchAlternative {
   mcmaster_url: string;
   mcmaster_part_number: string;
   mcmaster_category: string;
+  mcmaster_metacategory?: string;
+  mcmaster_metacategory_label?: string;
   match_tier: MatchTier;
   confidence: number;
   confidence_low?: number | null;
   confidence_high?: number | null;
   mcmaster_reason: string;
+  guess_scope?: "same_size" | "wider_scope";
+  guess_label?: string;
 }
 
 export interface BrowseFinishOption {
@@ -103,6 +107,8 @@ export interface Part {
   mcmaster_url: string;
   mcmaster_part_number: string;
   mcmaster_category: string;
+  mcmaster_metacategory?: string;
+  mcmaster_metacategory_label?: string;
   confidence: number;
   confidence_low?: number | null;
   confidence_high?: number | null;
@@ -134,6 +140,7 @@ export interface Project {
   parts: Part[];
   bom_status?: "file" | "embedded" | "description" | "none" | "upload";
   warnings?: string[];
+  bom_headings?: Partial<Record<"bom" | "not_applicable", string>>;
 }
 
 export interface ProjectHistoryItem {
@@ -422,11 +429,15 @@ export async function getProject(projectId: string): Promise<Project> {
 export async function updateProject(
   projectId: string,
   parts: Part[],
+  bomHeadings?: Project["bom_headings"],
 ): Promise<Project> {
   const res = await apiFetch(`/api/bom/${projectId}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ parts }),
+    body: JSON.stringify({
+      parts,
+      ...(bomHeadings != null ? { bom_headings: bomHeadings } : {}),
+    }),
   });
   if (!res.ok) throw new Error("Update failed");
   return res.json();
@@ -484,6 +495,21 @@ export interface MatchErrorReportRequest {
   expected_quantity?: number | null;
   parse_context?: string;
   page_url?: string;
+  reporter_email?: string;
+}
+
+export interface FeedbackDispatchChannelResult {
+  channel: "email" | "github" | "webhook";
+  ok: boolean;
+  detail: string;
+  url: string;
+}
+
+export interface MatchErrorReportResponse {
+  id: string;
+  reported_at: string;
+  message: string;
+  dispatch?: FeedbackDispatchChannelResult[];
 }
 
 export interface SyncPricingResponse {
@@ -508,12 +534,6 @@ export async function syncPartsPricing(
     );
   }
   return res.json();
-}
-
-export interface MatchErrorReportResponse {
-  id: string;
-  reported_at: string;
-  message: string;
 }
 
 export async function submitMatchErrorReport(

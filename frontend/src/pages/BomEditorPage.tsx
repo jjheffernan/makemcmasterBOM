@@ -9,6 +9,8 @@ import {
   type RowSelectionState,
 } from "@tanstack/react-table";
 import { Download, ExternalLink, Flag, Loader2, Trash2 } from "lucide-react";
+import { BomDragHandle, readBomPartDragIndex } from "@/components/BomDragHandle";
+import { HardwareCheckHint } from "@/components/HardwareCheckHint";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -45,6 +47,7 @@ import {
   mcmasterStatusClass,
   mcmasterStatusLabel,
   countNeedsVerification,
+  alternativeOptionLabel,
   formatConfidence,
   hardwareMatchClass,
   hardwareMatchLabel,
@@ -59,7 +62,18 @@ import {
   specPlaceholderForPart,
   worstSpecIssue,
 } from "@/lib/specMetadata";
+import { hardwareCheckTooltip, hardwareCategoryLabel, inferHardwareCategory } from "@/lib/hardwareCheckTips";
 import { useReportMatchError } from "@/lib/reportContext";
+import {
+  buildBomDisplayRows,
+  buildPartIndexMap,
+  normalizePartsOrder,
+  remapRowSelection,
+  remapSpecIssuesByIndex,
+  reorderPartWithinSection,
+  resolveBomHeadings,
+  type BomSectionKey,
+} from "@/lib/bomSections";
 
 function confidenceDisplay(part: Part): string {
   if (part.mcmaster_status === "not_applicable") return "—";
@@ -85,7 +99,9 @@ export function BomEditorPage() {
   const [project, setProject] = useState<Project | null>(
     (location.state as { project?: Project } | null)?.project ?? null,
   );
-  const [parts, setParts] = useState<Part[]>(project?.parts ?? []);
+  const [parts, setParts] = useState<Part[]>(
+    normalizePartsOrder(project?.parts ?? []),
+  );
   const [loading, setLoading] = useState(!project);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -96,6 +112,11 @@ export function BomEditorPage() {
   const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({});
   const [bulkQuantity, setBulkQuantity] = useState("");
   const [activeTab, setActiveTab] = useState<BomViewTab>("parts");
+  const [bomHeadings, setBomHeadings] = useState(() =>
+    resolveBomHeadings(project?.bom_headings),
+  );
+  const [dragPartIndex, setDragPartIndex] = useState<number | null>(null);
+  const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
   const { openReport, registerBomContext } = useReportMatchError();
 
   useEffect(() => {
@@ -105,7 +126,8 @@ export function BomEditorPage() {
     getProject(projectId)
       .then((p) => {
         setProject(p);
-        setParts(p.parts);
+        setParts(normalizePartsOrder(p.parts));
+        setBomHeadings(resolveBomHeadings(p.bom_headings));
       })
       .catch(() => setError("Could not load project"))
       .finally(() => setLoading(false));
@@ -239,9 +261,51 @@ export function BomEditorPage() {
   const coverage = useMemo(() => summarizeMcMasterParts(parts), [parts]);
   const notApplicableCount = coverage.not_applicable ?? 0;
   const verifyCount = useMemo(() => countNeedsVerification(parts), [parts]);
+  const displayRows = useMemo(
+    () => buildBomDisplayRows(parts, bomHeadings),
+    [parts, bomHeadings],
+  );
+
+  const updateBomHeading = useCallback((key: BomSectionKey, text: string) => {
+    setBomHeadings((prev) => ({ ...prev, [key]: text }));
+  }, []);
+
+  const reorderParts = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      const next = reorderPartWithinSection(parts, fromIndex, toIndex);
+      if (!next) return;
+
+      const indexMap = buildPartIndexMap(parts, next);
+      setParts(next);
+      setSpecIssuesByIndex((prev) => remapSpecIssuesByIndex(prev, indexMap));
+      setRowSelection((prev) => remapRowSelection(prev, indexMap));
+    },
+    [parts],
+  );
+
+  const clearDragState = useCallback(() => {
+    setDragPartIndex(null);
+    setDropTargetIndex(null);
+  }, []);
 
   const columns = useMemo<ColumnDef<Part>[]>(
     () => [
+      {
+        id: "drag",
+        size: 36,
+        minSize: 36,
+        maxSize: 36,
+        enableResizing: false,
+        header: () => <span className="sr-only">Reorder</span>,
+        cell: ({ row }) => (
+          <BomDragHandle
+            partIndex={row.index}
+            label={`Reorder ${row.original.original_name || "row"}`}
+            onDragStart={setDragPartIndex}
+            onDragEnd={clearDragState}
+          />
+        ),
+      },
       {
         id: "select",
         size: 32,
@@ -302,13 +366,16 @@ export function BomEditorPage() {
         size: 128,
         minSize: 96,
         cell: ({ row }) => (
-          <Input
-            className={compactInput}
-            value={row.original.original_name}
-            onChange={(e) =>
-              updatePart(row.index, { original_name: e.target.value })
-            }
-          />
+          <div className="flex min-w-0 items-start gap-1">
+            <Input
+              className={cn(compactInput, "min-w-0 flex-1")}
+              value={row.original.original_name}
+              onChange={(e) =>
+                updatePart(row.index, { original_name: e.target.value })
+              }
+            />
+            <HardwareCheckHint part={row.original} className="mt-1.5" />
+          </div>
         ),
       },
       {
@@ -360,7 +427,7 @@ export function BomEditorPage() {
                 <p className="text-[10px] text-muted-foreground">
                   {row.original.match_selection_policy === "finish"
                     ? "Finish selected manually"
-                    : "Default: lowest $/ea from McMaster listing"}
+                    : "Default: simplest standard row from McMaster table"}
                 </p>
               )}
               {issue && (
@@ -386,8 +453,10 @@ export function BomEditorPage() {
         cell: ({ row }) => {
           const status = (row.original.mcmaster_status ??
             "possible") as McMasterStatus;
+          const hardwareCategory = inferHardwareCategory(row.original);
+          const checkTooltip = hardwareCheckTooltip(row.original);
           return (
-            <div className="space-y-0.5">
+            <div className="space-y-0.5" title={checkTooltip}>
               <div className="flex flex-wrap items-center gap-1">
                 <span
                   className={cn(
@@ -397,6 +466,7 @@ export function BomEditorPage() {
                 >
                   {mcmasterStatusLabel(status)}
                 </span>
+                <HardwareCheckHint part={row.original} />
                 <span
                   className={cn(
                     "font-mono text-[10px]",
@@ -409,6 +479,21 @@ export function BomEditorPage() {
               {row.original.match_tier && (
                 <p className="truncate text-[10px] text-muted-foreground">
                   {matchTierLabel(row.original.match_tier)}
+                  {hardwareCategory !== "unknown" && (
+                    <span className="text-muted-foreground/80">
+                      {" "}
+                      · {hardwareCategoryLabel(hardwareCategory)}
+                    </span>
+                  )}
+                  {row.original.mcmaster_metacategory_label && (
+                    <span
+                      className="text-muted-foreground/80"
+                      title={`McMaster department: ${row.original.mcmaster_metacategory_label}`}
+                    >
+                      {" "}
+                      · {row.original.mcmaster_metacategory_label}
+                    </span>
+                  )}
                 </p>
               )}
               {(row.original.match_option_count ?? 0) > 3 && (
@@ -442,6 +527,12 @@ export function BomEditorPage() {
         cell: ({ row }) => {
           const isNa = row.original.mcmaster_status === "not_applicable";
           const alternatives = row.original.match_alternatives ?? [];
+          const sameSizeAlts = alternatives.filter(
+            (alt) => alt.guess_scope === "same_size",
+          );
+          const widerAlts = alternatives.filter(
+            (alt) => alt.guess_scope !== "same_size",
+          );
           return (
             <div className="space-y-1">
               <div className="flex min-w-0 items-center gap-1">
@@ -460,7 +551,7 @@ export function BomEditorPage() {
                     target="_blank"
                     rel="noreferrer"
                     className="shrink-0 text-link hover:text-[var(--link-hover)]"
-                    title="Open on McMaster-Carr"
+                    title={`Open on McMaster-Carr\n\n${hardwareCheckTooltip(row.original)}`}
                   >
                     <ExternalLink className="h-3.5 w-3.5" />
                   </a>
@@ -485,14 +576,30 @@ export function BomEditorPage() {
                   }}
                 >
                   <option value="">Other guess…</option>
-                  {alternatives.map((alt) => (
-                    <option key={alt.mcmaster_url} value={alt.mcmaster_url}>
-                      {matchTierLabel(alt.match_tier)}
-                      {alt.mcmaster_part_number
-                        ? ` · ${alt.mcmaster_part_number}`
-                        : ` · ${formatConfidence(alt)}`}
-                    </option>
-                  ))}
+                  {sameSizeAlts.length > 0 && (
+                    <optgroup label="Same size">
+                      {sameSizeAlts.map((alt) => (
+                        <option key={alt.mcmaster_url} value={alt.mcmaster_url}>
+                          {alternativeOptionLabel(alt)}
+                          {alt.mcmaster_part_number
+                            ? ""
+                            : ` · ${formatConfidence(alt)}`}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {widerAlts.length > 0 && (
+                    <optgroup label="Wider search">
+                      {widerAlts.map((alt) => (
+                        <option key={alt.mcmaster_url} value={alt.mcmaster_url}>
+                          {alternativeOptionLabel(alt)}
+                          {alt.mcmaster_part_number
+                            ? ` · ${alt.mcmaster_part_number}`
+                            : ` · ${formatConfidence(alt)}`}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
                 </Select>
               )}
             </div>
@@ -542,7 +649,7 @@ export function BomEditorPage() {
         ),
       },
     ],
-    [applyAlternative, applyFinish, deleteRow, openReport, specIssuesByIndex, updatePart, validateRowSpec],
+    [applyAlternative, applyFinish, clearDragState, deleteRow, openReport, specIssuesByIndex, updatePart, validateRowSpec],
   );
 
   const table = useReactTable({
@@ -565,9 +672,10 @@ export function BomEditorPage() {
     setSaving(true);
     setError(null);
     try {
-      const updated = await updateProject(projectId, parts);
+      const updated = await updateProject(projectId, parts, bomHeadings);
       setProject(updated);
-      setParts(updated.parts);
+      setParts(normalizePartsOrder(updated.parts));
+      setBomHeadings(resolveBomHeadings(updated.bom_headings));
       void validateSpecifications(updated.parts).then((result) => {
         const byIndex: Record<number, SpecificationIssue[]> = {};
         for (const issue of result.issues) {
@@ -719,16 +827,13 @@ export function BomEditorPage() {
             </div>
           )}
           {parts.length > 0 && notApplicableCount > 0 && activeTab === "parts" && (
-            <div className="mb-4 rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm">
-              <p className="font-medium">
-                {notApplicableCount} part{notApplicableCount === 1 ? "" : "s"}{" "}
-                not sold on McMaster-Carr
-              </p>
-              <p className="mt-1 text-muted-foreground">
-                3D-printed parts, electronics, filaments, and similar items stay
-                in your BOM with a blank McMaster link. Sourcing notes appear in
-                the McMaster column.
-              </p>
+            <div className="mb-4 rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+              Items under{" "}
+              <span className="font-medium text-foreground">
+                {bomHeadings.not_applicable}
+              </span>{" "}
+              (3D-printed parts, electronics, filament, etc.) stay in your BOM with
+              a blank McMaster link.
             </div>
           )}
           {parts.length === 0 ? (
@@ -741,8 +846,10 @@ export function BomEditorPage() {
           ) : activeTab === "pricing" ? (
             <BomPricingTab
               parts={parts}
+              bomHeadings={bomHeadings}
               onUpdatePart={updatePart}
-              onPartsSynced={setParts}
+              onPartsSynced={(next) => setParts(normalizePartsOrder(next))}
+              onReorderPart={reorderParts}
             />
           ) : (
             <>
@@ -827,29 +934,78 @@ export function BomEditorPage() {
                 ))}
               </TableHeader>
               <TableBody>
-                {table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    className={cn(
-                      row.getIsSelected() && "bg-primary/5",
-                      needsMcMasterVerification(row.original) &&
-                        "bg-warning/5 hover:bg-warning/10",
-                    )}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell
-                        key={cell.id}
-                        className="px-1.5 py-1.5 align-top"
-                        style={{ width: cell.column.getSize() }}
+                {displayRows.map((displayRow) => {
+                  if (displayRow.kind === "heading") {
+                    return (
+                      <TableRow
+                        key={`heading-${displayRow.id}`}
+                        className="bg-muted/40 hover:bg-muted/40"
                       >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
+                        <TableCell
+                          colSpan={table.getVisibleLeafColumns().length}
+                          className="px-2 py-2"
+                        >
+                          <Input
+                            value={displayRow.text}
+                            onChange={(e) =>
+                              updateBomHeading(displayRow.id, e.target.value)
+                            }
+                            aria-label={`${displayRow.id} section heading`}
+                            className="h-8 border-transparent bg-transparent px-1 text-sm font-semibold tracking-tight shadow-none focus-visible:border-border"
+                          />
+                        </TableCell>
+                      </TableRow>
+                    );
+                  }
+
+                  const row = table.getRow(String(displayRow.partIndex));
+                  if (!row) return null;
+
+                  return (
+                    <TableRow
+                      key={row.id}
+                      className={cn(
+                        row.getIsSelected() && "bg-primary/5",
+                        needsMcMasterVerification(row.original) &&
+                          "bg-warning/5 hover:bg-warning/10",
+                        dragPartIndex === displayRow.partIndex && "opacity-60",
+                        dropTargetIndex === displayRow.partIndex &&
+                          "outline outline-2 -outline-offset-2 outline-primary/60",
+                      )}
+                      onDragOver={(event) => {
+                        event.preventDefault();
+                        event.dataTransfer.dropEffect = "move";
+                        setDropTargetIndex(displayRow.partIndex);
+                      }}
+                      onDragLeave={() => {
+                        setDropTargetIndex((current) =>
+                          current === displayRow.partIndex ? null : current,
+                        );
+                      }}
+                      onDrop={(event) => {
+                        event.preventDefault();
+                        const fromIndex = readBomPartDragIndex(event.dataTransfer);
+                        if (fromIndex != null) {
+                          reorderParts(fromIndex, displayRow.partIndex);
+                        }
+                        clearDragState();
+                      }}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell
+                          key={cell.id}
+                          className="px-1.5 py-1.5 align-top"
+                          style={{ width: cell.column.getSize() }}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  );
+                })}
               </TableBody>
               </Table>
             </>
