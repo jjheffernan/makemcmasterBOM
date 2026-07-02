@@ -9,7 +9,9 @@ from pydantic import BaseModel, Field
 
 from backend.models.part import Part
 
-MatchIssueType = Literal[
+ReportSide = Literal["mcmaster", "makerworld"]
+
+McMasterIssueType = Literal[
     "wrong_part_number",
     "wrong_category_or_search",
     "missed_hardware",
@@ -18,6 +20,16 @@ MatchIssueType = Literal[
     "other",
 ]
 
+MakerWorldIssueType = Literal[
+    "makerworld_wrong_line",
+    "makerworld_missing_hardware",
+    "makerworld_wrong_quantity",
+    "makerworld_parse_error",
+    "makerworld_other",
+]
+
+MatchIssueType = McMasterIssueType | MakerWorldIssueType
+
 
 class MatchErrorReportCreate(BaseModel):
     """Payload from the report-an-error form."""
@@ -25,12 +37,19 @@ class MatchErrorReportCreate(BaseModel):
     project_id: str = ""
     project_title: str = ""
     makerworld_url: str = ""
+    report_side: ReportSide = "mcmaster"
     part_index: int | None = None
     part: Part | None = None
     issue_type: MatchIssueType
     message: str = Field(min_length=1, max_length=4000)
     expected_part_number: str = Field(default="", max_length=64)
     expected_url: str = Field(default="", max_length=2048)
+    expected_finish: str = Field(default="", max_length=256)
+    makerworld_line_text: str = Field(default="", max_length=1024)
+    expected_line_text: str = Field(default="", max_length=1024)
+    expected_quantity: float | None = Field(default=None, ge=0.0)
+    parse_context: str = Field(default="", max_length=1024)
+    page_url: str = Field(default="", max_length=2048)
 
 
 class MatchErrorReport(MatchErrorReportCreate):

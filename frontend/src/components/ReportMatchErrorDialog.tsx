@@ -1,124 +1,173 @@
-import { useEffect, useRef, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { useLocation } from "react-router-dom";
+import { Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label, Select } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import {
   submitMatchErrorReport,
-  type MatchIssueType,
   type Part,
   type Project,
+  type ReportSide,
 } from "@/lib/api";
-import { formatConfidence, matchTierLabel } from "@/lib/mcmaster";
-
-const ISSUE_OPTIONS: { value: MatchIssueType; label: string }[] = [
-  {
-    value: "wrong_part_number",
-    label: "Wrong McMaster part number / SKU",
-  },
-  {
-    value: "wrong_category_or_search",
-    label: "Wrong category or search link (not the right product type)",
-  },
-  {
-    value: "missed_hardware",
-    label: "Missed hardware — should have matched McMaster",
-  },
-  {
-    value: "wrong_finish_or_material",
-    label: "Wrong finish or material (e.g. stainless vs black oxide)",
-  },
-  {
-    value: "should_be_not_applicable",
-    label: "Should not match McMaster (3D print, electronics, etc.)",
-  },
-  { value: "other", label: "Other matching problem" },
-];
+import { cn } from "@/lib/utils";
+import { REPORT_SIDES } from "@/components/reportError/config";
+import {
+  emptyReportForm,
+  ReportErrorFormFields,
+  type ReportFormState,
+} from "@/components/reportError/ReportErrorFormFields";
 
 export interface ReportMatchErrorDialogProps {
   open: boolean;
   onClose: () => void;
-  projectId: string;
-  project: Project;
-  parts: Part[];
+  projectId?: string;
+  project?: Project;
+  parts?: Part[];
   initialPartIndex?: number | null;
 }
 
-function partSummary(part: Part): string {
-  const bits = [part.original_name];
-  if (part.specification) bits.push(part.specification);
-  return bits.join(" · ");
+function parseOptionalQuantity(value: string): number | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const qty = Number(trimmed);
+  return Number.isFinite(qty) && qty >= 0 ? qty : null;
 }
 
-function matchSummary(part: Part): string {
-  const tier = part.match_tier ? matchTierLabel(part.match_tier) : "—";
-  const sku = part.mcmaster_part_number || "no SKU";
-  return `${tier} · ${sku} · ${formatConfidence(part)}`;
+function validateForm(reportSide: ReportSide, form: ReportFormState): string | null {
+  if (!form.message.trim()) {
+    return "Please describe what went wrong.";
+  }
+
+  if (reportSide === "mcmaster") {
+    if (form.issueType === "missed_hardware" && !form.partIndex && !form.expectedLineText.trim()) {
+      return "Select a BOM line or name the hardware we missed.";
+    }
+    return null;
+  }
+
+  if (form.issueType === "makerworld_missing_hardware" && !form.expectedLineText.trim()) {
+    return "Describe the hardware missing from the MakerWorld BOM.";
+  }
+  if (
+    (form.issueType === "makerworld_wrong_line" ||
+      form.issueType === "makerworld_wrong_quantity") &&
+    !form.partIndex
+  ) {
+    return "Select the BOM line this report is about.";
+  }
+  if (
+    form.issueType === "makerworld_wrong_quantity" &&
+    parseOptionalQuantity(form.expectedQuantity) == null
+  ) {
+    return "Enter the correct quantity.";
+  }
+
+  return null;
 }
 
 export function ReportMatchErrorDialog({
   open,
   onClose,
-  projectId,
-  project,
-  parts,
+  projectId = "",
+  project = { title: "", makerworld_url: "", description: "", parts: [] },
+  parts = [],
   initialPartIndex = null,
 }: ReportMatchErrorDialogProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
-  const [partIndex, setPartIndex] = useState<string>(
-    initialPartIndex != null ? String(initialPartIndex) : "",
+  const location = useLocation();
+  const initialPart =
+    initialPartIndex != null ? String(initialPartIndex) : "";
+
+  const [reportSide, setReportSide] = useState<ReportSide>("mcmaster");
+  const [form, setForm] = useState<ReportFormState>(() =>
+    emptyReportForm(initialPart, "mcmaster"),
   );
-  const [issueType, setIssueType] = useState<MatchIssueType>("wrong_part_number");
-  const [message, setMessage] = useState("");
-  const [expectedPartNumber, setExpectedPartNumber] = useState("");
-  const [expectedUrl, setExpectedUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-    if (open) {
-      setPartIndex(initialPartIndex != null ? String(initialPartIndex) : "");
-      setIssueType("wrong_part_number");
-      setMessage("");
-      setExpectedPartNumber("");
-      setExpectedUrl("");
+  const pageUrl = `${window.location.origin}${location.pathname}${location.search}${location.hash}`;
+
+  const resetForm = useCallback(
+    (side: ReportSide, partIndex = initialPart) => {
+      setForm(emptyReportForm(partIndex, side));
       setError(null);
       setSuccess(false);
-      dialog.showModal();
-    } else {
-      dialog.close();
-    }
-  }, [open, initialPartIndex]);
+    },
+    [initialPart],
+  );
+
+  useEffect(() => {
+    if (!open) return;
+    setReportSide("mcmaster");
+    resetForm("mcmaster", initialPart);
+  }, [open, initialPart, resetForm]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !submitting) {
+        onClose();
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open, onClose, submitting]);
 
   const selectedPart =
-    partIndex !== "" && !Number.isNaN(Number(partIndex))
-      ? parts[Number(partIndex)]
+    form.partIndex !== "" && !Number.isNaN(Number(form.partIndex))
+      ? parts[Number(form.partIndex)]
       : undefined;
+
+  function handleSideChange(side: ReportSide) {
+    setReportSide(side);
+    resetForm(side, form.partIndex);
+  }
+
+  function patchForm(patch: Partial<ReportFormState>) {
+    setForm((prev) => ({ ...prev, ...patch }));
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!message.trim()) {
-      setError("Please describe what the matcher got wrong.");
+
+    const validationError = validateForm(reportSide, form);
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
     setSubmitting(true);
     setError(null);
+
+    const makerworldUrl =
+      form.makerworldUrl.trim() || project.makerworld_url.trim();
+
     try {
       await submitMatchErrorReport({
         project_id: projectId,
         project_title: project.title,
-        makerworld_url: project.makerworld_url,
-        part_index: partIndex !== "" ? Number(partIndex) : null,
+        makerworld_url: makerworldUrl,
+        report_side: reportSide,
+        part_index: form.partIndex !== "" ? Number(form.partIndex) : null,
         part: selectedPart ?? null,
-        issue_type: issueType,
-        message: message.trim(),
-        expected_part_number: expectedPartNumber.trim(),
-        expected_url: expectedUrl.trim(),
+        issue_type: form.issueType,
+        message: form.message.trim(),
+        expected_part_number: form.expectedPartNumber.trim(),
+        expected_url: form.expectedUrl.trim(),
+        expected_finish: form.expectedFinish.trim(),
+        makerworld_line_text: form.makerworldLineText.trim(),
+        expected_line_text: form.expectedLineText.trim(),
+        expected_quantity: parseOptionalQuantity(form.expectedQuantity),
+        parse_context: form.parseContext.trim(),
+        page_url: pageUrl,
       });
       setSuccess(true);
     } catch (err) {
@@ -128,125 +177,102 @@ export function ReportMatchErrorDialog({
     }
   }
 
-  return (
-    <dialog
-      ref={dialogRef}
-      className="w-[min(100%,32rem)] max-h-[90vh] overflow-y-auto rounded-[var(--radius-md)] border border-border bg-card p-0 text-foreground shadow-lg backdrop:bg-black/40 open:animate-in"
-      onClose={onClose}
-      onCancel={onClose}
-    >
-      <form onSubmit={handleSubmit} className="space-y-4 p-6">
-        <div>
-          <h2 className="text-lg font-semibold">Report matching error</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Help us improve hardware matching. We save the BOM line and current
-            McMaster guess with your notes.
-          </p>
-        </div>
+  if (!open) return null;
 
-        {success ? (
-          <div className="space-y-4">
-            <p className="rounded-lg border border-success/30 bg-success/10 px-4 py-3 text-sm text-success">
-              Thank you — your report was saved and will help tune the matcher.
-            </p>
-            <Button type="button" onClick={onClose}>
-              Close
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      role="presentation"
+    >
+      <div
+        className="absolute inset-0 bg-black/50"
+        aria-hidden
+        onMouseDown={(e) => e.preventDefault()}
+      />
+
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="report-error-title"
+        className="relative z-10 flex max-h-[min(90vh,720px)] w-full max-w-lg flex-col overflow-hidden rounded-[var(--radius-md)] border border-border bg-card text-foreground shadow-xl"
+      >
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          <input type="hidden" name="page_url" value={pageUrl} readOnly />
+
+          <div className="flex items-start justify-between gap-3 border-b border-border px-6 py-4">
+            <div>
+              <h2 id="report-error-title" className="text-lg font-semibold">
+                Report an error
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Tell us what went wrong — McMaster matching or the MakerWorld BOM.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="shrink-0"
+              onClick={onClose}
+              disabled={submitting}
+              aria-label="Close"
+            >
+              <X className="h-4 w-4" />
             </Button>
           </div>
-        ) : (
-          <>
-            {parts.length > 0 && (
-              <div className="space-y-2">
-                <Label htmlFor="report-part">BOM line (optional)</Label>
-                <Select
-                  id="report-part"
-                  value={partIndex}
-                  onChange={(e) => setPartIndex(e.target.value)}
-                  disabled={submitting}
-                >
-                  <option value="">General — whole project / multiple lines</option>
-                  {parts.map((part, index) => (
-                    <option key={index} value={String(index)}>
-                      {partSummary(part)}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-            )}
 
-            {selectedPart && (
-              <div className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-                <p className="font-medium text-foreground">Current match</p>
-                <p className="mt-1">{matchSummary(selectedPart)}</p>
-                {selectedPart.mcmaster_url && (
-                  <p className="mt-1 truncate font-mono">{selectedPart.mcmaster_url}</p>
+          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
+            {success ? (
+              <div className="space-y-4">
+                <p className="rounded-lg border border-success/30 bg-success/10 px-4 py-3 text-sm text-success">
+                  Thank you — your report was saved and will help improve imports
+                  and matching.
+                </p>
+                <Button type="button" onClick={onClose}>
+                  Close
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex gap-1 rounded-lg border border-border bg-muted/40 p-1">
+                  {REPORT_SIDES.map(({ value, label }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      className={cn(
+                        "flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                        reportSide === value
+                          ? "bg-card text-foreground shadow-sm"
+                          : "text-muted-foreground hover:text-foreground",
+                      )}
+                      onClick={() => handleSideChange(value)}
+                      disabled={submitting}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                <ReportErrorFormFields
+                  reportSide={reportSide}
+                  parts={parts}
+                  projectMakerworldUrl={project.makerworld_url}
+                  form={form}
+                  submitting={submitting}
+                  onChange={patchForm}
+                />
+
+                {error && (
+                  <p className="text-sm text-destructive" role="alert">
+                    {error}
+                  </p>
                 )}
               </div>
             )}
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="report-issue">What went wrong?</Label>
-              <Select
-                id="report-issue"
-                value={issueType}
-                onChange={(e) => setIssueType(e.target.value as MatchIssueType)}
-                disabled={submitting}
-                required
-              >
-                {ISSUE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="report-message">Details</Label>
-              <Textarea
-                id="report-message"
-                placeholder="What should we have picked instead? Any context from the MakerWorld BOM?"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                disabled={submitting}
-                required
-                rows={4}
-              />
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="report-expected-sku">Correct part # (optional)</Label>
-                <Input
-                  id="report-expected-sku"
-                  placeholder="e.g. 91290A120"
-                  value={expectedPartNumber}
-                  onChange={(e) => setExpectedPartNumber(e.target.value)}
-                  disabled={submitting}
-                  className="font-mono text-sm"
-                />
-              </div>
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="report-expected-url">Correct McMaster URL (optional)</Label>
-                <Input
-                  id="report-expected-url"
-                  type="url"
-                  placeholder="https://www.mcmaster.com/…"
-                  value={expectedUrl}
-                  onChange={(e) => setExpectedUrl(e.target.value)}
-                  disabled={submitting}
-                  className="font-mono text-xs"
-                />
-              </div>
-            </div>
-
-            {error && (
-              <p className="text-sm text-destructive" role="alert">
-                {error}
-              </p>
-            )}
-
-            <div className="flex flex-wrap justify-end gap-2 pt-2">
+          {!success && (
+            <div className="flex flex-wrap justify-end gap-2 border-t border-border px-6 py-4">
               <Button
                 type="button"
                 variant="outline"
@@ -266,9 +292,10 @@ export function ReportMatchErrorDialog({
                 )}
               </Button>
             </div>
-          </>
-        )}
-      </form>
-    </dialog>
+          )}
+        </form>
+      </div>
+    </div>,
+    document.body,
   );
 }

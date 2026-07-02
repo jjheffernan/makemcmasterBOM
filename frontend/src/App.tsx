@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { DebugPanel } from "@/components/DebugPanel";
 import { Layout } from "@/components/Layout";
+import { ReportMatchErrorProvider } from "@/lib/reportContext";
 import { BomEditorPage } from "@/pages/BomEditorPage";
 import { ImportPage } from "@/pages/ImportPage";
 import { NotebooksPage } from "@/pages/NotebooksPage";
@@ -16,13 +17,15 @@ export default function App() {
       <DebugProvider>
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
-            <Layout>
-              <Routes>
-                <Route path="/" element={<ImportPage />} />
-                <Route path="/bom/:projectId" element={<BomEditorPage />} />
-                <Route path="/notebooks" element={<NotebooksPage />} />
-              </Routes>
-            </Layout>
+            <ReportMatchErrorProvider>
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<ImportPage />} />
+                  <Route path="/bom/:projectId" element={<BomEditorPage />} />
+                  <Route path="/notebooks" element={<NotebooksPage />} />
+                </Routes>
+              </Layout>
+            </ReportMatchErrorProvider>
             <DebugPanel />
           </BrowserRouter>
         </QueryClientProvider>

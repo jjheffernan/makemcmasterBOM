@@ -1,7 +1,8 @@
+import { BookOpen, Flag, Import, Table2 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import { BookOpen, Import, Table2 } from "lucide-react";
 import { DebugToggle } from "@/components/DebugPanel";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useReportMatchError } from "@/lib/reportContext";
 import { cn } from "@/lib/utils";
 
 const nav = [
@@ -11,6 +12,7 @@ const nav = [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
+  const { openReport } = useReportMatchError();
 
   return (
     <div className="min-h-screen bg-background">
@@ -49,6 +51,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   </Link>
                 );
               })}
+              <button
+                type="button"
+                onClick={() => openReport()}
+                title="Report matching error"
+                className={cn(
+                  "inline-flex items-center gap-2 border-b-2 border-transparent px-3 py-2 text-sm font-medium transition-colors",
+                  "opacity-75 hover:border-foreground/20 hover:opacity-100",
+                )}
+              >
+                <Flag className="h-4 w-4" />
+                Report error
+              </button>
             </nav>
             <DebugToggle />
             <ThemeToggle />

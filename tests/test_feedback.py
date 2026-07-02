@@ -35,6 +35,7 @@ async def test_submit_match_error_report(api_client):
             "message": "Should be 91290A120 for 16 mm length",
             "part": part.model_dump(),
             "expected_part_number": "91290A120",
+            "page_url": "http://localhost:5173/bom/abc123?tab=parts",
         },
     )
     assert response.status_code == 200
@@ -47,6 +48,7 @@ async def test_submit_match_error_report(api_client):
     assert stored[0].issue_type == "wrong_part_number"
     assert stored[0].expected_part_number == "91290A120"
     assert stored[0].part.original_name == "M3x8 Socket Head Cap Screw"
+    assert stored[0].page_url == "http://localhost:5173/bom/abc123?tab=parts"
 
 
 @pytest.mark.asyncio
@@ -72,6 +74,28 @@ async def test_submit_match_error_enriches_from_project(api_client):
     assert stored.project_id == project_id
     assert stored.part is not None
     assert stored.part.original_name == "M3 bolt"
+
+
+@pytest.mark.asyncio
+async def test_submit_makerworld_report(api_client):
+    response = await api_client.post(
+        "/api/feedback/match-error",
+        json={
+            "report_side": "makerworld",
+            "issue_type": "makerworld_wrong_quantity",
+            "message": "MakerWorld lists 2 but the design needs 8",
+            "makerworld_url": "https://makerworld.com/en/models/123",
+            "expected_quantity": 8,
+            "page_url": "http://localhost:5173/bom/test",
+        },
+    )
+    assert response.status_code == 200
+
+    stored = feedback_store.list_reports()[0]
+    assert stored.report_side == "makerworld"
+    assert stored.issue_type == "makerworld_wrong_quantity"
+    assert stored.expected_quantity == 8
+    assert stored.makerworld_url == "https://makerworld.com/en/models/123"
 
 
 @pytest.mark.asyncio
