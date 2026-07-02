@@ -5,6 +5,8 @@ from __future__ import annotations
 import re
 from urllib.parse import quote_plus
 
+from backend.services.mcmaster_handler import _is_excluded_route
+
 MCMASTER_SITE_BASE = "https://www.mcmaster.com"
 MCMASTER_API_BASE = "https://api.mcmaster.com/v1"
 
@@ -27,6 +29,8 @@ def mcmaster_product_url(part_number: str, search_query: str = "") -> str:
 
 def category_search_url(route: str, query: str) -> str:
     """Category-scoped search (`?searchQuery=` only)."""
+    if not query.strip() or _is_excluded_route(route):
+        return ""
     encoded = quote_plus(query.strip())
     path = route if route.startswith("/") else f"/{route}"
     if not path.endswith("/"):

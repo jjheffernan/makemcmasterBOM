@@ -18,8 +18,8 @@ from backend.services.mcmaster_handler import (
     McMasterCategory,
     _FLAT_HEAD_QUERY_RE,
     _SOCKET_HEAD_QUERY_RE,
-    _default_category,
     _load_categories,
+    _unclassified_category,
     get_category,
     infer_screw_head_type,
 )
@@ -94,10 +94,12 @@ def route_category(
 
     Prefer larger product catalogs when the query is ambiguous; use escape
     keywords to narrow broad parents (e.g. screws → flat-head vs socket-head).
+
+    When nothing matches, return the unclassified sentinel — never McMaster's
+    Standard Components route (calibration / metrology, not BOM hardware).
     """
     if not query or not query.strip():
-        default = _default_category()
-        return RoutedCategory(default, 0.0, "unclassified")
+        return RoutedCategory(_unclassified_category(), 0.0, "unclassified")
 
     head_type = infer_screw_head_type(query)
     if head_type == "flat_head":
@@ -174,5 +176,4 @@ def route_category(
             if socket:
                 return RoutedCategory(socket, 0.6, "metric")
 
-    default = _default_category()
-    return RoutedCategory(default, 0.0, "unclassified")
+    return RoutedCategory(_unclassified_category(), 0.0, "unclassified")

@@ -34,7 +34,6 @@ See [McMaster adapter](mcmaster.md) for tier order and [Vendor adapters](vendors
 
 | Name | Value | Purpose |
 |------|-------|---------|
-| `MCMASTER_SEARCH_BASE` | `https://www.mcmaster.com/products/standard-components/` | Base URL for product search |
 | `HARDWARE_KEYWORDS` | Compiled regex | Common hardware terms that boost confidence |
 
 ### `HARDWARE_KEYWORDS` pattern
@@ -128,7 +127,7 @@ After matching, `hardware_match_verify` may lower confidence on `size_mismatch` 
 | `catalog`, `rule`, `part_number`, `api_verified` | `likely` |
 | `filtered_browse` | `likely` if confidence ≥ 0.65 else `possible` |
 | `category_search` | `likely` if confidence ≥ 0.72 else `possible` |
-| `site_search` | `possible` if confidence ≥ 0.3 else `unlikely` |
+| `not_applicable` | `not_applicable` — no McMaster link (includes unclassified hardware) |
 
 Maximum score is capped at `1.0`.
 
@@ -145,22 +144,17 @@ Maximum score is capped at `1.0`.
 
 ## `mcmaster_search_url(query: str) -> str`
 
-Builds a McMaster-Carr search URL for a query string.
-
-**Parameters**
-
-- `query` — search terms
-
-**Returns** — full URL with URL-encoded query parameter
+Delegates to `build_mcmaster_link(query).url` — returns a product, filtered-browse, or category-scoped URL. Returns `""` when the line is unclassified or non-hardware (never McMaster Standard Components).
 
 **Example**
 
 ```python
 mcmaster_search_url("M3 socket head cap screw")
-# → "https://www.mcmaster.com/products/standard-components/?searchQuery=M3+socket+head+cap+screw"
-```
+# → filtered browse or category URL under /products/screws/…
 
-Uses `urllib.parse.quote_plus` for encoding.
+mcmaster_search_url("random widget bracket")
+# → ""
+```
 
 ---
 
@@ -171,7 +165,7 @@ Uses `urllib.parse.quote_plus` for encoding.
 **Flow**
 
 1. `classify_mcmaster_eligibility` — skip filament, electronics, STL, etc.
-2. `collect_scored_candidates` — generate catalog SKU, filtered browse, category/site search guesses in parallel
+2. `collect_scored_candidates` — generate catalog SKU, filtered browse, and category search guesses in parallel
 3. Rank by confidence (filtered browse with metric thread + length beats catalog SKU for screws)
 4. `verify_hardware_match` when primary is a catalog SKU
 5. Attach `confidence_low` / `confidence_high` range on primary match
@@ -183,7 +177,7 @@ Uses `urllib.parse.quote_plus` for encoding.
 | Filtered browse (thread + length) | ~0.90 | Primary — pre-filtered McMaster table |
 | Catalog / rule SKU | ~0.72–0.84 | Alternative — may be wrong material or head style |
 | Category search | ~0.52 | Broader fallback |
-| Site search | ~0.32 | Last resort |
+| Unclassified | — | `not_applicable` — no URL (Standard Components excluded) |
 
 Catalog hits no longer receive automatic **1.0** confidence.
 

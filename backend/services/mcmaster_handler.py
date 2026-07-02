@@ -22,6 +22,10 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 CATEGORIES_PATH = REPO_ROOT / "data" / "mcmaster_categories.json"
 MCMASTER_SITE_BASE = "https://www.mcmaster.com"
 
+# McMaster's "Standard Components" (/products/standard-components/) is for
+# calibration masters, gauge blocks, and metrology zeroing — not BOM hardware.
+STANDARD_COMPONENTS_ROUTE = "/products/standard-components/"
+
 LinkType = Literal["product", "filtered_browse", "category_search", "site_search"]
 
 _FLAT_HEAD_QUERY_RE = re.compile(
@@ -102,25 +106,34 @@ def _catalog_category_index() -> dict[str, McMasterCategory]:
     return index
 
 
-def _default_category() -> McMasterCategory:
-    raw = json.loads(CATEGORIES_PATH.read_text(encoding="utf-8"))
-    route = raw.get("default_route", "/products/standard-components/")
-    return McMasterCategory(
-        id="standard_components",
-        label="Standard Components",
-        route=route,
-        catalog_categories=(),
-        priority=0,
-        signals=(),
-    )
+_UNCLASSIFIED_SENTINEL = McMasterCategory(
+    id="unclassified",
+    label="Unclassified",
+    route="",
+    catalog_categories=(),
+    priority=0,
+    signals=(),
+)
+
+
+def _unclassified_category() -> McMasterCategory:
+    """Sentinel when no hardware category matches — never emits a browse URL."""
+    return _UNCLASSIFIED_SENTINEL
+
+
+def _is_excluded_route(route: str) -> bool:
+    if not route:
+        return True
+    normalized = route if route.endswith("/") else f"{route}/"
+    return normalized == STANDARD_COMPONENTS_ROUTE or "standard-components" in normalized
 
 
 def get_category(category_id: str) -> McMasterCategory | None:
+    if category_id == "unclassified":
+        return _unclassified_category()
     for category in _load_categories():
         if category.id == category_id:
             return category
-    if category_id == "standard_components":
-        return _default_category()
     return None
 
 
@@ -165,13 +178,16 @@ def classify_category(
 
 
 def category_search_url(category: McMasterCategory, query: str) -> str:
+    if not query.strip() or category.id == "unclassified" or _is_excluded_route(category.route):
+        return ""
     encoded = quote_plus(query.strip())
     route = category.route if category.route.endswith("/") else f"{category.route}/"
     return f"{MCMASTER_SITE_BASE}{route}?searchQuery={encoded}"
 
 
 def site_search_url(query: str) -> str:
-    return category_search_url(_default_category(), query)
+    """Deprecated — Standard Components search is not used for BOM matching."""
+    return ""
 
 
 def build_mcmaster_link(

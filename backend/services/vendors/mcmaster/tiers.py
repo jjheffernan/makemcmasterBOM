@@ -232,8 +232,8 @@ def resolve_mcmaster_link(
             url="",
             link_kind="site_search",
             tier="not_applicable",
-            category_id="",
-            category_label="",
+            category_id=category_match.category.id or "unclassified",
+            category_label=category_match.category.label or "Unclassified",
             method="unclassified",
             confidence_hint=0.0,
         )

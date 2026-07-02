@@ -3,12 +3,15 @@
 import pytest
 
 from backend.models.part import Part
-from backend.models.part import Part
 from backend.services.matcher import match_part
 from backend.services.mcmaster_handler import (
+    McMasterCategory,
+    STANDARD_COMPONENTS_ROUTE,
     build_mcmaster_link,
+    category_search_url,
     classify_category,
     list_categories,
+    site_search_url,
 )
 
 
@@ -36,6 +39,30 @@ def test_build_mcmaster_link_unclassified_without_site_search():
     assert link.link_type == "site_search"
     assert link.url == ""
     assert link.method == "unclassified"
+    assert link.category_id == "unclassified"
+
+
+def test_classify_unclassified_not_standard_components():
+    match = classify_category("random widget bracket")
+    assert match.category.id == "unclassified"
+    assert match.method == "unclassified"
+    assert "standard-components" not in match.category.route
+
+
+def test_category_search_url_blocks_standard_components():
+    blocked = McMasterCategory(
+        id="standard_components",
+        label="Standard Components",
+        route=STANDARD_COMPONENTS_ROUTE,
+        catalog_categories=(),
+        priority=0,
+        signals=(),
+    )
+    assert category_search_url(blocked, "widget bracket") == ""
+
+
+def test_site_search_url_returns_empty():
+    assert site_search_url("anything") == ""
 
 
 def test_build_mcmaster_link_catalog_product():

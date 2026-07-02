@@ -1,7 +1,9 @@
 {
   "version": 1,
-  "description": "McMaster-Carr site category routes for scoped search. Not a full parts library — routes + signals for query classification.",
-  "default_route": "/products/standard-components/",
+  "description": "McMaster-Carr site category routes for scoped search. Not a full parts library — routes + signals for query classification. Unmatched BOM lines stay unclassified; do not fall back to Standard Components (calibration / metrology).",
+  "excluded_routes": {
+    "/products/standard-components/": "McMaster Standard Components — calibration masters, gauge blocks, and metrology zeroing. Not used for BOM hardware matching."
+  },
   "categories": [
     {
       "id": "socket_head_screw",

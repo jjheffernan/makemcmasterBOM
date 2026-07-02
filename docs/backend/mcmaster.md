@@ -11,7 +11,9 @@ McMaster linking uses **six offline tiers** plus two **optional live** enrichmen
 | 3 | `part_number` | SKU embedded in BOM text (`91290A120`) | 0.95 |
 | 4 | `filtered_browse` | Metric fastener with category + browse root | 0.75 |
 | 5 | `category_search` | Category route + `?searchQuery=` | 0.55 |
-| 6 | `site_search` | Default `/products/standard-components/` | 0.35 |
+| — | `not_applicable` | No category match, non-hardware, or instruction line | — |
+
+**Standard Components excluded:** McMaster's `/products/standard-components/` category is for calibration masters, gauge blocks, and metrology — not BOM fasteners or general hardware. Unmatched queries return `not_applicable` with no URL instead of a site-wide search there.
 
 Resolver entry point: `backend/services/vendors/mcmaster/tiers.py` → `resolve_mcmaster_link()`.
 
