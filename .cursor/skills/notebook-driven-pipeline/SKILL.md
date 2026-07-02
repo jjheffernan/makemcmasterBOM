@@ -24,13 +24,14 @@ description: >-
 | `02_extract_bom.ipynb` | `scraper.py` + `parsers/makerworld/` | BOM file saved to `data/` or description parts parsed |
 | `03_parse_bom.ipynb` | `parsers/spreadsheet/` | Clean `Part` list from CSV/XLSX |
 | `04_match_mcmaster.ipynb` | `matcher.py` + `hardware_match_verify.py` | McMaster URL + confidence per part |
-| `05_api_payload.ipynb` | `pipeline.py` | Full `Project` JSON payload |
+| `05_api_payload.ipynb` | `pipeline.py` + `enrichment.py` | Full `Project` JSON payload incl. live hydrate |
 | `06_regression.ipynb` | `scripts/run_checks.sh` | Offline validators + optional live URL crawl |
 | `mcmaster_browse.ipynb` | `scripts/mcmaster_cross_test.py` | McMaster cross-test + optional live browse |
 
 ## Rules
 
 - Do not edit service modules for experimental logic — notebook first
+- **Promoted code only:** notebooks `01`–`05` call `backend.services.pipeline` (see `backend/notebook_pipeline.py`); parity is enforced by `tests/test_notebook_pipeline_parity.py`
 - Preserve original BOM values in `original_name`; normalize into `normalized_name`
 - Favor McMaster **catalog part URLs** when `mcmaster_catalog.json` matches; otherwise category-scoped search URLs
 - Use `safe_scrape` / `safe_import_project` in notebooks (not bare `scrape_makerworld`) to avoid agent/kernel hangs

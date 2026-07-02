@@ -17,7 +17,8 @@ from backend.notebook_frames import (
     parts_to_dataframe,
     project_parts_dataframe,
 )
-from backend.services.parser import parse_bom_bytes
+from backend.notebook_pipeline import format_pipeline_map, offline_file_import_parts
+from backend.models.progress import PIPELINE_STAGES
 from backend.services.pipeline import (
     import_from_url,
     match_parts_only,
@@ -70,10 +71,7 @@ def prepare_crawl_env(*, scraper: str = "auto", reload_backend: bool = True) -> 
 
 def print_pipeline_map() -> None:
     """Show notebook ↔ API stage mapping (same as GET /api/import/stages)."""
-    print("Pipeline stages (notebooks = website import progress):\n")
-    for stage in PIPELINE_STAGES:
-        print(f"  [{stage['id']:16}] {stage['notebook']:22}  {stage['label']}")
-    print("\nWebsite: POST /api/import/stream  →  same backend.services.pipeline")
+    print(format_pipeline_map())
 
 
 def notebook_progress(label: str = "notebook"):
@@ -221,10 +219,10 @@ async def resolve_parts_offline(
     if local:
         content, filename = local
         try:
-            parts = parse_bom_bytes(content, filename)
+            parts = offline_file_import_parts(content, filename, include_match=False)
             if parts:
                 cache_parts(parts, data_dir)
-                return parts, f"local file {filename}"
+                return parts, f"local file {filename} (parse_bom_only)"
         except Exception as exc:
             print(f"Could not parse {filename}: {exc}")
     return [], "none"
@@ -241,11 +239,14 @@ async def safe_import_project(url: str, on_progress=None):
         parts, source = await resolve_parts_offline()
         if not parts:
             return None
+        matched = match_parts_only(parts)
         return Project(
             title="Notebook fallback project",
             makerworld_url=url,
             description=f"Offline fallback ({source})",
-            parts=match_parts_only(parts),
+            parts=matched,
             bom_status="upload",
-            warnings=["Live import failed — offline fallback only"],
+            warnings=[
+                "Live import failed — offline fallback only (no enrich_mcmaster stage)",
+            ],
         )

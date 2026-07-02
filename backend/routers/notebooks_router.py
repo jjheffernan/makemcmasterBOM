@@ -2,52 +2,28 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 from fastapi import APIRouter
 from pydantic import BaseModel
 
+from backend.models.progress import PIPELINE_STAGES
+from backend.notebook_pipeline import AUXILIARY_NOTEBOOKS, NOTEBOOKS_DIR
+
 router = APIRouter(prefix="/notebooks", tags=["notebooks"])
 
-NOTEBOOKS_DIR = Path(__file__).resolve().parents[2] / "notebooks"
+_STAGE_BY_NOTEBOOK: dict[str, str] = {}
+for _stage in PIPELINE_STAGES:
+    _STAGE_BY_NOTEBOOK.setdefault(_stage["notebook"], _stage["id"])
 
-NOTEBOOK_META: dict[str, dict[str, str]] = {
-    "01_scrape.ipynb": {
-        "title": "01 — Scrape MakerWorld",
-        "description": "Download project page, extract metadata, locate BOM attachment.",
-        "stage": "scrape",
-    },
-    "02_extract_bom.ipynb": {
-        "title": "02 — Extract BOM",
-        "description": "Locate and download the BOM file from a scraped project.",
-        "stage": "extract",
-    },
-    "03_parse_bom.ipynb": {
-        "title": "03 — Parse BOM",
-        "description": "Read CSV/XLSX into a DataFrame and normalize columns.",
-        "stage": "parse",
-    },
-    "04_match_mcmaster.ipynb": {
-        "title": "04 — Match McMaster",
-        "description": "Generate McMaster-Carr search URLs and confidence scores.",
-        "stage": "match",
-    },
-    "05_api_payload.ipynb": {
-        "title": "05 — API Payload",
-        "description": "Assemble the final Project/Part payload for the API.",
-        "stage": "export",
-    },
-    "06_regression.ipynb": {
-        "title": "06 — Regression checks",
-        "description": "Offline validators, spreadsheet fixtures, optional live MakerWorld URL crawl.",
-        "stage": "regression",
-    },
-    "mcmaster_browse.ipynb": {
-        "title": "McMaster browse (optional)",
-        "description": "In-house Playwright browse fetch, fixture parse, and cross-test.",
-        "stage": "browse",
-    },
-}
+NOTEBOOK_META: dict[str, dict[str, str]] = {}
+for _stage in PIPELINE_STAGES:
+    nb = _stage["notebook"]
+    if nb not in NOTEBOOK_META:
+        NOTEBOOK_META[nb] = {
+            "title": f"{nb[:2]} — {_stage['label']}",
+            "description": _stage["description"],
+            "stage": _stage["id"],
+        }
+NOTEBOOK_META.update(AUXILIARY_NOTEBOOKS)
 
 
 class NotebookInfo(BaseModel):

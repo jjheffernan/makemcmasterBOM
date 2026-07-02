@@ -49,7 +49,7 @@ PIPELINE_STAGES: list[dict[str, str]] = [
     },
     {
         "id": "enrich_mcmaster",
-        "notebook": "04_match_mcmaster.ipynb",
+        "notebook": "05_api_payload.ipynb",
         "label": "Hydrate McMaster listings",
         "description": "Fetch live SKUs, finishes, and listing prices from McMaster-Carr",
     },
