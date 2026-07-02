@@ -13,8 +13,11 @@ BROWSE_ROOTS_PATH = REPO_ROOT / "data" / "mcmaster_browse_roots.json"
 DEFAULT_FINISH_ORDER = ("black_oxide", "zinc_plated", "stainless")
 
 CATEGORY_FINISH_ORDER: dict[str, tuple[str, ...]] = {
-    "nut": ("zinc_plated", "black_oxide", "stainless"),
-    "washer": ("zinc_plated", "black_oxide", "stainless"),
+    "hex_nut": ("zinc_plated", "black_oxide", "stainless"),
+    "lock_nut": ("stainless",),
+    "flat_washer": ("zinc_plated", "black_oxide", "stainless"),
+    "lock_washer": ("split_socket", "general"),
+    "fender_washer": ("metric",),
 }
 
 
