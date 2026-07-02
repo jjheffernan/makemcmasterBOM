@@ -11,6 +11,7 @@ Reference documentation for the MakerWorld BOM → McMaster-Carr generator.
 | [Notebooks](notebooks.md) | Pipeline notebooks and notebook-driven workflow |
 | [Testing](testing.md) | Running tests and what they cover |
 | [Parsers](backend/parsers.md) | Site-specific BOM parser layout and imports |
+| [Feedback dispatch](backend/feedback-dispatch.md) | Email, GitHub issues, and webhooks for bug reports |
 
 ## Reference
 

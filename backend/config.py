@@ -62,3 +62,26 @@ MCMASTER_FILTERED_BROWSE_ENABLED: bool = _env_bool(
 MCMASTER_BROWSE_RESOLVE_ENABLED: bool = _env_bool(
     "MCMASTER_BROWSE_RESOLVE_ENABLED", default=False
 )
+
+# Match-error report dispatch (optional — email, GitHub issues, webhooks)
+FEEDBACK_DISPATCH_ENABLED: bool = _env_bool("FEEDBACK_DISPATCH_ENABLED", default=False)
+
+FEEDBACK_EMAIL_ENABLED: bool = _env_bool("FEEDBACK_EMAIL_ENABLED", default=False)
+FEEDBACK_SMTP_HOST: str = os.getenv("FEEDBACK_SMTP_HOST", "").strip()
+FEEDBACK_SMTP_PORT: int = _env_int("FEEDBACK_SMTP_PORT", 587)
+FEEDBACK_SMTP_USER: str = os.getenv("FEEDBACK_SMTP_USER", "").strip()
+FEEDBACK_SMTP_PASSWORD: str = os.getenv("FEEDBACK_SMTP_PASSWORD", "").strip()
+FEEDBACK_SMTP_FROM: str = os.getenv("FEEDBACK_SMTP_FROM", "").strip()
+FEEDBACK_SMTP_USE_TLS: bool = _env_bool("FEEDBACK_SMTP_USE_TLS", default=True)
+FEEDBACK_EMAIL_TO: str = os.getenv("FEEDBACK_EMAIL_TO", "").strip()
+
+FEEDBACK_GITHUB_ENABLED: bool = _env_bool("FEEDBACK_GITHUB_ENABLED", default=False)
+FEEDBACK_GITHUB_TOKEN: str = os.getenv("FEEDBACK_GITHUB_TOKEN", "").strip()
+FEEDBACK_GITHUB_REPO: str = os.getenv("FEEDBACK_GITHUB_REPO", "").strip()
+FEEDBACK_GITHUB_LABELS: str = os.getenv(
+    "FEEDBACK_GITHUB_LABELS", "bug,match-report"
+).strip()
+
+FEEDBACK_WEBHOOK_ENABLED: bool = _env_bool("FEEDBACK_WEBHOOK_ENABLED", default=False)
+FEEDBACK_WEBHOOK_URLS: str = os.getenv("FEEDBACK_WEBHOOK_URLS", "").strip()
+FEEDBACK_WEBHOOK_TIMEOUT: float = _env_float("FEEDBACK_WEBHOOK_TIMEOUT", 15.0)

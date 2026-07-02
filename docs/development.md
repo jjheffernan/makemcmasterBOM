@@ -96,6 +96,17 @@ Optional McMaster enrichment (see [McMaster adapter](backend/mcmaster.md)):
 
 Contact [eprocurement@mcmaster.com](mailto:eprocurement@mcmaster.com) for API access. See [official API docs](https://www.mcmaster.com/help/api/).
 
+### Match-error report dispatch
+
+Optional outbound notifications when users submit **Report an error**. Reports always persist to `data/match_reports.jsonl` first. See [Feedback dispatch](backend/feedback-dispatch.md).
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `FEEDBACK_DISPATCH_ENABLED` | `0` | Master switch for outbound channels |
+| `FEEDBACK_EMAIL_ENABLED` | `0` | SMTP email to `FEEDBACK_EMAIL_TO` |
+| `FEEDBACK_GITHUB_ENABLED` | `0` | Create GitHub issue in `FEEDBACK_GITHUB_REPO` |
+| `FEEDBACK_WEBHOOK_ENABLED` | `0` | POST to comma-separated `FEEDBACK_WEBHOOK_URLS` |
+
 ### Debug mode
 
 ```bash

@@ -50,6 +50,7 @@ class MatchErrorReportCreate(BaseModel):
     expected_quantity: float | None = Field(default=None, ge=0.0)
     parse_context: str = Field(default="", max_length=1024)
     page_url: str = Field(default="", max_length=2048)
+    reporter_email: str = Field(default="", max_length=320)
 
 
 class MatchErrorReport(MatchErrorReportCreate):

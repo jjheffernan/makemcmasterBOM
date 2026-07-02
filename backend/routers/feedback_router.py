@@ -3,12 +3,16 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from backend.api import store
 from backend.api.feedback_store import append_report
 from backend.models.match_report import MatchErrorReport, MatchErrorReportCreate
 from backend.rate_limit import check_feedback_rate_limit
+from backend.services.feedback.dispatcher import (
+    DispatchChannelResult,
+    dispatch_match_report,
+)
 
 router = APIRouter(prefix="/feedback", tags=["feedback"])
 
@@ -17,6 +21,7 @@ class MatchErrorReportResponse(BaseModel):
     id: str
     reported_at: str
     message: str = "Thank you — your report was saved."
+    dispatch: list[DispatchChannelResult] = Field(default_factory=list)
 
 
 @router.post("/match-error", response_model=MatchErrorReportResponse)
@@ -27,7 +32,8 @@ async def submit_match_error_report(
     """
     Save a user report when hardware matching picked the wrong McMaster link.
 
-    Reports append to ``data/match_reports.jsonl`` for algorithm improvement.
+    Reports append to ``data/match_reports.jsonl``. When ``FEEDBACK_DISPATCH_ENABLED``
+    is set, the server also emails, opens a GitHub issue, and/or posts webhooks.
     """
     await check_feedback_rate_limit(request)
 
@@ -53,4 +59,15 @@ async def submit_match_error_report(
                     )
 
     report: MatchErrorReport = append_report(payload)
-    return MatchErrorReportResponse(id=report.id, reported_at=report.reported_at)
+    dispatch_result = await dispatch_match_report(report)
+
+    response_message = "Thank you — your report was saved."
+    if dispatch_result.any_ok:
+        response_message += " We've notified the maintainers."
+
+    return MatchErrorReportResponse(
+        id=report.id,
+        reported_at=report.reported_at,
+        message=response_message,
+        dispatch=dispatch_result.channels,
+    )
