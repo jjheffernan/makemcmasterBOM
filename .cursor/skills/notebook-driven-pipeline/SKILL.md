@@ -33,7 +33,7 @@ description: >-
 - Do not edit service modules for experimental logic — notebook first
 - **Promoted code only:** notebooks `01`–`05` call `backend.services.pipeline` (see `backend/notebook_pipeline.py`); parity is enforced by `tests/test_notebook_pipeline_parity.py`
 - Preserve original BOM values in `original_name`; normalize into `normalized_name`
-- Favor McMaster **catalog part URLs** when `mcmaster_catalog.json` matches; otherwise category-scoped search URLs
+- Favor **size-filtered browse URLs** (metric or imperial thread/length facets) as the primary guess; catalog SKUs and category browse are structured secondaries (`guess_scope`: `same_size` vs `wider_scope`)
 - Use `safe_scrape` / `safe_import_project` in notebooks (not bare `scrape_makerworld`) to avoid agent/kernel hangs
 - MakerWorld HTTP calls stay server-side only (never browser fetch)
 
