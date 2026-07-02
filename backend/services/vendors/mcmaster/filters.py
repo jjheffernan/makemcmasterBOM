@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from backend.services.hardware_spec import MetricFastenerSpec
+from backend.services.hardware_spec import ImperialFastenerSpec, MetricFastenerSpec
 
 _MATERIAL_STAINLESS = re.compile(r"\b(18-8|316|stainless|a2|a4)\b", re.I)
 _MATERIAL_BLACK_OXIDE = re.compile(r"\b(black\s*oxide|black[\s-]*oxide)\b", re.I)
@@ -61,6 +61,46 @@ def build_fastener_filters(spec: MetricFastenerSpec) -> BrowseFilterSet:
     return BrowseFilterSet(tuple(segments))
 
 
+def build_washer_filters(spec: MetricFastenerSpec) -> BrowseFilterSet:
+    """
+    McMaster washer tables filter on screw size (for screw size), not thread-size.
+
+    Length is not used for washers.
+    """
+    segments: list[str] = ["system-of-measurement~metric/"]
+    if spec.diameter_mm:
+        size = metric_thread_filter_slug(spec.diameter_mm)
+        segments.append(f"screw-size~{size}/")
+    return BrowseFilterSet(tuple(segments))
+
+
+def imperial_length_filter_slug(length_in: float) -> str:
+    if abs(length_in - 0.5) < 0.01:
+        return "1-2-in"
+    if abs(length_in - 0.25) < 0.01:
+        return "1-4-in"
+    if abs(length_in - 0.75) < 0.01:
+        return "3-4-in"
+    if length_in == int(length_in):
+        return f"{int(length_in)}-in"
+    return f"{str(length_in).replace('.', '-')}-in"
+
+
+def build_imperial_fastener_filters(spec: ImperialFastenerSpec) -> BrowseFilterSet:
+    """Inch-system thread + optional length facets."""
+    segments: list[str] = ["system-of-measurement~inch/"]
+    segments.append(f"thread-size~{spec.thread_callout}/")
+    if spec.length_in is not None:
+        segments.append(f"length~{imperial_length_filter_slug(spec.length_in)}/")
+    return BrowseFilterSet(tuple(segments))
+
+
+def build_imperial_washer_filters(spec: ImperialFastenerSpec) -> BrowseFilterSet:
+    segments: list[str] = ["system-of-measurement~inch/"]
+    segments.append(f"screw-size~{spec.thread_callout}/")
+    return BrowseFilterSet(tuple(segments))
+
+
 def infer_finish_from_bom(query: str, specification: str = "") -> str | None:
     """
     Return a finish_id when the BOM names a material finish.
@@ -93,7 +133,20 @@ def infer_material_variant_id(
     finish = infer_finish_from_bom(query, specification)
     if finish:
         return finish
-    if category_id in {"nut", "washer"}:
+    if category_id == "lock_washer":
+        from backend.services.vendors.mcmaster.washer_subtype import lock_washer_finish_id
+
+        return lock_washer_finish_id(query, specification)
+    if category_id in {
+        "hex_nut",
+        "lock_nut",
+        "flange_nut",
+        "jam_nut",
+        "coupling_nut",
+        "flat_washer",
+        "fender_washer",
+        "washer",
+    }:
         return "metric"
     return "black_oxide"
 

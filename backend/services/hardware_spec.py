@@ -9,6 +9,8 @@ from typing import Literal
 from backend.models.part import Part
 from backend.services.hardware_terms import (
     BEARING_DESIGNATION_RE,
+    IMPERIAL_THREAD_RE,
+    LENGTH_IN_RE,
     METRIC_FASTENER_RE,
     METRIC_THREAD_RE,
 )
@@ -30,6 +32,33 @@ FASTENER_TRAILING_LENGTH_MM = re.compile(
     r"\b(?:screw|screws|bolt|bolts|stud|studs)\s+(\d+(?:\.\d+)?)\s*mm\b",
     re.I,
 )
+
+IMPERIAL_THREAD_CALL_RE = re.compile(
+    r"(#\s*\d+\s*-\s*\d+|\d+\s*/\s*\d+\s*-\s*\d+)",
+    re.I,
+)
+IMPERIAL_X_LENGTH_RE = re.compile(
+    r"\bx\s*(\d+\s*/\s*\d+|\d+(?:\.\d+)?)\s*(?:\"|in(?:ch)?)?",
+    re.I,
+)
+
+
+@dataclass(frozen=True)
+class ImperialFastenerSpec:
+    thread_callout: str
+    thread_label: str
+    length_in: float | None = None
+    kind: FastenerKind = "screw"
+
+    def label(self) -> str:
+        if self.length_in is not None:
+            length = (
+                int(self.length_in)
+                if self.length_in == int(self.length_in)
+                else self.length_in
+            )
+            return f"{self.thread_label} x {length}\""
+        return self.thread_label
 
 
 @dataclass(frozen=True)
@@ -63,7 +92,7 @@ def _kind_from_text(text: str) -> FastenerKind:
     lower = text.lower()
     if BEARING_DESIGNATION_RE.search(lower):
         return "bearing"
-    if re.search(r"\b(?:hex\s+)?nut\b", lower):
+    if re.search(r"\b(?:hex\s+)?nut\b|\b(?:nylock|nyloc)\b", lower):
         return "nut"
     if re.search(r"\bwasher\b", lower):
         return "washer"
@@ -146,6 +175,67 @@ def extract_fastener_specs(text: str) -> list[MetricFastenerSpec]:
             )
 
     return found
+
+
+def _parse_fraction_inches(text: str) -> float | None:
+    cleaned = text.strip()
+    if "/" in cleaned:
+        parts = cleaned.split("/", 1)
+        try:
+            numerator = float(parts[0].strip())
+            denominator = float(parts[1].strip())
+            if denominator:
+                return numerator / denominator
+        except ValueError:
+            return None
+    try:
+        return float(cleaned)
+    except ValueError:
+        return None
+
+
+def _normalize_imperial_thread(callout: str) -> tuple[str, str]:
+    raw = callout.strip()
+    compact = raw.lower().replace(" ", "")
+    if compact.startswith("#"):
+        return compact, raw.replace(" ", "")
+    match = re.match(r"(\d+)\s*/\s*(\d+)\s*-\s*(\d+)", raw, re.I)
+    if match:
+        slug = f"{match.group(1)}-{match.group(2)}-{match.group(3)}"
+        label = f"{match.group(1)}/{match.group(2)}-{match.group(3)}"
+        return slug, label
+    return compact.replace("/", "-"), raw
+
+
+def extract_imperial_spec(text: str) -> ImperialFastenerSpec | None:
+    if not text or not IMPERIAL_THREAD_RE.search(text):
+        return None
+    thread_match = IMPERIAL_THREAD_CALL_RE.search(text)
+    if not thread_match:
+        return None
+    slug, label = _normalize_imperial_thread(thread_match.group(1))
+    length_in: float | None = None
+    length_match = IMPERIAL_X_LENGTH_RE.search(text)
+    if length_match:
+        length_in = _parse_fraction_inches(length_match.group(1))
+    elif LENGTH_IN_RE.search(text):
+        inch_match = LENGTH_IN_RE.search(text)
+        if inch_match:
+            length_in = _parse_fraction_inches(inch_match.group(0))
+    return ImperialFastenerSpec(
+        thread_callout=slug,
+        thread_label=label,
+        length_in=length_in,
+        kind=_kind_from_text(text),
+    )
+
+
+def primary_imperial_spec(part: Part) -> ImperialFastenerSpec | None:
+    for field in (part.original_name, part.specification, part.notes):
+        spec = extract_imperial_spec(field)
+        if spec:
+            return spec
+    return None
 
 
 def primary_fastener_spec(part: Part) -> MetricFastenerSpec | None:
