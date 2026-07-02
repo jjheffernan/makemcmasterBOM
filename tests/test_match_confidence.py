@@ -47,10 +47,11 @@ def test_category_search_tier_is_possible():
     assert matched.mcmaster_status == "possible"
 
 
-def test_site_search_hardware_stays_possible_not_unlikely():
+def test_unclassified_hardware_not_site_search():
     matched = match_part(Part(original_name="widget bracket", specification="aluminum"))
-    assert matched.match_tier == "site_search"
-    assert matched.mcmaster_status == "possible"
+    assert matched.match_tier == "not_applicable"
+    assert matched.mcmaster_status == "not_applicable"
+    assert "standard-components" not in (matched.mcmaster_url or "")
 
 
 def test_resolve_match_status_tier_table():

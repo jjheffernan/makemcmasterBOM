@@ -20,7 +20,7 @@ from backend.models.part import Part
         ("75 x M3-16 mm", "91290A120"),
         ("608-ZZ bearings", "5972K113"),
         ("693-ZZ bearing", "5972K42"),
-        ("M3 hex nut", "91828A113"),
+        ("M3 hex nut stainless", "91828A113"),
     ],
 )
 def test_catalog_lookup_common_parts(query, part_number):
@@ -62,7 +62,9 @@ def test_match_part_uses_product_url_for_catalog_hit():
     assert "searchQuery=" in catalog_alt.mcmaster_url
 
 
-def test_match_part_falls_back_to_search_without_catalog_hit():
+def test_match_part_without_catalog_hit_skips_site_search():
     matched = match_part(Part(original_name="custom widget bracket"))
     assert matched.mcmaster_part_number == ""
-    assert "searchQuery" in matched.mcmaster_url
+    assert matched.mcmaster_url == ""
+    assert matched.mcmaster_status == "not_applicable"
+    assert matched.match_tier == "not_applicable"

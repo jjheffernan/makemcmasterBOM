@@ -190,6 +190,16 @@ def classify_mcmaster_eligibility(part: Part) -> tuple[McMasterStatus, str]:
     if not query:
         return "not_applicable", "No searchable terms after normalization"
 
+    from backend.services.searchability import analyze_searchability
+
+    searchability = analyze_searchability(
+        part.original_name,
+        part.specification,
+        normalized_query=query,
+    )
+    if not searchability.searchable:
+        return "not_applicable", searchability.reason
+
     if CUSTOM_PART_HINTS.search(query) and not _has_hardware_signal(query):
         return (
             "unlikely",
@@ -243,7 +253,7 @@ def build_search_query(part: Part) -> str:
             return name_only
 
     rich_type = re.compile(
-        r"\b(socket head|button head|hex bolt|flat head|cheese head)\b",
+        r"\b(socket head|button head|hex bolt|flat head|countersink(?:ed)?|cheese head)\b",
         re.I,
     )
     if rich_type.search(name_only):
@@ -420,18 +430,41 @@ def _link_reason(link, *, catalog_title: str | None = None) -> str:
     return "McMaster site search"
 
 
+def compute_match_option_count(part: Part) -> int:
+    """Count distinct McMaster match paths offered for this BOM line."""
+    finishes = len(part.browse_finish_options)
+    alts = len(part.match_alternatives)
+    if finishes > 0:
+        return finishes + alts
+    if part.mcmaster_url or part.mcmaster_part_number:
+        return 1 + alts
+    return alts
+
+
 def _with_match_notes(part: Part) -> Part:
     """Copy match explanation into Notes so the BOM editor shows verbose sourcing context."""
+    option_count = compute_match_option_count(part)
+    updates: dict[str, object] = {"match_option_count": option_count}
+    if option_count > 3 and part.mcmaster_status != "not_applicable":
+        hint = (
+            f"McMaster: {option_count} match paths for this line "
+            "(finishes + alternatives) — confirm link and finish."
+        )
+        existing = part.notes.strip()
+        if hint not in existing:
+            updates["notes"] = f"{existing}\n\n{hint}" if existing else hint
+
     reason = part.mcmaster_reason.strip()
     if not reason:
-        return part
+        return part.model_copy(update=updates)
     tier = (part.match_tier or "match").replace("_", " ")
     line = f"McMaster ({tier}): {reason}"
     existing = part.notes.strip()
     if line in existing:
-        return part
+        return part.model_copy(update=updates)
     notes = f"{existing}\n\n{line}" if existing else line
-    return part.model_copy(update={"notes": notes})
+    updates["notes"] = notes
+    return part.model_copy(update=updates)
 
 
 def match_part(part: Part) -> Part:
@@ -463,23 +496,29 @@ def match_part(part: Part) -> Part:
     candidates = collect_scored_candidates(query, part)
     primary, alt_candidates = pick_primary_and_alternatives(candidates)
 
-    if primary is None:
-        link = build_mcmaster_link(query, catalog_hit=None, part=part)
-        confidence = score_confidence(part, query, status=preliminary_status)
-        final_status = resolve_status_from_confidence(confidence, preliminary_status)
-        reason = status_reason(final_status, confidence, preliminary_reason)
+    if primary is None or primary.link.tier in {"site_search", "not_applicable"}:
+        search_reason = (
+            "No McMaster category match — standard site search is disabled"
+        )
+        if preliminary_reason:
+            search_reason = f"{preliminary_reason} ({search_reason})"
         return _with_match_notes(
             part.model_copy(
             update={
                 "normalized_name": query,
-                "mcmaster_url": link.url,
+                "mcmaster_url": "",
                 "mcmaster_part_number": "",
-                "mcmaster_category": link.category_id,
-                "confidence": confidence,
-                "mcmaster_status": final_status,
-                "mcmaster_reason": reason,
-                "match_tier": "site_search",
+                "mcmaster_category": "",
+                "confidence": 0.0,
+                "confidence_low": None,
+                "confidence_high": None,
+                "mcmaster_status": "not_applicable",
+                "mcmaster_reason": search_reason,
+                "hardware_match_status": "not_applicable",
+                "match_tier": "not_applicable",
                 "match_alternatives": [],
+                "browse_finish_options": [],
+                "selected_finish_id": "",
             }
         )
         )

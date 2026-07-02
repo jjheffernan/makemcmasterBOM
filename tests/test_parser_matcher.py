@@ -70,12 +70,12 @@ def test_not_applicable_reason_in_notes():
     assert "3D-printed" in matched.notes
 
 
-def test_custom_part_unlikely_still_has_search_url():
+def test_custom_part_without_category_match_is_not_applicable():
     part = Part(original_name="Enclosure lid", specification="")
     matched = match_part(part)
-    assert matched.mcmaster_status == "unlikely"
-    assert matched.mcmaster_url != ""
-    assert matched.confidence <= 0.25
+    assert matched.mcmaster_status == "not_applicable"
+    assert matched.mcmaster_url == ""
+    assert matched.match_tier == "not_applicable"
 
 
 def test_classify_empty_part():
