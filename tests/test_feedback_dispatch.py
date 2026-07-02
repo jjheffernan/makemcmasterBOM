@@ -64,7 +64,7 @@ async def test_dispatch_disabled_by_default(monkeypatch):
     monkeypatch.setenv("FEEDBACK_DISPATCH_ENABLED", "0")
     from backend import config
 
-    config.FEEDBACK_DISPATCH_ENABLED = False
+    monkeypatch.setattr(config, "FEEDBACK_DISPATCH_ENABLED", False)
 
     result = await dispatch_match_report(_sample_report())
     assert result.enabled is False
@@ -76,13 +76,17 @@ async def test_dispatch_github_and_webhook(monkeypatch, httpx_mock):
     from backend import config
 
     monkeypatch.setenv("FEEDBACK_DISPATCH_ENABLED", "1")
-    config.FEEDBACK_DISPATCH_ENABLED = True
-    config.FEEDBACK_GITHUB_ENABLED = True
-    config.FEEDBACK_GITHUB_TOKEN = "ghp_test"
-    config.FEEDBACK_GITHUB_REPO = "owner/repo"
-    config.FEEDBACK_WEBHOOK_ENABLED = True
-    config.FEEDBACK_WEBHOOK_URLS = "https://discord.com/api/webhooks/1/token"
-    config.FEEDBACK_EMAIL_ENABLED = False
+    monkeypatch.setattr(config, "FEEDBACK_DISPATCH_ENABLED", True)
+    monkeypatch.setattr(config, "FEEDBACK_GITHUB_ENABLED", True)
+    monkeypatch.setattr(config, "FEEDBACK_GITHUB_TOKEN", "ghp_test")
+    monkeypatch.setattr(config, "FEEDBACK_GITHUB_REPO", "owner/repo")
+    monkeypatch.setattr(config, "FEEDBACK_WEBHOOK_ENABLED", True)
+    monkeypatch.setattr(
+        config,
+        "FEEDBACK_WEBHOOK_URLS",
+        "https://discord.com/api/webhooks/1/token",
+    )
+    monkeypatch.setattr(config, "FEEDBACK_EMAIL_ENABLED", False)
 
     httpx_mock.add_response(
         url="https://api.github.com/repos/owner/repo/issues",
@@ -104,12 +108,12 @@ async def test_api_returns_dispatch_metadata(api_client, monkeypatch, httpx_mock
     from backend import config
 
     monkeypatch.setenv("FEEDBACK_DISPATCH_ENABLED", "1")
-    config.FEEDBACK_DISPATCH_ENABLED = True
-    config.FEEDBACK_GITHUB_ENABLED = True
-    config.FEEDBACK_GITHUB_TOKEN = "ghp_test"
-    config.FEEDBACK_GITHUB_REPO = "owner/repo"
-    config.FEEDBACK_EMAIL_ENABLED = False
-    config.FEEDBACK_WEBHOOK_ENABLED = False
+    monkeypatch.setattr(config, "FEEDBACK_DISPATCH_ENABLED", True)
+    monkeypatch.setattr(config, "FEEDBACK_GITHUB_ENABLED", True)
+    monkeypatch.setattr(config, "FEEDBACK_GITHUB_TOKEN", "ghp_test")
+    monkeypatch.setattr(config, "FEEDBACK_GITHUB_REPO", "owner/repo")
+    monkeypatch.setattr(config, "FEEDBACK_EMAIL_ENABLED", False)
+    monkeypatch.setattr(config, "FEEDBACK_WEBHOOK_ENABLED", False)
 
     httpx_mock.add_response(
         url="https://api.github.com/repos/owner/repo/issues",
