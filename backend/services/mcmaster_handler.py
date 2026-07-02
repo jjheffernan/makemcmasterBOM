@@ -160,7 +160,13 @@ def _signal_score(query: str, category: McMasterCategory) -> float:
             score += 1.5
     if category.id == "nut" and re.search(r"\bnut\b", lower):
         score += 2.0
-    if category.id == "washer" and re.search(r"\bwasher\b", lower):
+    if category.id in {"hex_nut", "lock_nut", "flange_nut", "jam_nut", "coupling_nut"} and re.search(
+        r"\bnut\b|\bnylock\b|\bnyloc\b", lower
+    ):
+        score += 2.0
+    if category.id in {"flat_washer", "lock_washer", "fender_washer"} and re.search(
+        r"\bwasher\b", lower
+    ):
         score += 2.0
     return score + category.priority * 0.01
 

@@ -43,23 +43,174 @@
       "route": "/products/screws/",
       "catalog_categories": ["screw"],
       "priority": 5,
-      "signals": ["screw", "bolt", "machine screw", "set screw", "bhcs", "fhcs"]
+      "signals": ["screw", "bolt", "machine screw", "bhcs", "fhcs"]
     },
     {
-      "id": "nut",
+      "id": "set_screw",
+      "label": "Set Screws",
+      "route": "/products/set-screws/",
+      "catalog_categories": [],
+      "priority": 12,
+      "signals": [
+        "set screw",
+        "grub screw",
+        "cup point",
+        "dog point",
+        "din 916",
+        "din 913",
+        "din 914"
+      ]
+    },
+    {
+      "id": "hex_head_screw",
+      "label": "Hex Head Screws",
+      "route": "/products/hex-head-screws/",
+      "catalog_categories": ["screw"],
+      "priority": 10,
+      "signals": ["hex head screw", "hex screw", "machine bolt"]
+    },
+    {
+      "id": "hex_bolt",
+      "label": "Hex Bolts",
+      "route": "/products/hex-bolts/",
+      "catalog_categories": [],
+      "priority": 11,
+      "signals": [
+        "hex bolt",
+        "carriage bolt",
+        "elevator bolt",
+        "plow bolt",
+        "hold-down bolt"
+      ]
+    },
+    {
+      "id": "button_head_screw",
+      "label": "Button Head Screws",
+      "route": "/products/button-head-screws/",
+      "catalog_categories": [],
+      "priority": 12,
+      "signals": ["button head", "bhcs", "pan head", "round head screw"]
+    },
+    {
+      "id": "shoulder_screw",
+      "label": "Shoulder Screws",
+      "route": "/products/shoulder-screws/",
+      "catalog_categories": [],
+      "priority": 12,
+      "signals": ["shoulder screw", "stripper bolt"]
+    },
+    {
+      "id": "thumb_screw",
+      "label": "Thumb Screws",
+      "route": "/products/thumb-screws/",
+      "catalog_categories": [],
+      "priority": 12,
+      "signals": ["thumb screw", "knurled screw"]
+    },
+    {
+      "id": "threaded_rod",
+      "label": "Threaded Rods",
+      "route": "/products/threaded-rods/",
+      "catalog_categories": [],
+      "priority": 9,
+      "signals": ["threaded rod", "threaded bar", "all thread", "stud rod", "threaded stud"]
+    },
+    {
+      "id": "stud",
+      "label": "Studs",
+      "route": "/products/studs/",
+      "catalog_categories": [],
+      "priority": 10,
+      "signals": ["stud", "double end stud", "weld stud", "press-fit stud"]
+    },
+    {
+      "id": "hex_nut",
       "label": "Hex Nuts",
-      "route": "/products/hex-nuts/",
+      "route": "/products/metric-hex-nuts/",
       "catalog_categories": ["nut"],
       "priority": 8,
-      "signals": ["hex nut", "lock nut", "nyloc", "nylock", "jam nut", "flange nut", " nut"]
+      "signals": ["hex nut", "din 934", " nut"]
     },
     {
-      "id": "washer",
-      "label": "Washers",
+      "id": "lock_nut",
+      "label": "Lock Nuts",
+      "route": "/products/nylon-insert-hex-nuts/",
+      "catalog_categories": [],
+      "priority": 11,
+      "signals": [
+        "lock nut",
+        "locknut",
+        "nyloc",
+        "nylock",
+        "nylon insert",
+        "din 985",
+        "din 986"
+      ]
+    },
+    {
+      "id": "flange_nut",
+      "label": "Flange Nuts",
+      "route": "/products/flange-nuts/",
+      "catalog_categories": [],
+      "priority": 11,
+      "signals": ["flange nut"]
+    },
+    {
+      "id": "jam_nut",
+      "label": "Jam Nuts",
+      "route": "/products/jam-nuts/",
+      "catalog_categories": [],
+      "priority": 11,
+      "signals": ["jam nut"]
+    },
+    {
+      "id": "coupling_nut",
+      "label": "Coupling Nuts",
+      "route": "/products/coupling-nuts/",
+      "catalog_categories": [],
+      "priority": 11,
+      "signals": ["coupling nut"]
+    },
+    {
+      "id": "cap_nut",
+      "label": "Cap Nuts",
+      "route": "/products/cap-nuts/",
+      "catalog_categories": [],
+      "priority": 12,
+      "signals": ["cap nut", "acorn nut", "domed nut"]
+    },
+    {
+      "id": "flat_washer",
+      "label": "Flat Washers",
       "route": "/products/flat-washers/",
       "catalog_categories": ["washer"],
       "priority": 8,
-      "signals": ["washer", "flat washer", "lock washer", "fender washer"]
+      "signals": ["flat washer", "din 125", " washer"]
+    },
+    {
+      "id": "lock_washer",
+      "label": "Lock Washers",
+      "route": "/products/lock-washers/",
+      "catalog_categories": ["washer"],
+      "priority": 11,
+      "signals": [
+        "lock washer",
+        "spring washer",
+        "split lock",
+        "split washer",
+        "tooth lock",
+        "star washer",
+        "din 127",
+        "din 7980"
+      ]
+    },
+    {
+      "id": "fender_washer",
+      "label": "Fender Washers",
+      "route": "/products/fender-washers/",
+      "catalog_categories": ["washer"],
+      "priority": 11,
+      "signals": ["fender washer"]
     },
     {
       "id": "bearing",
@@ -75,7 +226,21 @@
       "route": "/products/heat-set-inserts/",
       "catalog_categories": ["insert"],
       "priority": 10,
-      "signals": ["heat insert", "heat-set insert", "threaded insert", "insert"]
+      "signals": ["heat insert", "heat-set insert", "heat set insert"]
+    },
+    {
+      "id": "threaded_insert",
+      "label": "Threaded Inserts",
+      "route": "/products/threaded-inserts/",
+      "catalog_categories": ["insert"],
+      "priority": 11,
+      "signals": [
+        "threaded insert",
+        "helicoil",
+        "heli-coil",
+        "wire insert",
+        "self-tapping insert"
+      ]
     },
     {
       "id": "standoff",
@@ -124,6 +289,62 @@
       "catalog_categories": ["pin"],
       "priority": 7,
       "signals": ["dowel pin", "roll pin", "clevis pin", " pin"]
+    },
+    {
+      "id": "retaining_ring",
+      "label": "Retaining Rings",
+      "route": "/products/retaining-rings/",
+      "catalog_categories": [],
+      "priority": 10,
+      "signals": ["retaining ring", "snap ring", "circlip", "e-clip"]
+    },
+    {
+      "id": "anchor",
+      "label": "Anchors",
+      "route": "/products/anchors/",
+      "catalog_categories": [],
+      "priority": 9,
+      "signals": ["anchor", "wedge anchor", "toggle bolt", "concrete anchor", "drywall anchor"]
+    },
+    {
+      "id": "shim",
+      "label": "Shims",
+      "route": "/products/shims/",
+      "catalog_categories": [],
+      "priority": 8,
+      "signals": ["shim", "shim stock", "alignment shim"]
+    },
+    {
+      "id": "cable_tie",
+      "label": "Cable Ties",
+      "route": "/products/cable-ties/",
+      "catalog_categories": [],
+      "priority": 7,
+      "signals": ["cable tie", "zip tie", "wire tie"]
+    },
+    {
+      "id": "u_bolt",
+      "label": "U-Bolts",
+      "route": "/products/u-bolts/",
+      "catalog_categories": [],
+      "priority": 11,
+      "signals": ["u-bolt", "u bolt"]
+    },
+    {
+      "id": "eyebolt",
+      "label": "Eyebolts",
+      "route": "/products/eyebolts/",
+      "catalog_categories": [],
+      "priority": 10,
+      "signals": ["eyebolt", "eye bolt"]
+    },
+    {
+      "id": "binding_barrel",
+      "label": "Binding Barrels",
+      "route": "/products/binding-barrels/",
+      "catalog_categories": [],
+      "priority": 10,
+      "signals": ["binding barrel", "barrel nut", "sex bolt", "chicago screw"]
     },
     {
       "id": "bushing",

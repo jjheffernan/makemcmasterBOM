@@ -4,7 +4,12 @@ from __future__ import annotations
 
 from backend import config
 from backend.models.part import Part
-from backend.services.hardware_spec import MetricFastenerSpec, primary_fastener_spec
+from backend.services.hardware_spec import (
+    ImperialFastenerSpec,
+    MetricFastenerSpec,
+    primary_fastener_spec,
+    primary_imperial_spec,
+)
 from backend.services.mcmaster_catalog import CatalogHit, catalog_lookup
 from backend.services.mcmaster_handler import (
     CategoryMatch,
@@ -20,16 +25,28 @@ from backend.services.vendors.base import MatchTier, VendorLink, VendorMatchCont
 from backend.services.vendors.mcmaster.browse_roots import get_browse_root
 from backend.services.vendors.mcmaster.filters import (
     build_fastener_filters,
+    build_imperial_fastener_filters,
+    build_imperial_washer_filters,
+    build_washer_filters,
     infer_material_variant_id,
 )
+from backend.services.vendors.mcmaster.nut_subtype import NUT_CATEGORY_IDS
+from backend.services.vendors.mcmaster.washer_subtype import is_washer_category
 from backend.services.vendors.mcmaster.part_numbers import (
     extract_part_number_from_text,
     is_valid_part_number,
 )
 
 _FILTERED_BROWSE_CATEGORIES = frozenset(
-    {"socket_head_screw", "flat_head_screw", "screw", "nut", "washer"},
-)
+    {
+        "socket_head_screw",
+        "flat_head_screw",
+        "screw",
+        "flat_washer",
+        "lock_washer",
+        "fender_washer",
+    }
+) | NUT_CATEGORY_IDS
 
 
 def _catalog_hit_tier(hit: CatalogHit) -> MatchTier:
@@ -54,6 +71,45 @@ def _vendor_link_from_catalog(
     )
 
 
+def _build_imperial_filtered_browse_link(
+    query: str,
+    part: Part,
+    category_match: CategoryMatch,
+    spec: ImperialFastenerSpec,
+    *,
+    finish_id: str,
+    method: str = "filtered_browse",
+) -> VendorLink | None:
+    filters = (
+        build_imperial_washer_filters(spec)
+        if is_washer_category(category_match.category.id)
+        else build_imperial_fastener_filters(spec)
+    )
+    if filters.is_empty or not spec.thread_callout:
+        return None
+
+    browse_root = get_browse_root(category_match.category.id, finish_id)
+    if not browse_root:
+        return None
+
+    url = filtered_browse_url(
+        browse_root.route,
+        filters.as_path(),
+        search_query=query,
+    )
+    return VendorLink(
+        url=url,
+        link_kind="filtered_browse",
+        tier="filtered_browse",
+        category_id=category_match.category.id,
+        category_label=category_match.category.label,
+        filter_path=filters.as_path(),
+        method=method,
+        confidence_hint=0.75,
+        extras={"browse_finish": finish_id},
+    )
+
+
 def _build_filtered_browse_link(
     query: str,
     part: Part,
@@ -63,7 +119,11 @@ def _build_filtered_browse_link(
     finish_id: str,
     method: str = "filtered_browse",
 ) -> VendorLink | None:
-    filters = build_fastener_filters(spec)
+    filters = (
+        build_washer_filters(spec)
+        if is_washer_category(category_match.category.id)
+        else build_fastener_filters(spec)
+    )
     if filters.is_empty or spec.diameter_mm is None:
         return None
 
@@ -100,36 +160,64 @@ def _try_filtered_browse(
         return None
 
     spec: MetricFastenerSpec | None = primary_fastener_spec(part)
-    if not spec or spec.diameter_mm is None:
-        return None
-
-    finish_id = infer_material_variant_id(
-        query,
-        part.specification,
-        category_id=category_match.category.id,
-    )
-    link = _build_filtered_browse_link(
-        query,
-        part,
-        category_match,
-        spec,
-        finish_id=finish_id,
-    )
-    if link:
-        return link
-
-    for fallback in ("black_oxide", "zinc_plated", "stainless"):
-        if fallback == finish_id:
-            continue
+    if spec and spec.diameter_mm is not None:
+        finish_id = infer_material_variant_id(
+            query,
+            part.specification,
+            category_id=category_match.category.id,
+        )
         link = _build_filtered_browse_link(
             query,
             part,
             category_match,
             spec,
-            finish_id=fallback,
+            finish_id=finish_id,
         )
         if link:
             return link
+
+        for fallback in ("black_oxide", "zinc_plated", "stainless"):
+            if fallback == finish_id:
+                continue
+            link = _build_filtered_browse_link(
+                query,
+                part,
+                category_match,
+                spec,
+                finish_id=fallback,
+            )
+            if link:
+                return link
+
+    imperial = primary_imperial_spec(part)
+    if imperial and imperial.thread_callout:
+        finish_id = infer_material_variant_id(
+            query,
+            part.specification,
+            category_id=category_match.category.id,
+        )
+        link = _build_imperial_filtered_browse_link(
+            query,
+            part,
+            category_match,
+            imperial,
+            finish_id=finish_id,
+        )
+        if link:
+            return link
+
+        for fallback in ("black_oxide", "zinc_plated", "stainless"):
+            if fallback == finish_id:
+                continue
+            link = _build_imperial_filtered_browse_link(
+                query,
+                part,
+                category_match,
+                imperial,
+                finish_id=fallback,
+            )
+            if link:
+                return link
     return None
 
 

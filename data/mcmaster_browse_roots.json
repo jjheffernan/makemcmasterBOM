@@ -57,52 +57,100 @@
       "route": "/products/screws/socket-head-screws-2~/18-8-stainless-steel-socket-head-screws~~/"
     },
     {
-      "category_id": "nut",
+      "category_id": "hex_nut",
       "finish_id": "zinc_plated",
       "finish_label": "Zinc plated steel",
       "route": "/products/hex-nuts/zinc-plated-steel-hex-nuts~~/"
     },
     {
-      "category_id": "nut",
+      "category_id": "hex_nut",
       "finish_id": "black_oxide",
       "finish_label": "Black oxide steel",
       "route": "/products/hex-nuts/black-oxide-steel-hex-nuts~~/"
     },
     {
-      "category_id": "nut",
+      "category_id": "hex_nut",
       "finish_id": "stainless",
       "finish_label": "18-8 stainless",
       "route": "/products/hex-nuts/18-8-stainless-steel-hex-nuts~~/"
     },
     {
-      "category_id": "nut",
+      "category_id": "hex_nut",
       "finish_id": "metric",
       "finish_label": "Metric hex nuts",
-      "route": "/products/hex-nuts/metric-hex-nuts~~/"
+      "route": "/products/metric-hex-nuts/"
     },
     {
-      "category_id": "washer",
+      "category_id": "lock_nut",
+      "finish_id": "metric",
+      "finish_label": "Nylon-insert locknuts",
+      "route": "/products/nylon-insert-hex-nuts/"
+    },
+    {
+      "category_id": "lock_nut",
+      "finish_id": "stainless",
+      "finish_label": "18-8 stainless nylon-insert",
+      "route": "/products/nylon-insert-hex-nuts/18-8-stainless-steel-nylon-insert-hex-nuts~~/"
+    },
+    {
+      "category_id": "flange_nut",
+      "finish_id": "metric",
+      "finish_label": "Metric flange nuts",
+      "route": "/products/flange-nuts/metric-flange-nuts~~/"
+    },
+    {
+      "category_id": "jam_nut",
+      "finish_id": "metric",
+      "finish_label": "Metric jam nuts",
+      "route": "/products/jam-nuts/metric-jam-nuts~~/"
+    },
+    {
+      "category_id": "coupling_nut",
+      "finish_id": "metric",
+      "finish_label": "Metric coupling nuts",
+      "route": "/products/coupling-nuts/metric-coupling-nuts~~/"
+    },
+    {
+      "category_id": "flat_washer",
       "finish_id": "zinc_plated",
       "finish_label": "Zinc plated steel",
       "route": "/products/flat-washers/zinc-plated-steel-flat-washers~~/"
     },
     {
-      "category_id": "washer",
+      "category_id": "flat_washer",
       "finish_id": "black_oxide",
       "finish_label": "Steel",
       "route": "/products/flat-washers/steel-flat-washers~~/"
     },
     {
-      "category_id": "washer",
+      "category_id": "flat_washer",
       "finish_id": "stainless",
       "finish_label": "18-8 stainless",
       "route": "/products/flat-washers/18-8-stainless-steel-flat-washers~~/"
     },
     {
-      "category_id": "washer",
+      "category_id": "flat_washer",
       "finish_id": "metric",
       "finish_label": "Metric flat washers",
       "route": "/products/flat-washers/metric-flat-washers~~/"
+    },
+    {
+      "category_id": "lock_washer",
+      "finish_id": "split_socket",
+      "finish_label": "Metric split lock (socket screws)",
+      "route": "/products/metric-split-lock-washers-for-socket-head-screws/"
+    },
+    {
+      "category_id": "lock_washer",
+      "finish_id": "general",
+      "finish_label": "Lock washers",
+      "route": "/products/lock-washers/"
+    },
+    {
+      "category_id": "fender_washer",
+      "finish_id": "metric",
+      "finish_label": "Metric fender washers",
+      "route": "/products/fender-washers/metric-fender-washers~~/"
     }
   ]
 }

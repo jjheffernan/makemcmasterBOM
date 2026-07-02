@@ -113,7 +113,7 @@ def test_summarize_coverage():
         ("M3x8", "Maker's Supply", "likely", "M3x8 screw"),
         ("M4x10 BHCS (10PCS) - B-KA007", "", "likely", "button head cap screw"),
         ("DIN912 M3x8", "", "likely", "socket head cap screw"),
-        ("#6-32 x 1/2\"", "", "possible", "screw"),
+        ("#6-32 x 1/2\"", "", "likely", "screw"),
         ("M3 Hex Nut", "Stainless Steel", "likely", "nut"),
     ],
 )

@@ -24,7 +24,7 @@ def test_applicable_finish_roots_ambiguous_screw_defaults_black_oxide():
 
 
 def test_applicable_finish_roots_ambiguous_nut_uses_metric_table():
-    roots = applicable_finish_roots("nut", "M3 nut", "")
+    roots = applicable_finish_roots("hex_nut", "M3 nut", "")
     assert len(roots) == 1
     assert roots[0].finish_id == "metric"
     assert "metric-hex-nuts" in roots[0].route

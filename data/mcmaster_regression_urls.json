@@ -75,7 +75,8 @@
         "quantity": 4
       },
       "expect": {
-        "match_tier": "catalog",
+        "match_tier": "filtered_browse",
+        "url_contains": ["stainless", "thread-size~m3"],
         "catalog_part_number": "91828A113"
       },
       "live": {

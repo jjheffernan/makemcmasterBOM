@@ -54,4 +54,6 @@ def test_catalog_primary_when_browse_resolve_disabled(monkeypatch):
     monkeypatch.setattr(config, "MCMASTER_BROWSE_RESOLVE_ENABLED", False)
     part = Part(original_name="M3 Hex Nut", specification="18-8 stainless")
     candidates = collect_scored_candidates("M3 hex nut", part)
-    assert candidates[0].link.tier == "catalog"
+    assert candidates[0].link.tier == "filtered_browse"
+    catalog = next(c for c in candidates if c.link.part_number == "91828A113")
+    assert catalog.link.tier in {"catalog", "rule"}

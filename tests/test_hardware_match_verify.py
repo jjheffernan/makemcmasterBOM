@@ -55,7 +55,7 @@ def test_build_search_query_ignores_conflicting_specification():
 def test_match_part_verifies_m3_25_length():
     matched = match_part(Part(original_name="M3-25 mm"))
     assert matched.match_tier == "filtered_browse"
-    assert matched.confidence == 0.90
+    assert matched.confidence == 0.92
     assert matched.hardware_length_mm == 25
     assert matched.hardware_diameter_mm == 3
     catalog_alt = next(

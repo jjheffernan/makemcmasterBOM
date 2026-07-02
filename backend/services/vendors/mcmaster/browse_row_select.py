@@ -8,8 +8,10 @@ from backend.models.part import Part
 from backend.services.hardware_spec import MetricFastenerSpec, primary_fastener_spec
 from backend.services.pricing_listing import effective_unit_cost_for_row
 from backend.services.vendors.mcmaster.browse_parse import BrowseRow, find_row_by_part_number
+from backend.services.vendors.mcmaster.nut_subtype import infer_nut_category_id
+from backend.services.vendors.mcmaster.washer_subtype import infer_washer_category_id
 
-_THREAD_FIELD_KEYS = ("Thread Size", "Thread", "Size")
+_THREAD_FIELD_KEYS = ("Thread Size", "Thread", "Size", "Screw Size", "For Screw Size")
 _LENGTH_FIELD_KEYS = ("Length", "Overall Length", "Lg.")
 _TYPE_FIELD_KEYS = ("Type", "Fastener Type", "Nut Type", "Washer Type", "Head Type")
 
@@ -76,16 +78,62 @@ def _row_simplicity_score(part: Part, row: BrowseRow) -> float:
     blob = _row_text_blob(row)
     score = 0.0
     spec = primary_fastener_spec(part)
+    washer_family = infer_washer_category_id(
+        part.original_name or "",
+        part.specification or "",
+    )
+    nut_family = infer_nut_category_id(
+        part.original_name or "",
+        part.specification or "",
+    )
     if spec and spec.kind == "nut":
-        if re.search(r"\bhex nut\b", blob):
-            score += 4.0
-        if re.search(r"\bstandard\b", blob):
-            score += 2.0
+        if nut_family == "lock_nut":
+            if re.search(r"\bnylon[\s-]*insert\b|\block\s*nut\b", blob):
+                score += 5.0
+            if re.search(r"\bhex nut\b", blob) and "nylon" not in blob:
+                score -= 4.0
+        elif nut_family == "flange_nut":
+            if re.search(r"\bflange\s+nut\b", blob):
+                score += 5.0
+        elif nut_family == "jam_nut":
+            if re.search(r"\bjam\s+nut\b", blob):
+                score += 5.0
+        elif nut_family == "coupling_nut":
+            if re.search(r"\bcoupling\s+nut\b", blob):
+                score += 5.0
+        else:
+            if re.search(r"\bhex nut\b", blob):
+                score += 4.0
+            if re.search(r"\bstandard\b", blob):
+                score += 2.0
+            if re.search(r"\bnylon[\s-]*insert\b|\block\s*nut\b", blob):
+                score -= 6.0
     if spec and spec.kind == "washer":
-        if re.search(r"\bflat washer\b", blob):
-            score += 4.0
+        if washer_family == "lock_washer":
+            if re.search(r"\bsplit\s+lock\b", blob):
+                score += 5.0
+            if re.search(r"\block\s+washer\b", blob):
+                score += 3.0
+            if re.search(r"\bflat\s+washer\b", blob):
+                score -= 6.0
+        elif washer_family == "fender_washer":
+            if re.search(r"\bfender\s+washer\b", blob):
+                score += 5.0
+            if re.search(r"\bflat\s+washer\b", blob):
+                score -= 3.0
+        else:
+            if re.search(r"\bflat washer\b", blob):
+                score += 4.0
+            if re.search(r"\bgeneral purpose\b", blob):
+                score += 2.0
+            if re.search(r"\block\s+washer\b", blob):
+                score -= 6.0
     if _COMPLEX_SUBTYPE_RE.search(blob):
-        score -= 5.0
+        if spec and spec.kind == "nut" and nut_family == "lock_nut":
+            if not re.search(r"\b(nyloc|nylock|nylon[\s-]*insert|lock)\b", blob):
+                score -= 5.0
+        else:
+            score -= 5.0
     return score
 
 

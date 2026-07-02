@@ -14,6 +14,10 @@ from backend.services.hardware_terms import (
     has_fastener_type,
     has_metric_fastener,
 )
+from backend.services.vendors.mcmaster.metacategories import (
+    infer_bom_metacategory,
+    metacategory_for_category_id,
+)
 from backend.services.mcmaster_handler import (
     McMasterCategory,
     _FLAT_HEAD_QUERY_RE,
@@ -101,6 +105,24 @@ def route_category(
     if not query or not query.strip():
         return RoutedCategory(_unclassified_category(), 0.0, "unclassified")
 
+    if re.search(r"\bwasher\b", query, re.I):
+        from backend.services.vendors.mcmaster.washer_subtype import infer_washer_category_id
+
+        washer_id = infer_washer_category_id(query)
+        washer_cat = get_category(washer_id)
+        if washer_cat:
+            hits = _keyword_hits(query, washer_cat.signals)
+            return RoutedCategory(washer_cat, 0.9, "washer_family", tuple(hits))
+
+    from backend.services.vendors.mcmaster.nut_subtype import infer_nut_category_id, is_nut_line
+
+    if is_nut_line(query):
+        nut_id = infer_nut_category_id(query)
+        nut_cat = get_category(nut_id)
+        if nut_cat:
+            hits = _keyword_hits(query, nut_cat.signals)
+            return RoutedCategory(nut_cat, 0.9, "nut_family", tuple(hits))
+
     head_type = infer_screw_head_type(query)
     if head_type == "flat_head":
         flat = get_category("flat_head_screw")
@@ -124,6 +146,8 @@ def route_category(
             if socket:
                 return RoutedCategory(socket, 1.0, "catalog")
 
+    expected_meta = infer_bom_metacategory(query)
+
     scored: list[tuple[McMasterCategory, float, str, tuple[str, ...]]] = []
     for category in _load_categories():
         signal = _signal_score(query, category)
@@ -136,6 +160,13 @@ def route_category(
 
         size_bonus = _catalog_size_bonus(category.id)
         total = relevance + size_bonus
+
+        category_meta = metacategory_for_category_id(category.id)
+        if expected_meta and category_meta:
+            if category_meta == expected_meta:
+                total += 2.0
+            else:
+                total -= 3.0
 
         if category.id == "socket_head_screw" and _FLAT_HEAD_QUERY_RE.search(query):
             total -= 4.0

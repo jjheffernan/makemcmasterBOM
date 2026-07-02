@@ -29,16 +29,106 @@
       ]
     },
     {
-      "category_id": "nut",
-      "parent_id": null,
-      "catalog_size": 4500,
-      "escape_keywords": ["hex nut", "lock nut", "nyloc", "jam nut", "flange nut"]
+      "category_id": "set_screw",
+      "parent_id": "screw",
+      "catalog_size": 5325,
+      "escape_keywords": ["set screw", "grub screw", "din 916"]
     },
     {
-      "category_id": "washer",
+      "category_id": "hex_head_screw",
+      "parent_id": "screw",
+      "catalog_size": 11746,
+      "escape_keywords": ["hex head screw", "hex screw"]
+    },
+    {
+      "category_id": "hex_bolt",
       "parent_id": null,
-      "catalog_size": 3800,
-      "escape_keywords": ["flat washer", "lock washer", "fender washer"]
+      "catalog_size": 2000,
+      "escape_keywords": ["hex bolt", "carriage bolt", "elevator bolt"]
+    },
+    {
+      "category_id": "button_head_screw",
+      "parent_id": "screw",
+      "catalog_size": 3000,
+      "escape_keywords": ["button head", "bhcs", "pan head"]
+    },
+    {
+      "category_id": "shoulder_screw",
+      "parent_id": "screw",
+      "catalog_size": 6915,
+      "escape_keywords": ["shoulder screw", "stripper bolt"]
+    },
+    {
+      "category_id": "thumb_screw",
+      "parent_id": "screw",
+      "catalog_size": 1551,
+      "escape_keywords": ["thumb screw", "knurled screw"]
+    },
+    {
+      "category_id": "threaded_rod",
+      "parent_id": null,
+      "catalog_size": 5369,
+      "escape_keywords": ["threaded rod", "all thread", "threaded bar"]
+    },
+    {
+      "category_id": "stud",
+      "parent_id": null,
+      "catalog_size": 637,
+      "escape_keywords": ["stud", "weld stud", "press-fit stud"]
+    },
+    {
+      "category_id": "hex_nut",
+      "parent_id": null,
+      "catalog_size": 4500,
+      "escape_keywords": ["hex nut", "din 934"]
+    },
+    {
+      "category_id": "lock_nut",
+      "parent_id": null,
+      "catalog_size": 2200,
+      "escape_keywords": ["lock nut", "nyloc", "nylock", "din 985"]
+    },
+    {
+      "category_id": "flange_nut",
+      "parent_id": null,
+      "catalog_size": 900,
+      "escape_keywords": ["flange nut"]
+    },
+    {
+      "category_id": "jam_nut",
+      "parent_id": null,
+      "catalog_size": 700,
+      "escape_keywords": ["jam nut"]
+    },
+    {
+      "category_id": "coupling_nut",
+      "parent_id": null,
+      "catalog_size": 500,
+      "escape_keywords": ["coupling nut"]
+    },
+    {
+      "category_id": "cap_nut",
+      "parent_id": null,
+      "catalog_size": 423,
+      "escape_keywords": ["cap nut", "acorn nut"]
+    },
+    {
+      "category_id": "flat_washer",
+      "parent_id": null,
+      "catalog_size": 3200,
+      "escape_keywords": ["flat washer", "din 125"]
+    },
+    {
+      "category_id": "lock_washer",
+      "parent_id": null,
+      "catalog_size": 1800,
+      "escape_keywords": ["lock washer", "spring washer", "split lock", "din 127"]
+    },
+    {
+      "category_id": "fender_washer",
+      "parent_id": null,
+      "catalog_size": 600,
+      "escape_keywords": ["fender washer"]
     },
     {
       "category_id": "bearing",
@@ -50,7 +140,13 @@
       "category_id": "insert",
       "parent_id": null,
       "catalog_size": 900,
-      "escape_keywords": ["heat insert", "threaded insert"]
+      "escape_keywords": ["heat insert", "heat-set insert", "heat set insert"]
+    },
+    {
+      "category_id": "threaded_insert",
+      "parent_id": null,
+      "catalog_size": 3625,
+      "escape_keywords": ["threaded insert", "helicoil", "heli-coil", "wire insert"]
     },
     {
       "category_id": "standoff",
@@ -69,6 +165,48 @@
       "parent_id": null,
       "catalog_size": 800,
       "escape_keywords": ["magnet", "neodymium"]
+    },
+    {
+      "category_id": "retaining_ring",
+      "parent_id": null,
+      "catalog_size": 412,
+      "escape_keywords": ["retaining ring", "snap ring", "circlip"]
+    },
+    {
+      "category_id": "anchor",
+      "parent_id": null,
+      "catalog_size": 970,
+      "escape_keywords": ["anchor", "wedge anchor", "toggle bolt"]
+    },
+    {
+      "category_id": "shim",
+      "parent_id": null,
+      "catalog_size": 500,
+      "escape_keywords": ["shim", "shim stock"]
+    },
+    {
+      "category_id": "cable_tie",
+      "parent_id": null,
+      "catalog_size": 800,
+      "escape_keywords": ["cable tie", "zip tie"]
+    },
+    {
+      "category_id": "u_bolt",
+      "parent_id": null,
+      "catalog_size": 200,
+      "escape_keywords": ["u-bolt", "u bolt"]
+    },
+    {
+      "category_id": "eyebolt",
+      "parent_id": null,
+      "catalog_size": 987,
+      "escape_keywords": ["eyebolt", "eye bolt"]
+    },
+    {
+      "category_id": "binding_barrel",
+      "parent_id": null,
+      "catalog_size": 893,
+      "escape_keywords": ["binding barrel", "barrel nut", "chicago screw"]
     }
   ]
 }
