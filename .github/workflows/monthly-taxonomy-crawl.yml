@@ -1,0 +1,84 @@
+name: Monthly McMaster taxonomy crawl
+
+on:
+  schedule:
+    # 12:00 UTC on the 1st of each month — low-traffic window, ~monthly product refresh
+    - cron: "0 12 1 * *"
+  workflow_dispatch:
+    inputs:
+      sync_metacategories:
+        description: Update product_slugs in mcmaster_metacategories.json
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install -e ".[dev,playwright]"
+          playwright install chromium
+
+      - name: Run monthly taxonomy crawl
+        env:
+          MCMASTER_CRAWL_DELAY_SECONDS: "6"
+          MCMASTER_CRAWL_MAX_ERRORS: "3"
+        run: |
+          ARGS=(--batch)
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.sync_metacategories }}" == "true" ]]; then
+            ARGS+=(--sync-metacategories)
+          elif [[ "${{ github.event_name }}" == "schedule" ]]; then
+            ARGS+=(--sync-metacategories)
+          fi
+          python scripts/crawl_mcmaster_taxonomy.py "${ARGS[@]}"
+
+      - name: Validate taxonomy (offline)
+        run: pytest tests/test_category_coverage.py -m "not integration" -q
+
+      - name: Open PR when data changed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet -- data/; then
+            echo "No taxonomy changes — skipping PR."
+            exit 0
+          fi
+          BRANCH="chore/taxonomy-$(date -u +%Y-%m)"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add data/mcmaster_site_taxonomy.json data/mcmaster_metacategories.json
+          git commit -m "$(cat <<EOF
+chore(data): refresh McMaster taxonomy crawl ($(date -u +%Y-%m))
+
+Monthly ProdPageWebPart crawl of Fastening & Joining child browse pages.
+Updates site taxonomy fixture and fastening product_slugs mappings.
+EOF
+)"
+          git push -u origin "$BRANCH"
+          gh pr create \
+            --title "chore(data): McMaster taxonomy refresh $(date -u +%Y-%m)" \
+            --body "$(cat <<EOF
+## Summary
+- Refreshed \`data/mcmaster_site_taxonomy.json\` from the scheduled monthly crawl
+- Synced fastening product family slugs into \`mcmaster_metacategories.json\` when applicable
+
+## Test plan
+- [ ] Review crawl \`summary.errors\` in the taxonomy JSON (should be 0–3)
+- [ ] \`pytest tests/test_category_coverage.py -m 'not integration'\`
+- [ ] Spot-check new/changed product family slugs under Fastening & Joining
+
+Automated by [.github/workflows/monthly-taxonomy-crawl.yml](.github/workflows/monthly-taxonomy-crawl.yml).
+EOF
+)"
