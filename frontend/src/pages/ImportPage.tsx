@@ -15,6 +15,7 @@ import {
   ImportProgress,
   applyStageEvent,
   initialStageState,
+  DEFAULT_IMPORT_STAGES,
   type StageState,
 } from "@/components/ImportProgress";
 import { BomHistory } from "@/components/BomHistory";
@@ -90,10 +91,10 @@ export function ImportPage() {
   }
 
   function resetProgress() {
-    if (stages.length) {
-      setStageState(initialStageState(stages));
-    }
+    setStageState(initialStageState(stages));
   }
+
+  const progressStages = stages.length > 0 ? stages : DEFAULT_IMPORT_STAGES;
 
   function onStage(event: Parameters<typeof applyStageEvent>[1]) {
     setStageState((prev) => applyStageEvent(prev, event));
@@ -276,7 +277,7 @@ export function ImportPage() {
       )}
 
       <ImportProgress
-        stages={stages}
+        stages={progressStages}
         stageState={stageState}
         active={
           loading ||

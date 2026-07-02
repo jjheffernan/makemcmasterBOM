@@ -31,6 +31,67 @@ const STATUS_STYLE: Record<ImportStageStatus, string> = {
   skipped: "text-muted-foreground",
 };
 
+/** Fallback when /api/import/stages has not loaded yet. */
+export const DEFAULT_IMPORT_STAGES: ImportStageDefinition[] = [
+  {
+    id: "validate",
+    notebook: "01_scrape.ipynb",
+    label: "Validate URL",
+    description: "Confirm this is a MakerWorld project link",
+  },
+  {
+    id: "scrape",
+    notebook: "01_scrape.ipynb",
+    label: "Scrape project page",
+    description: "Download the project page and read title & description",
+  },
+  {
+    id: "extract_bom",
+    notebook: "02_extract_bom.ipynb",
+    label: "Extract BOM file",
+    description: "Locate and download the bill of materials attachment",
+  },
+  {
+    id: "parse_bom",
+    notebook: "03_parse_bom.ipynb",
+    label: "Parse BOM",
+    description: "Read spreadsheet rows into structured parts",
+  },
+  {
+    id: "match_mcmaster",
+    notebook: "04_match_mcmaster.ipynb",
+    label: "Match McMaster-Carr",
+    description: "Rank browse links and default part options",
+  },
+  {
+    id: "enrich_mcmaster",
+    notebook: "04_match_mcmaster.ipynb",
+    label: "Hydrate McMaster listings",
+    description: "Fetch live SKUs, finishes, and listing prices from McMaster-Carr",
+  },
+  {
+    id: "finalize",
+    notebook: "05_api_payload.ipynb",
+    label: "Prepare results",
+    description: "Assemble the editable BOM for the editor",
+  },
+];
+
+function activeStageId(
+  stages: ImportStageDefinition[],
+  stageState: Partial<Record<ImportStageId, StageState>>,
+): ImportStageId | null {
+  for (const stage of stages) {
+    const status = stageState[stage.id]?.status ?? "pending";
+    if (status === "running") return stage.id;
+  }
+  for (const stage of stages) {
+    const status = stageState[stage.id]?.status ?? "pending";
+    if (status === "pending") return stage.id;
+  }
+  return null;
+}
+
 interface ImportProgressProps {
   stages: ImportStageDefinition[];
   stageState: Partial<Record<ImportStageId, StageState>>;
@@ -48,8 +109,20 @@ export function ImportProgress({
 }: ImportProgressProps) {
   if (!active) return null;
 
+  const displayStages = stages.length > 0 ? stages : DEFAULT_IMPORT_STAGES;
   const scrapeThumb =
     previewThumbnail || stageState.scrape?.thumbnailUrl;
+  const currentId = activeStageId(displayStages, stageState);
+  const currentStage = currentId
+    ? displayStages.find((stage) => stage.id === currentId)
+    : null;
+  const currentState = currentId ? stageState[currentId] : null;
+  const completedCount = displayStages.filter(
+    (stage) => stageState[stage.id]?.status === "done",
+  ).length;
+  const isWorking = displayStages.some(
+    (stage) => stageState[stage.id]?.status === "running",
+  );
 
   return (
     <div
@@ -59,7 +132,16 @@ export function ImportProgress({
       aria-label="Import progress"
     >
       <div className="mb-4 flex items-start justify-between gap-4">
-        <p className="text-sm font-medium">Import pipeline</p>
+        <div className="min-w-0 space-y-1">
+          <p className="text-sm font-medium">Import pipeline</p>
+          {currentStage && (
+            <p className="text-xs text-muted-foreground">
+              Step {Math.min(completedCount + 1, displayStages.length)} of{" "}
+              {displayStages.length}
+              {isWorking ? " — in progress" : ""}
+            </p>
+          )}
+        </div>
         {scrapeThumb && (
           <ProjectThumbnail
             url={scrapeThumb}
@@ -68,8 +150,41 @@ export function ImportProgress({
           />
         )}
       </div>
+
+      {currentStage && currentState && (
+        <div
+          className={cn(
+            "mb-4 rounded-md border px-3 py-2",
+            currentState.status === "running"
+              ? "border-primary/40 bg-primary/5"
+              : currentState.status === "error"
+                ? "border-destructive/30 bg-danger-muted"
+                : "border-border bg-card/60",
+          )}
+        >
+          <div className="flex items-start gap-2">
+            {currentState.status === "running" && (
+              <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-primary" />
+            )}
+            <div className="min-w-0">
+              <p className="text-sm font-medium">{currentStage.label}</p>
+              <p
+                className={cn(
+                  "mt-0.5 text-sm",
+                  currentState.status === "error"
+                    ? "text-destructive"
+                    : "text-muted-foreground",
+                )}
+              >
+                {currentState.message}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <ol className="space-y-3">
-        {stages.map((stage, index) => {
+        {displayStages.map((stage, index) => {
           const state = stageState[stage.id] ?? {
             status: "pending" as const,
             message: stage.description,
@@ -98,7 +213,7 @@ export function ImportProgress({
                     )}
                   />
                 </div>
-                {index < stages.length - 1 && (
+                {index < displayStages.length - 1 && (
                   <div
                     className={cn(
                       "mt-1 w-px flex-1 min-h-4",
@@ -163,7 +278,8 @@ export function applyStageEvent(
 export function initialStageState(
   stages: ImportStageDefinition[],
 ): Partial<Record<ImportStageId, StageState>> {
+  const source = stages.length > 0 ? stages : DEFAULT_IMPORT_STAGES;
   return Object.fromEntries(
-    stages.map((s) => [s.id, { status: "pending", message: s.description }]),
+    source.map((s) => [s.id, { status: "pending", message: s.description }]),
   ) as Partial<Record<ImportStageId, StageState>>;
 }
