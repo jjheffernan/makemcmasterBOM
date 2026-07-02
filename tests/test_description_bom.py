@@ -7,9 +7,12 @@ import pytest
 from backend.services.description_bom import (
     find_bom_section_lines,
     html_to_text,
+    merge_description_with_embedded,
+    parse_description_bom,
     parts_from_description,
     parse_bom_line,
 )
+from backend.models.part import Part
 from backend.services.matcher import match_parts
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -119,3 +122,68 @@ def test_section_starters(line):
     parts = parts_from_description(text)
     assert len(parts) == 1
     assert "screw" in parts[0].original_name.lower()
+
+
+def test_parse_description_bom_explicit_flag():
+    explicit = parse_description_bom("Bill of Materials\n4x M3x8 socket head cap screw")
+    assert explicit.from_explicit_section
+    assert len(explicit.parts) == 1
+
+    fallback = parse_description_bom("This design uses M3x8 socket head cap screws throughout.")
+    assert not fallback.from_explicit_section
+
+
+def test_inline_bill_of_materials_header():
+    text = "Build notes. Bill of Materials: 4x M3x8 socket head cap screw"
+    parts = parts_from_description(text)
+    assert len(parts) == 1
+    assert "screw" in parts[0].original_name.lower()
+
+
+def test_explicit_description_wins_merge_over_embedded():
+    description = [
+        Part(
+            original_name="M3x8 socket head cap screw, black oxide",
+            quantity=12,
+            notes="MakerWorld BOM (description)",
+        ),
+    ]
+    embedded = [
+        Part(
+            original_name="M3x8 socket head cap screw",
+            quantity=12,
+            notes="MakerWorld BOM (embedded)",
+        ),
+        Part(original_name="PLA filament", quantity=1, notes="MakerWorld BOM (filament)"),
+    ]
+    merged = merge_description_with_embedded(
+        embedded,
+        description,
+        description_explicit=True,
+    )
+    assert merged[0].original_name == description[0].original_name
+    assert merged[0].notes == "MakerWorld BOM (description)"
+    assert any(p.original_name == "PLA filament" for p in merged)
+
+
+def test_inferred_description_loses_merge_to_embedded():
+    description = [
+        Part(
+            original_name="M3x8 socket head cap screw",
+            quantity=4,
+            notes="MakerWorld BOM (description)",
+        ),
+    ]
+    embedded = [
+        Part(
+            original_name="M3x8 socket head cap screw",
+            quantity=4,
+            notes="MakerWorld BOM (embedded)",
+        ),
+    ]
+    merged = merge_description_with_embedded(
+        embedded,
+        description,
+        description_explicit=False,
+    )
+    assert merged[0].notes == "MakerWorld BOM (embedded)"

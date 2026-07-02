@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 
 from backend.models.part import Part
 from backend.services.parsers.helpers.bom_line import parse_hardware_line
@@ -94,6 +95,7 @@ def normalize_prose(text: str) -> str:
     text = re.sub(r"dimensionYou\b", "dimension You", text, flags=re.I)
     text = re.sub(r"PersonalizationThis\b", "Personalization This", text, flags=re.I)
     text = re.sub(r"joint\.Parts:", "joint.\nParts:", text, flags=re.I)
+    text = _split_inline_bom_headers(text)
 
     for label in (
         "Parts",
@@ -108,6 +110,30 @@ def normalize_prose(text: str) -> str:
 
     text = collapse_inline_whitespace(text)
     return collapse_blank_lines(text)
+
+
+def _split_inline_bom_headers(text: str) -> str:
+    """Break inline 'Bill of Materials:' / 'BOM:' headers onto their own lines."""
+    text = re.sub(
+        r"(?<=\S)\s+(?=(?:bill\s+of\s+materials|bom)\s*:)",
+        "\n",
+        text,
+        flags=re.I,
+    )
+    out: list[str] = []
+    header_with_items = re.compile(
+        r"^(?P<header>(?:bill\s+of\s+materials|bom))\s*:\s*(?P<items>.+)$",
+        re.I,
+    )
+    for line in text.splitlines():
+        stripped = line.strip()
+        match = header_with_items.match(stripped)
+        if match:
+            out.append(match.group("header"))
+            out.append(match.group("items").strip())
+        else:
+            out.append(line)
+    return "\n".join(out)
 
 
 def resolve_description_text(soup_description: str, design: dict | None) -> str:
@@ -270,7 +296,14 @@ def extract_candidate_lines(description: str) -> tuple[list[str], bool]:
     return _fallback_hardware_lines(text), False
 
 
-def parts_from_description(description: str) -> list[Part]:
+@dataclass(frozen=True)
+class DescriptionBomParse:
+    parts: list[Part]
+    from_explicit_section: bool
+
+
+def parse_description_bom(description: str) -> DescriptionBomParse:
+    """Parse description BOM lines and whether they came from a labeled section."""
     lines, from_section = extract_candidate_lines(description)
     require_keyword = not from_section
 
@@ -291,7 +324,11 @@ def parts_from_description(description: str) -> list[Part]:
         seen.add(key)
         parts.append(part)
 
-    return parts
+    return DescriptionBomParse(parts=parts, from_explicit_section=from_section)
+
+
+def parts_from_description(description: str) -> list[Part]:
+    return parse_description_bom(description).parts
 
 
 __all__ = [
@@ -301,8 +338,10 @@ __all__ = [
     "find_bom_section_lines",
     "html_to_text",
     "merge_parts",
+    "DescriptionBomParse",
     "normalize_prose",
     "parse_bom_line",
+    "parse_description_bom",
     "parts_from_description",
     "resolve_description_text",
 ]

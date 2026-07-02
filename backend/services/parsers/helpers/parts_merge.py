@@ -17,3 +17,19 @@ def merge_parts(*lists: list[Part]) -> list[Part]:
             seen.add(key)
             merged.append(part)
     return merged
+
+
+def merge_description_with_embedded(
+    embedded: list[Part],
+    description: list[Part],
+    *,
+    description_explicit: bool,
+) -> list[Part]:
+    """Prefer description BOM lines when the author labeled a BOM section."""
+    if not description:
+        return embedded
+    if not embedded:
+        return description
+    if description_explicit:
+        return merge_parts(description, embedded)
+    return merge_parts(embedded, description)

@@ -17,8 +17,8 @@ from backend.models.part import Part
 from backend.models.progress import ProgressCallback, StageEvent
 from backend.services.http_client import format_fetch_error, outbound_client, unwrap_exception
 from backend.services.description_bom import (
-    merge_parts,
-    parts_from_description,
+    merge_description_with_embedded,
+    parse_description_bom,
     resolve_description_text,
 )
 from backend.rate_limit import outbound_request
@@ -209,7 +209,9 @@ async def scrape_project(
             raw_description_html = design_summary
 
     description = resolve_description_text(og_description, design)
-    description_parts = parts_from_description(raw_description_html)
+    description_bom = parse_description_bom(description or raw_description_html)
+    description_parts = description_bom.parts
+    description_bom_explicit = description_bom.from_explicit_section
 
     scrape_debug = (
         {
@@ -318,6 +320,35 @@ async def scrape_project(
                         debug=bom_debug,
                     )
                 )
+    elif description_parts and description_bom_explicit:
+        bom_source = "description"
+        record(
+            "extract_bom",
+            "Description BOM parsed",
+            data={
+                "description_parts": len(description_parts),
+                "embedded_parts": len(embedded_parts),
+                "prioritized_over_embedded": bool(embedded_parts),
+            },
+        )
+        if on_progress:
+            msg = f"Found {len(description_parts)} parts in project description (BOM section)"
+            if embedded_parts:
+                msg += f" — prioritized over {len(embedded_parts)} embedded parts"
+            on_progress(
+                StageEvent(
+                    stage="extract_bom",
+                    status="done",
+                    message=msg,
+                    debug={
+                        "description_parts": len(description_parts),
+                        "embedded_parts": len(embedded_parts),
+                        "description_bom_explicit": True,
+                    }
+                    if config.DEBUG
+                    else None,
+                )
+            )
     elif embedded_parts:
         bom_source = "embedded"
         if on_progress:
@@ -363,8 +394,12 @@ async def scrape_project(
                 )
             )
 
-    if description_parts:
-        embedded_parts = merge_parts(embedded_parts, description_parts)
+    if description_parts or embedded_parts:
+        embedded_parts = merge_description_with_embedded(
+            embedded_parts,
+            description_parts,
+            description_explicit=description_bom_explicit,
+        )
 
     return ScrapeResult(
         title=title,
