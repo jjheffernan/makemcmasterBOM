@@ -131,3 +131,15 @@ def test_crawled_fastening_families_map_to_fastening_department():
                 if metacategory_for_slug(base) != "fastening_and_joining":
                     unmapped.append(base)
     assert not unmapped, f"Unmapped fastening families: {sorted(set(unmapped))[:20]}"
+
+
+def test_taxonomy_fixture_has_batch_metadata():
+    if not TAXONOMY_PATH.is_file():
+        pytest.skip("Run scripts/crawl_mcmaster_taxonomy.py to generate taxonomy fixture")
+
+    taxonomy = json.loads(TAXONOMY_PATH.read_text(encoding="utf-8"))
+    assert taxonomy.get("summary")
+    assert taxonomy["summary"]["fastening_child_pages"] >= 1
+    # crawled_at added by batch crawl; optional for older fixtures
+    if "crawled_at" in taxonomy:
+        assert "T" in taxonomy["crawled_at"]
