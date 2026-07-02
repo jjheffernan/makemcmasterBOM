@@ -29,6 +29,8 @@ def leak_bait_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(config, "MCMASTER_API_USERNAME", LEAK_BAIT["username"])
     monkeypatch.setattr(config, "MCMASTER_API_PASSWORD", LEAK_BAIT["password"])
     monkeypatch.setattr(config, "MCMASTER_API_CERT_PATH", LEAK_BAIT["cert_path"])
+    monkeypatch.setattr(config, "FEEDBACK_GITHUB_TOKEN", LEAK_BAIT["github_token"])
+    monkeypatch.setattr(config, "FEEDBACK_SMTP_PASSWORD", LEAK_BAIT["smtp_password"])
     monkeypatch.setattr(config, "DEBUG", True)
 
 
@@ -76,6 +78,31 @@ async def test_bom_get_response_does_not_leak_credentials(
 ) -> None:
     project_id = store.save(Project(title="Guardrail", parts=[]))
     response = await api_client.get(f"/api/bom/{project_id}")
+    assert response.status_code == 200
+    assert_no_leak_bait(response.text)
+
+
+@pytest.mark.asyncio
+async def test_feedback_response_does_not_leak_credentials(
+    api_client: AsyncClient,
+    leak_bait_env: None,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+) -> None:
+    monkeypatch.setenv("MATCH_REPORTS_PATH", str(tmp_path / "reports.jsonl"))
+    monkeypatch.setattr(config, "FEEDBACK_DISPATCH_ENABLED", True)
+    monkeypatch.setattr(config, "FEEDBACK_GITHUB_ENABLED", True)
+    monkeypatch.setattr(config, "FEEDBACK_GITHUB_REPO", "owner/repo")
+    monkeypatch.setattr(config, "FEEDBACK_EMAIL_ENABLED", False)
+    monkeypatch.setattr(config, "FEEDBACK_WEBHOOK_ENABLED", False)
+
+    response = await api_client.post(
+        "/api/feedback/match-error",
+        json={
+            "issue_type": "other",
+            "message": "Guardrail feedback leak test",
+        },
+    )
     assert response.status_code == 200
     assert_no_leak_bait(response.text)
 

@@ -52,6 +52,7 @@ Security and hygiene checks that **fail the build** when violated:
 | `test_import_file_response_*` / `test_bom_get_*` | Same leak-bait scan on import and BOM endpoints |
 | `test_health_never_exposes_credential_config` | Health payload must not mention McMaster credentials |
 | `test_global_exception_handler_hides_traceback_when_debug_off` | 500 responses omit traceback when `DEBUG=0` |
+| `test_feedback_response_does_not_leak_credentials` | Feedback dispatch config (GitHub token, SMTP password) not in JSON |
 | `test_debug_proxy_env_redacts_credentials` | `/api/debug` redacts `user:pass@` in proxy URLs |
 | `test_tracked_files_do_not_include_env` | `.env` / `.env.*` must not be git-tracked |
 | `test_tracked_source_has_no_obvious_secrets` | Private keys, cloud tokens, hardcoded credentials in committed files |
@@ -77,16 +78,23 @@ Run everything offline:
 ./scripts/run_checks.sh
 ```
 
-These assert **exit code 0** on `tests/fixtures/description_mega_python.txt` (quantity/hardware) and `data/sample_bom.csv` (specifications). Also runs `scripts/mcmaster_cross_test.py` (offline McMaster matcher ↔ pipeline ↔ parser parity).
+These assert **exit code 0** on `tests/fixtures/description_mega_python.txt` (quantity/hardware) and `data/sample_bom.csv` (specifications). Also runs:
+
+- `scripts/mcmaster_cross_test.py` — offline McMaster matcher ↔ pipeline parity
+- `tests/test_query_accuracy.py` — dummy BOM listing query-accuracy fixture
+- `tests/test_notebook_pipeline_parity.py` — notebook ↔ website pipeline drift checks
+- `tests/test_feedback.py` + `tests/test_feedback_dispatch.py` — report form + outbound channels (mocked HTTP)
 
 ## McMaster cross-test
 
-Curated cases: `data/mcmaster_regression_urls.json`
+Curated cases: `data/mcmaster_regression_urls.json`  
+Query-accuracy cases: `tests/fixtures/bom_listing_query_cases.json`
 
 | Command | Network | What it compares |
 |---------|---------|------------------|
-| `python scripts/mcmaster_cross_test.py` | No | `match_part` vs `match_parts_only` vs expectations; inhouse vs vendored JSON parser |
-| `python scripts/mcmaster_cross_test.py --live` | Yes | Above + live browse fetch via `browse_fetch` and vendored `sync_api` |
+| `python scripts/mcmaster_cross_test.py` | No | `match_part` vs `match_parts_only` vs expectations |
+| `pytest tests/test_query_accuracy.py` | No | Per-line URL/finish expectations from dummy BOM listing |
+| `python scripts/mcmaster_cross_test.py --live` | Yes | Above + live browse fetch |
 
 Tests: `tests/test_mcmaster_cross_test.py` (offline always; one `@integration` live case).
 
@@ -117,7 +125,60 @@ FastAPI route tests using `httpx.AsyncClient` + `ASGITransport` (no live server)
 | Test | What it verifies |
 |------|------------------|
 | `test_health` | `GET /api/health` returns `status: ok` |
+| `test_list_import_stages` | Seven stages; `enrich_mcmaster` maps to `05_api_payload.ipynb` |
+| `test_import_bom_file` | File upload import returns project + parts |
 | `test_list_notebooks` | `GET /api/notebooks` returns notebooks array |
+| `test_import_sources` | MakerWorld examples and upload format metadata |
+
+---
+
+### `tests/test_feedback.py` / `tests/test_feedback_dispatch.py`
+
+Match-error report form (`POST /api/feedback/match-error`).
+
+| Area | Tests |
+|------|-------|
+| Persistence | JSONL append, project enrichment, MakerWorld vs McMaster sides |
+| Dispatch | Email/GitHub/webhook formatters; `pytest-httpx` mocks for outbound HTTP |
+| Guardrails | Feedback credentials never appear in API JSON (`test_guardrails.py`) |
+
+See [Feedback dispatch](backend/feedback-dispatch.md).
+
+---
+
+### `tests/test_query_accuracy.py`
+
+Offline McMaster query accuracy from `tests/fixtures/bom_listing_query_cases.json` — URL fragments, finish counts, `selected_finish_id` per hardware line (no app or network).
+
+---
+
+### `tests/test_notebook_pipeline_parity.py`
+
+Ensures numbered notebooks (`01`–`05`) call `backend.services.pipeline`, avoid bypass patterns (`parse_bom_bytes`, direct `matcher.match_parts`), and match `import_from_file` / `parts_from_scrape_result` branching.
+
+---
+
+### `tests/test_searchability.py`
+
+Non-searchable BOM lines (instructions, markup, placeholders) → `not_applicable`; no Standard Components fallback URLs.
+
+---
+
+### `tests/test_nut_washer_matching.py` / `tests/test_head_type_matching.py` / `tests/test_finish_browse.py`
+
+Metric nut/washer browse roots, screw head-type routing, single-default finish browse tables.
+
+---
+
+### `tests/test_browse_finish_hydrate.py` / `tests/test_hydration_dedup.py` / `tests/test_browse_web_first.py`
+
+Live browse hydration policies (`lowest_price`, finish selection), session dedupe, web-first ranking.
+
+---
+
+### `tests/test_pricing.py` / `tests/test_pricing_listing.py`
+
+McMaster listing price sync and BOM pricing API.
 
 ---
 
@@ -209,7 +270,13 @@ HTTP client helpers: browser headers, proxy error unwrapping, error formatting.
 
 ### `tests/test_notebook_utils.py`
 
-Jupyter helpers: `prepare_crawl_env`, offline fallbacks, regression URL picker.
+Jupyter helpers: `prepare_crawl_env`, offline fallbacks, regression URL picker, `parse_bom_only` + `match_parts_only` parity with API stages.
+
+---
+
+### `tests/test_notebook_frames.py`
+
+Structured DataFrame helpers for notebook display (`parts_to_dataframe`, browse rows).
 
 ---
 
@@ -270,8 +337,9 @@ pytest tests/test_guardrails.py tests/test_regression_checks.py
 
 ## What is not tested yet
 
-- Frontend component tests
-- End-to-end browser import with real URLs (use notebooks + `@integration` test)
-- Captured CSV/XLSX export regression fixtures (Phase 3)
+- Frontend component tests (Vitest/RTL)
+- End-to-end browser import with real URLs (use notebooks + `@integration` tests)
+- Live SMTP email send (dispatch email channel is config-gated; not exercised in CI)
+- Live GitHub issue creation (mocked via `pytest-httpx` in CI)
 
 See [PLAN.md](../PLAN.md) Phase 6 for iteration backlog.

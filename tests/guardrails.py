@@ -11,6 +11,8 @@ LEAK_BAIT = {
     "username": "leak-bait-mcmaster-user-xyzzy",
     "password": "leak-bait-mcmaster-pass-plugh",
     "cert_path": "/home/leak/bait-cert-plugh.pfx",
+    "github_token": "ghp_leakbaitfeedbacktokenxyzzy1234567890",
+    "smtp_password": "leak-bait-smtp-pass-plugh",
 }
 
 # Patterns that must not appear in committed source (excluding this module's bait strings).

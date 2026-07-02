@@ -70,7 +70,8 @@
         "quantity": 4
       },
       "expect": {
-        "match_tier": "catalog",
+        "match_tier": "filtered_browse",
+        "url_contains": ["stainless", "thread-size~m3"],
         "catalog_part_number": "91828A113"
       }
     },
@@ -83,7 +84,7 @@
       },
       "expect": {
         "match_tier": "filtered_browse",
-        "url_contains": ["metric-flat-washers", "thread-size~m4"],
+        "url_contains": ["metric-flat-washers", "screw-size~m4"],
         "url_must_not_contain": ["zinc-plated-steel-flat-washers"],
         "finish_options_count": 1,
         "selected_finish_id": "metric"
@@ -132,16 +133,16 @@
       }
     },
     {
-      "label": "Listing — M6x20 hex bolt socket default",
+      "label": "Listing — M6x20 hex bolt category search",
       "part": {
         "original_name": "M6x20 hex bolt",
         "specification": "",
         "quantity": 4
       },
       "expect": {
-        "match_tier": "filtered_browse",
-        "url_contains": ["thread-size~m6", "length~20-mm"],
-        "finish_options_count": 1
+        "match_tier": "category_search",
+        "url_contains": ["hex-bolts", "searchQuery="],
+        "finish_options_count": 0
       }
     },
     {

@@ -20,8 +20,8 @@ from backend.services.mcmaster_handler import (
     [
         ("M3x8 socket head cap screw", "socket_head_screw"),
         ("608-ZZ bearing", "bearing"),
-        ("M3 hex nut", "nut"),
-        ("M3 flat washer", "washer"),
+        ("M3 hex nut", "hex_nut"),
+        ("M3 flat washer", "flat_washer"),
         ("PTFE tubing 2.5mm", "tubing"),
         ("neodymium magnet 10x3", "magnet"),
     ],
@@ -81,7 +81,8 @@ def test_match_part_search_uses_category_route():
     matched = match_part(Part(original_name="M5x12 hex bolt", specification=""))
     assert "searchQuery=" in matched.mcmaster_url
     assert matched.match_tier in {"filtered_browse", "category_search"}
-    assert matched.mcmaster_category == "screw"
+    assert matched.mcmaster_category == "hex_bolt"
+    assert "/products/hex-bolts/" in matched.mcmaster_url
 
 
 def test_list_categories_not_empty():

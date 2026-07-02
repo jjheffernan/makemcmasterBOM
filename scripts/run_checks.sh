@@ -38,4 +38,13 @@ echo "== check_catalog_integrity =="
 echo "== mcmaster cross-test (offline) =="
 "$PY" scripts/mcmaster_cross_test.py
 
+echo "== query accuracy fixture =="
+"$PY" -m pytest tests/test_query_accuracy.py -q
+
+echo "== notebook ↔ pipeline parity =="
+"$PY" -m pytest tests/test_notebook_pipeline_parity.py -q
+
+echo "== feedback API + dispatch =="
+"$PY" -m pytest tests/test_feedback.py tests/test_feedback_dispatch.py -q
+
 echo "All checks passed."
