@@ -15,6 +15,7 @@ router = APIRouter(prefix="/bom", tags=["bom"])
 
 class UpdateBomRequest(BaseModel):
     parts: list[Part]
+    bom_headings: dict[str, str] | None = None
 
 
 class ValidateSpecificationsRequest(BaseModel):
@@ -125,7 +126,10 @@ async def update_bom(project_id: str, body: UpdateBomRequest) -> Project:
         raise HTTPException(status_code=404, detail="Project not found")
 
     normalized_parts = [normalize_part_specification(p) for p in body.parts]
-    updated = project.model_copy(update={"parts": normalized_parts})
+    updates: dict[str, object] = {"parts": normalized_parts}
+    if body.bom_headings is not None:
+        updates["bom_headings"] = body.bom_headings
+    updated = project.model_copy(update=updates)
     update(project_id, updated)
     return updated
 

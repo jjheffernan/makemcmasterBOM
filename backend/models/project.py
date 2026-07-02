@@ -15,6 +15,7 @@ class Project(BaseModel):
     parts: list[Part] = []
     bom_status: BomStatus = "none"
     warnings: list[str] = []
+    bom_headings: dict[str, str] = {}
 
 
 class ProjectHistoryItem(BaseModel):
