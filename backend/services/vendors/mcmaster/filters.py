@@ -79,15 +79,22 @@ def infer_finish_from_bom(query: str, specification: str = "") -> str | None:
     return None
 
 
-def infer_material_variant_id(query: str, specification: str = "") -> str:
+def infer_material_variant_id(
+    query: str,
+    specification: str = "",
+    *,
+    category_id: str = "",
+) -> str:
     """
-    Pick the default browse-root finish for socket-head screws.
+    Pick the default browse-root finish for metric fasteners.
 
     Returns one of: black_oxide | zinc_plated | stainless
     """
     finish = infer_finish_from_bom(query, specification)
     if finish:
         return finish
+    if category_id in {"nut", "washer"}:
+        return "metric"
     return "black_oxide"
 
 

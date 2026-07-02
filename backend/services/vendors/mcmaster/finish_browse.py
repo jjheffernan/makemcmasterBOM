@@ -38,10 +38,13 @@ def default_finish_id(
     bom_finish = infer_finish_from_bom(query, specification)
     if bom_finish:
         return bom_finish
-    roots = list_finish_roots(category_id)
-    if roots:
-        return roots[0].finish_id
-    return default_material_for_category(category_id)
+    from backend.services.vendors.mcmaster.filters import infer_material_variant_id
+
+    return infer_material_variant_id(
+        query,
+        specification,
+        category_id=category_id,
+    )
 
 
 def build_browse_finish_options(

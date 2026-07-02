@@ -12,6 +12,11 @@ BROWSE_ROOTS_PATH = REPO_ROOT / "data" / "mcmaster_browse_roots.json"
 
 DEFAULT_FINISH_ORDER = ("black_oxide", "zinc_plated", "stainless")
 
+CATEGORY_FINISH_ORDER: dict[str, tuple[str, ...]] = {
+    "nut": ("zinc_plated", "black_oxide", "stainless"),
+    "washer": ("zinc_plated", "black_oxide", "stainless"),
+}
+
 
 @dataclass(frozen=True)
 class BrowseRoot:
@@ -48,8 +53,13 @@ def _load_roots() -> tuple[BrowseRoot, ...]:
 
 def list_finish_roots(category_id: str) -> list[BrowseRoot]:
     """All finish browse roots for a fastener category, in default display order."""
-    roots = [root for root in _load_roots() if root.category_id == category_id]
-    order = {finish_id: index for index, finish_id in enumerate(DEFAULT_FINISH_ORDER)}
+    roots = [
+        root
+        for root in _load_roots()
+        if root.category_id == category_id and root.finish_id != "metric"
+    ]
+    order_list = CATEGORY_FINISH_ORDER.get(category_id, DEFAULT_FINISH_ORDER)
+    order = {finish_id: index for index, finish_id in enumerate(order_list)}
     return sorted(roots, key=lambda root: order.get(root.finish_id, 99))
 
 

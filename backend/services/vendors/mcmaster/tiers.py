@@ -10,7 +10,6 @@ from backend.services.mcmaster_handler import (
     CategoryMatch,
     McMasterLink,
     classify_category,
-    site_search_url,
 )
 from backend.services.vendors.mcmaster.urls import (
     category_search_url,
@@ -26,6 +25,10 @@ from backend.services.vendors.mcmaster.filters import (
 from backend.services.vendors.mcmaster.part_numbers import (
     extract_part_number_from_text,
     is_valid_part_number,
+)
+
+_FILTERED_BROWSE_CATEGORIES = frozenset(
+    {"socket_head_screw", "flat_head_screw", "screw", "nut", "washer"},
 )
 
 
@@ -51,28 +54,20 @@ def _vendor_link_from_catalog(
     )
 
 
-def _try_filtered_browse(
+def _build_filtered_browse_link(
     query: str,
     part: Part,
     category_match: CategoryMatch,
+    spec: MetricFastenerSpec,
+    *,
+    finish_id: str,
+    method: str = "filtered_browse",
 ) -> VendorLink | None:
-    if not config.MCMASTER_FILTERED_BROWSE_ENABLED:
-        return None
-    if category_match.category.id not in {"socket_head_screw", "screw"}:
-        return None
-
-    spec: MetricFastenerSpec | None = primary_fastener_spec(part)
-    if not spec or spec.diameter_mm is None:
-        return None
-
     filters = build_fastener_filters(spec)
-    if filters.is_empty:
+    if filters.is_empty or spec.diameter_mm is None:
         return None
 
-    finish_id = infer_material_variant_id(query, part.specification)
     browse_root = get_browse_root(category_match.category.id, finish_id)
-    if not browse_root:
-        browse_root = get_browse_root(category_match.category.id, "black_oxide")
     if not browse_root:
         return None
 
@@ -88,9 +83,91 @@ def _try_filtered_browse(
         category_id=category_match.category.id,
         category_label=category_match.category.label,
         filter_path=filters.as_path(),
-        method="filtered_browse",
+        method=method,
         confidence_hint=0.75,
         extras={"browse_finish": finish_id},
+    )
+
+
+def _try_filtered_browse(
+    query: str,
+    part: Part,
+    category_match: CategoryMatch,
+) -> VendorLink | None:
+    if not config.MCMASTER_FILTERED_BROWSE_ENABLED:
+        return None
+    if category_match.category.id not in _FILTERED_BROWSE_CATEGORIES:
+        return None
+
+    spec: MetricFastenerSpec | None = primary_fastener_spec(part)
+    if not spec or spec.diameter_mm is None:
+        return None
+
+    finish_id = infer_material_variant_id(
+        query,
+        part.specification,
+        category_id=category_match.category.id,
+    )
+    link = _build_filtered_browse_link(
+        query,
+        part,
+        category_match,
+        spec,
+        finish_id=finish_id,
+    )
+    if link:
+        return link
+
+    for fallback in ("black_oxide", "zinc_plated", "stainless"):
+        if fallback == finish_id:
+            continue
+        link = _build_filtered_browse_link(
+            query,
+            part,
+            category_match,
+            spec,
+            finish_id=fallback,
+        )
+        if link:
+            return link
+    return None
+
+
+def _try_metric_category_browse(
+    query: str,
+    part: Part,
+    category_match: CategoryMatch,
+) -> VendorLink | None:
+    """Thread-filtered category table — closer to products than ?searchQuery= on category."""
+    if not config.MCMASTER_FILTERED_BROWSE_ENABLED:
+        return None
+    if category_match.category.id not in _FILTERED_BROWSE_CATEGORIES:
+        return None
+
+    spec = primary_fastener_spec(part)
+    if not spec or spec.diameter_mm is None:
+        return None
+
+    link = _build_filtered_browse_link(
+        query,
+        part,
+        category_match,
+        spec,
+        finish_id="metric",
+        method="metric_category_browse",
+    )
+    if not link:
+        return None
+    return VendorLink(
+        url=link.url,
+        link_kind="filtered_browse",
+        tier="category_search",
+        category_id=link.category_id,
+        category_label=link.category_label,
+        filter_path=link.filter_path,
+        method="metric_category_browse",
+        confidence_hint=0.62,
+        extras=link.extras,
     )
 
 
@@ -146,15 +223,19 @@ def resolve_mcmaster_link(
     if filtered:
         return filtered
 
-    if category_match.method == "default":
+    metric_category = _try_metric_category_browse(query, part, category_match)
+    if metric_category:
+        return metric_category
+
+    if category_match.method in {"default", "unclassified"}:
         return VendorLink(
-            url=site_search_url(query),
+            url="",
             link_kind="site_search",
-            tier="site_search",
-            category_id=category_match.category.id,
-            category_label=category_match.category.label,
-            method="default",
-            confidence_hint=0.35,
+            tier="not_applicable",
+            category_id="",
+            category_label="",
+            method="unclassified",
+            confidence_hint=0.0,
         )
 
     return VendorLink(

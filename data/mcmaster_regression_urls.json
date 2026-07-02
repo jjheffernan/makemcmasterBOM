@@ -67,7 +67,7 @@
       }
     },
     {
-      "label": "M3 hex nut — catalog primary",
+      "label": "M3 hex nut — catalog when stainless specified",
       "part": {
         "original_name": "M3 Hex Nut",
         "specification": "18-8 stainless",
@@ -76,6 +76,21 @@
       "expect": {
         "match_tier": "catalog",
         "catalog_part_number": "91828A113"
+      },
+      "live": {
+        "skip_browse_fetch": true
+      }
+    },
+    {
+      "label": "M3 Nut — filtered browse primary",
+      "part": {
+        "original_name": "M3 Nut",
+        "specification": "",
+        "quantity": 4
+      },
+      "expect": {
+        "match_tier": "filtered_browse",
+        "url_contains": ["hex-nuts", "thread-size~m3", "system-of-measurement~metric"]
       },
       "live": {
         "skip_browse_fetch": true

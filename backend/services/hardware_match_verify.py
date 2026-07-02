@@ -73,6 +73,8 @@ def check_length(part: Part, matched: MetricFastenerSpec | None) -> HardwareMatc
     if not expected or not matched:
         return None
     if expected.length_mm is None:
+        if expected.kind in {"nut", "washer"}:
+            return None
         return HardwareMatchCheck(
             status="length_unknown",
             message="Length not found in BOM — verify McMaster part length manually",

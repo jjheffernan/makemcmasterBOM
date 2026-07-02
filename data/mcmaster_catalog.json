@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "description": "Curated BOM phrase → McMaster part number mappings. Verify part numbers against live McMaster before trusting lengths. Keys normalized by backend/services/mcmaster_catalog.py.",
+  "description": "Fallback phrase → SKU hints when live McMaster browse resolve is unavailable. Prefer live product tables (MCMASTER_BROWSE_RESOLVE_ENABLED=1) over these entries. Keys normalized by backend/services/mcmaster_catalog.py.",
   "entries": [
     {
       "part_number": "91290A109",
@@ -54,13 +54,13 @@
       "part_number": "91828A113",
       "title": "M3 Hex Nut, 18-8 Stainless Steel",
       "category": "nut",
-      "keys": ["m3 hex nut", "m3 nut"]
+      "keys": ["m3 hex nut stainless", "m3 nut stainless", "m3 hex nut 18-8"]
     },
     {
       "part_number": "98689A113",
       "title": "M3 Washer, 18-8 Stainless Steel",
       "category": "washer",
-      "keys": ["m3 washer", "m3 flat washer"]
+      "keys": ["m3 washer stainless", "m3 flat washer stainless", "m3 washer 18-8"]
     },
     {
       "part_number": "5972K113",

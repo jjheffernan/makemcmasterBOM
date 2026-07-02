@@ -132,6 +132,12 @@ def _lookup_rules(query: str) -> CatalogHit | None:
             and "bearing" not in lower
             and "insert" not in lower
         )
+        from backend.services.mcmaster_handler import infer_screw_head_type
+
+        if infer_screw_head_type(lower) == "flat_head":
+            is_plain_metric_screw = False
+            is_socket_head = False
+            is_cap_screw = False
         if diameter == 3 and (
             is_socket_head or is_cap_screw or is_plain_metric_screw
         ):
@@ -144,21 +150,23 @@ def _lookup_rules(query: str) -> CatalogHit | None:
                     source="rule",
                 )
 
-    if re.search(r"\bm3\b", lower) and re.search(r"\bhex\s+nut\b", lower):
-        return CatalogHit(
-            part_number="91828A113",
-            title="M3 Hex Nut, 18-8 Stainless Steel",
-            category="nut",
-            source="rule",
-        )
+    if re.search(r"\bm3\b", lower) and re.search(r"\bnut\b", lower):
+        if re.search(r"\b(18-8|316|stainless|a2|a4)\b", lower):
+            return CatalogHit(
+                part_number="91828A113",
+                title="M3 Hex Nut, 18-8 Stainless Steel",
+                category="nut",
+                source="rule",
+            )
 
     if re.search(r"\bm3\b", lower) and re.search(r"\bwasher\b", lower):
-        return CatalogHit(
-            part_number="98689A113",
-            title="M3 Washer, 18-8 Stainless Steel",
-            category="washer",
-            source="rule",
-        )
+        if re.search(r"\b(18-8|316|stainless|a2|a4)\b", lower):
+            return CatalogHit(
+                part_number="98689A113",
+                title="M3 Washer, 18-8 Stainless Steel",
+                category="washer",
+                source="rule",
+            )
 
     return None
 

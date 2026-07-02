@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+from backend import config
 from backend.models.part import MatchAlternative, Part
 from backend.services.hardware_match_verify import (
     HardwareMatchCheck,
@@ -12,12 +13,13 @@ from backend.services.hardware_match_verify import (
 )
 from backend.services.hardware_spec import MetricFastenerSpec, primary_fastener_spec
 from backend.services.mcmaster_catalog import CatalogHit, catalog_lookup
-from backend.services.mcmaster_handler import classify_category, site_search_url
+from backend.services.mcmaster_handler import classify_category
 from backend.services.vendors.base import MatchTier, VendorLink
 from backend.services.vendors.mcmaster.filters import infer_material_variant_id
 from backend.services.vendors.mcmaster.tiers import (
     _try_explicit_part_number,
     _try_filtered_browse,
+    _try_metric_category_browse,
     _vendor_link_from_catalog,
 )
 from backend.services.vendors.mcmaster.urls import category_search_url
@@ -66,7 +68,11 @@ def bom_material_matches_catalog(
     specification: str,
 ) -> bool | None:
     """True/False when BOM material conflicts with catalog title; None if unknown."""
-    bom_material = infer_material_variant_id(query, specification)
+    bom_material = infer_material_variant_id(
+        query,
+        specification,
+        category_id=hit.category,
+    )
     title = hit.title.lower()
 
     catalog_stainless = bool(_CATALOG_STAINLESS.search(title))
@@ -111,6 +117,13 @@ def _score_filtered_browse(
             f"Best guess — McMaster filtered table for {spec.label()}{finish_note}",
         )
     if spec and spec.diameter_mm:
+        if spec.kind in {"nut", "washer"}:
+            return (
+                0.82,
+                0.78,
+                0.86,
+                f"Best guess — McMaster filtered table for {spec.label()}{finish_note}",
+            )
         return (
             0.78,
             0.72,
@@ -192,11 +205,31 @@ def _score_part_number(link: VendorLink) -> tuple[float, float, float, str]:
 
 
 def _score_category_search(link: VendorLink) -> tuple[float, float, float, str]:
+    if link.method == "metric_category_browse" and link.filter_path:
+        return (
+            0.62,
+            0.56,
+            0.68,
+            f"McMaster {link.category_label} — metric thread table (pre-filtered)",
+        )
     return 0.52, 0.45, 0.58, f"McMaster {link.category_label} category search"
 
 
 def _score_site_search() -> tuple[float, float, float, str]:
     return 0.32, 0.25, 0.40, "McMaster site-wide search"
+
+
+def _catalog_hit_for_part(query: str, part: Part) -> CatalogHit | None:
+    spec_text = part.specification.strip()
+    candidates = [query]
+    if spec_text:
+        candidates.insert(0, f"{query} {spec_text}".strip())
+        candidates.append(f"{part.original_name} {spec_text}".strip())
+    for candidate in candidates:
+        hit = catalog_lookup(candidate)
+        if hit:
+            return hit
+    return None
 
 
 def _collect_vendor_links(
@@ -217,41 +250,61 @@ def _collect_vendor_links(
         seen_urls.add(link.url)
         collected.append((link, hit))
 
-    if catalog_hit:
-        add(_vendor_link_from_catalog(query, catalog_hit, category_match), catalog_hit)
+    filtered = _try_filtered_browse(query, part, category_match)
+    if filtered:
+        add(filtered)
 
     explicit = _try_explicit_part_number(query, part)
     if explicit:
         add(explicit)
 
-    filtered = _try_filtered_browse(query, part, category_match)
-    if filtered:
-        add(filtered)
+    use_live_table = config.MCMASTER_BROWSE_RESOLVE_ENABLED and filtered is not None
+    if catalog_hit:
+        catalog_link = _vendor_link_from_catalog(query, catalog_hit, category_match)
+        if use_live_table:
+            catalog_link = VendorLink(
+                url=catalog_link.url,
+                link_kind=catalog_link.link_kind,
+                tier=catalog_link.tier,
+                part_number=catalog_link.part_number,
+                category_id=catalog_link.category_id,
+                category_label=catalog_link.category_label,
+                filter_path=catalog_link.filter_path,
+                method="catalog_cache",
+                confidence_hint=0.65,
+                extras=catalog_link.extras,
+            )
+        add(catalog_link, catalog_hit)
 
-    if category_match.method == "default":
-        add(
-            VendorLink(
-                url=site_search_url(query),
-                link_kind="site_search",
-                tier="site_search",
-                category_id=category_match.category.id,
-                category_label=category_match.category.label,
-                method="default",
-                confidence_hint=0.35,
-            )
-        )
+    if category_match.method in {"default", "unclassified"}:
+        pass
     else:
-        add(
-            VendorLink(
-                url=category_search_url(category_match.category.route, query),
-                link_kind="category_search",
-                tier="category_search",
-                category_id=category_match.category.id,
-                category_label=category_match.category.label,
-                method=category_match.method,
-                confidence_hint=0.55,
+        metric_category = _try_metric_category_browse(query, part, category_match)
+        if metric_category:
+            add(
+                VendorLink(
+                    url=metric_category.url,
+                    link_kind="filtered_browse",
+                    tier="category_search",
+                    category_id=metric_category.category_id,
+                    category_label=metric_category.category_label,
+                    filter_path=metric_category.filter_path,
+                    method="metric_category_browse",
+                    confidence_hint=0.62,
+                )
             )
-        )
+        else:
+            add(
+                VendorLink(
+                    url=category_search_url(category_match.category.route, query),
+                    link_kind="category_search",
+                    tier="category_search",
+                    category_id=category_match.category.id,
+                    category_label=category_match.category.label,
+                    method=category_match.method,
+                    confidence_hint=0.55,
+                )
+            )
 
     return collected
 
@@ -267,6 +320,11 @@ def _score_link(
     if link.tier in {"catalog", "rule"} and hit:
         check = verify_hardware_match(part, hit=hit)
         conf, low, high, reason = _score_catalog(hit, link, part, query, check)
+        if link.method == "catalog_cache":
+            conf = min(conf, 0.72)
+            low = min(low, 0.66)
+            high = min(high, 0.78)
+            reason = f"Cached catalog fallback — {reason}"
         return ScoredCandidate(
             link=link,
             catalog_hit=hit,
@@ -311,8 +369,13 @@ def collect_scored_candidates(
     part: Part,
 ) -> list[ScoredCandidate]:
     """Generate and rank all offline McMaster link candidates for a BOM line."""
-    catalog_hit = catalog_lookup(query)
+    catalog_hit = _catalog_hit_for_part(query, part)
     links = _collect_vendor_links(query, part, catalog_hit)
+    links = [
+        (link, hit)
+        for link, hit in links
+        if link.tier not in {"site_search", "not_applicable"} and link.url.strip()
+    ]
     scored = [_score_link(link, hit, part, query) for link, hit in links]
     return _sort_candidates(scored)
 
