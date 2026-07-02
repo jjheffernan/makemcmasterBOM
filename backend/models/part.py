@@ -34,6 +34,12 @@ class BrowseFinishOption(BaseModel):
     finish_id: str
     label: str
     mcmaster_url: str
+    mcmaster_part_number: str = ""
+    product_url: str = ""
+    unit_cost: float | None = None
+    price_min_qty: float = Field(default=1.0, ge=1.0)
+    price_batch_cost: float | None = Field(default=None, ge=0.0)
+    price_listing_note: str = ""
 
 
 class Part(BaseModel):
@@ -59,3 +65,31 @@ class Part(BaseModel):
     hardware_diameter_mm: float | None = None
     hardware_length_mm: float | None = None
     hardware_match_status: HardwareMatchStatus = "unchecked"
+    price_min_qty: float = Field(default=1.0, ge=1.0, description="Minimum purchase qty / pack size")
+    price_batch_cost: float | None = Field(
+        default=None,
+        ge=0.0,
+        description="Total price for price_min_qty units (pack price)",
+    )
+    unit_cost: float | None = Field(
+        default=None,
+        ge=0.0,
+        description="Optional per-unit override; otherwise batch_cost / price_min_qty",
+    )
+    price_source: str = Field(
+        default="",
+        description="listing, api, or manual — where price fields came from",
+    )
+    price_listing_note: str = Field(
+        default="",
+        description="Human-readable note from McMaster listing or API tier",
+    )
+    match_selection_policy: str = Field(
+        default="lowest_price",
+        description="How multi-option rows are picked: lowest_price or finish",
+    )
+    match_option_count: int = Field(
+        default=0,
+        ge=0,
+        description="Total McMaster match paths (primary + finishes + alternatives)",
+    )
