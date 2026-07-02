@@ -1,0 +1,162 @@
+{
+  "version": 1,
+  "description": "Dummy MakerWorld enclosure BOM listing for offline McMaster query-accuracy tests. Each case mirrors a hardware line from the listing below.",
+  "listing_description": "Enclosure hardware kit (metric fasteners):\n• M3x8 socket head cap screw — black oxide alloy steel (qty 12)\n• M3x16 socket head cap screw (qty 6)\n• M3 Nut (qty 12)\n• M3 Hex Nut, 18-8 stainless (qty 4)\n• M4 flat washer (qty 12)\n• M5x12 socket head cap screw, zinc plated (qty 4)\n• M4x30 flat head screw, countersunk (qty 2)\n• M2.5x6 socket head cap screw (qty 8)\n• M6x20 hex bolt (qty 4)\n• M3x10 socket head cap screw, stainless (qty 6)",
+  "cases": [
+    {
+      "label": "Listing — M3x8 SHCS black oxide default",
+      "part": {
+        "original_name": "M3x8 socket head cap screw",
+        "specification": "black oxide alloy steel",
+        "quantity": 12
+      },
+      "expect": {
+        "match_tier": "filtered_browse",
+        "url_contains": ["black-oxide", "thread-size~m3", "length~8-mm"],
+        "finish_options_count": 1,
+        "selected_finish_id": "black_oxide"
+      }
+    },
+    {
+      "label": "Listing — M3x8 SHCS ambiguous (no finish named)",
+      "part": {
+        "original_name": "M3x8 socket head cap screw",
+        "specification": "",
+        "quantity": 12
+      },
+      "expect": {
+        "match_tier": "filtered_browse",
+        "url_contains": ["black-oxide-alloy-steel", "thread-size~m3", "length~8-mm"],
+        "url_must_not_contain": ["18-8-stainless-steel", "zinc-plated-socket-head"],
+        "finish_options_count": 1,
+        "selected_finish_id": "black_oxide"
+      }
+    },
+    {
+      "label": "Listing — M3x16 SHCS ambiguous",
+      "part": {
+        "original_name": "M3x16 socket head cap screw",
+        "specification": "",
+        "quantity": 6
+      },
+      "expect": {
+        "match_tier": "filtered_browse",
+        "url_contains": ["thread-size~m3", "length~16-mm", "black-oxide"],
+        "finish_options_count": 1,
+        "selected_finish_id": "black_oxide",
+        "catalog_sku_in_alternatives": "91290A120"
+      }
+    },
+    {
+      "label": "Listing — M3 Nut ambiguous metric table",
+      "part": {
+        "original_name": "M3 Nut",
+        "specification": "",
+        "quantity": 12
+      },
+      "expect": {
+        "match_tier": "filtered_browse",
+        "url_contains": ["metric-hex-nuts", "thread-size~m3", "system-of-measurement~metric"],
+        "url_must_not_contain": ["zinc-plated-steel-hex-nuts", "black-oxide-steel-hex-nuts"],
+        "finish_options_count": 1,
+        "selected_finish_id": "metric"
+      }
+    },
+    {
+      "label": "Listing — M3 Hex Nut stainless catalog",
+      "part": {
+        "original_name": "M3 Hex Nut",
+        "specification": "18-8 stainless",
+        "quantity": 4
+      },
+      "expect": {
+        "match_tier": "catalog",
+        "catalog_part_number": "91828A113"
+      }
+    },
+    {
+      "label": "Listing — M4 flat washer ambiguous metric",
+      "part": {
+        "original_name": "M4 flat washer",
+        "specification": "",
+        "quantity": 12
+      },
+      "expect": {
+        "match_tier": "filtered_browse",
+        "url_contains": ["metric-flat-washers", "thread-size~m4"],
+        "url_must_not_contain": ["zinc-plated-steel-flat-washers"],
+        "finish_options_count": 1,
+        "selected_finish_id": "metric"
+      }
+    },
+    {
+      "label": "Listing — M5x12 SHCS zinc plated",
+      "part": {
+        "original_name": "M5x12 socket head cap screw",
+        "specification": "zinc plated",
+        "quantity": 4
+      },
+      "expect": {
+        "match_tier": "filtered_browse",
+        "url_contains": ["zinc-plated", "thread-size~m5", "length~12-mm"],
+        "finish_options_count": 1,
+        "selected_finish_id": "zinc_plated"
+      }
+    },
+    {
+      "label": "Listing — M4x30 flat head countersunk",
+      "part": {
+        "original_name": "M4x30 flat head screw",
+        "specification": "countersunk",
+        "quantity": 2
+      },
+      "expect": {
+        "match_tier": "filtered_browse",
+        "url_contains": ["thread-size~m4", "length~30-mm"],
+        "finish_options_count": 1,
+        "selected_finish_id": "black_oxide"
+      }
+    },
+    {
+      "label": "Listing — M2.5x6 SHCS fine thread slug",
+      "part": {
+        "original_name": "M2.5x6 socket head cap screw",
+        "specification": "",
+        "quantity": 8
+      },
+      "expect": {
+        "match_tier": "filtered_browse",
+        "url_contains": ["thread-size~m2-5", "length~6-mm"],
+        "finish_options_count": 1,
+        "selected_finish_id": "black_oxide"
+      }
+    },
+    {
+      "label": "Listing — M6x20 hex bolt socket default",
+      "part": {
+        "original_name": "M6x20 hex bolt",
+        "specification": "",
+        "quantity": 4
+      },
+      "expect": {
+        "match_tier": "filtered_browse",
+        "url_contains": ["thread-size~m6", "length~20-mm"],
+        "finish_options_count": 1
+      }
+    },
+    {
+      "label": "Listing — M3x10 SHCS stainless single finish",
+      "part": {
+        "original_name": "M3x10 socket head cap screw",
+        "specification": "stainless",
+        "quantity": 6
+      },
+      "expect": {
+        "match_tier": "filtered_browse",
+        "url_contains": ["18-8-stainless", "thread-size~m3", "length~10-mm"],
+        "finish_options_count": 1,
+        "selected_finish_id": "stainless"
+      }
+    }
+  ]
+}

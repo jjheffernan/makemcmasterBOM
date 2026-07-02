@@ -23,6 +23,10 @@ def test_m3_nut_prefers_filtered_browse_over_stainless_catalog():
     assert "hex-nuts" in matched.mcmaster_url
     assert "metric-hex-nuts" in matched.mcmaster_url
     assert matched.mcmaster_part_number == ""
+    assert len(matched.browse_finish_options) == 1
+    assert matched.browse_finish_options[0].finish_id == "metric"
+    assert matched.selected_finish_id == "metric"
+    assert matched.browse_finish_options[0].mcmaster_url == matched.mcmaster_url
 
     tiers = {candidate.link.tier for candidate in collect_scored_candidates("M3 nut", part)}
     assert "filtered_browse" in tiers

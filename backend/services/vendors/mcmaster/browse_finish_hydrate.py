@@ -237,11 +237,24 @@ async def hydrate_part_from_browse(
         ]
         results = await asyncio.gather(*tasks)
         variants = [result for result in results if result]
-    elif part.mcmaster_url and part.match_tier in {"filtered_browse", "category_search"}:
+
+    if not variants and part.mcmaster_url and part.match_tier in {
+        "filtered_browse",
+        "category_search",
+    }:
+        fallback_finish = part.selected_finish_id or "default"
+        fallback_label = next(
+            (
+                option.label
+                for option in finish_options
+                if option.finish_id == fallback_finish
+            ),
+            "Listing",
+        )
         hydrated = await _hydrate_single_url(
             part,
-            finish_id="default",
-            label="Listing",
+            finish_id=fallback_finish,
+            label=fallback_label,
             browse_url=part.mcmaster_url,
             session=session,
         )

@@ -17,10 +17,17 @@ def test_infer_finish_from_bom_detects_named_finishes():
     assert infer_finish_from_bom("M3x8 socket head cap screw", "") is None
 
 
-def test_applicable_finish_roots_ambiguous_offers_all_finishes():
+def test_applicable_finish_roots_ambiguous_screw_defaults_black_oxide():
     roots = applicable_finish_roots("socket_head_screw", "M3x16 socket head cap screw", "")
-    finish_ids = {root.finish_id for root in roots}
-    assert finish_ids == {"black_oxide", "zinc_plated", "stainless"}
+    assert len(roots) == 1
+    assert roots[0].finish_id == "black_oxide"
+
+
+def test_applicable_finish_roots_ambiguous_nut_uses_metric_table():
+    roots = applicable_finish_roots("nut", "M3 nut", "")
+    assert len(roots) == 1
+    assert roots[0].finish_id == "metric"
+    assert "metric-hex-nuts" in roots[0].route
 
 
 def test_applicable_finish_roots_stainless_only():
@@ -41,18 +48,16 @@ def test_build_browse_finish_options_share_thread_length_filters():
         category_id="socket_head_screw",
         filter_path="system-of-measurement~metric/thread-size~m3/length~16-mm/",
     )
-    assert len(options) == 3
-    labels = {option.label for option in options}
-    assert labels == {"Black oxide", "Zinc plated", "18-8 stainless"}
-    for option in options:
-        assert "thread-size~m3" in option.mcmaster_url
-        assert "length~16-mm" in option.mcmaster_url
+    assert len(options) == 1
+    assert options[0].finish_id == "black_oxide"
+    assert "thread-size~m3" in options[0].mcmaster_url
+    assert "length~16-mm" in options[0].mcmaster_url
 
 
-def test_match_part_ambiguous_screw_includes_finish_dropdown_options():
+def test_match_part_ambiguous_screw_single_default_finish():
     matched = match_part(Part(original_name="M3x16 socket head cap screw"))
     assert matched.match_tier == "filtered_browse"
-    assert len(matched.browse_finish_options) == 3
+    assert len(matched.browse_finish_options) == 1
     assert matched.selected_finish_id == "black_oxide"
     assert "black-oxide-alloy-steel" in matched.mcmaster_url
 

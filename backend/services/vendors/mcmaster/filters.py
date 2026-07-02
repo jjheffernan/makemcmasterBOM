@@ -63,9 +63,9 @@ def build_fastener_filters(spec: MetricFastenerSpec) -> BrowseFilterSet:
 
 def infer_finish_from_bom(query: str, specification: str = "") -> str | None:
     """
-    Return a single finish_id when the BOM names a finish.
+    Return a finish_id when the BOM names a material finish.
 
-    Returns None when multiple finishes should be offered (dropdown).
+    Returns None when ambiguous — callers pick a single default browse table.
     """
     combined = f"{query} {specification}".lower()
     if _MATERIAL_STAINLESS.search(combined):

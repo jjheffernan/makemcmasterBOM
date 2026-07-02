@@ -81,6 +81,34 @@ def _check_expectations(matched: Part, expect: dict[str, Any]) -> list[str]:
         if fragment not in matched.mcmaster_url:
             errors.append(f"URL missing fragment {fragment!r}")
 
+    for fragment in expect.get("url_must_not_contain", []):
+        if fragment in matched.mcmaster_url:
+            errors.append(f"URL must not contain {fragment!r}")
+
+    if finish_id := expect.get("selected_finish_id"):
+        if matched.selected_finish_id != finish_id:
+            errors.append(
+                f"selected_finish_id: expected {finish_id!r}, "
+                f"got {matched.selected_finish_id!r}"
+            )
+
+    finish_count = len(matched.browse_finish_options)
+    if exact_finishes := expect.get("finish_options_count"):
+        if finish_count != exact_finishes:
+            errors.append(
+                f"finish_options: expected exactly {exact_finishes}, got {finish_count}"
+            )
+    if min_finishes := expect.get("finish_options_min"):
+        if finish_count < min_finishes:
+            errors.append(
+                f"finish_options: expected >={min_finishes}, got {finish_count}"
+            )
+    if max_finishes := expect.get("finish_options_max"):
+        if finish_count > max_finishes:
+            errors.append(
+                f"finish_options: expected <={max_finishes}, got {finish_count}"
+            )
+
     if sku := expect.get("catalog_part_number"):
         if matched.mcmaster_part_number != sku:
             alt_pns = {a.mcmaster_part_number for a in matched.match_alternatives}
@@ -96,18 +124,6 @@ def _check_expectations(matched: Part, expect: dict[str, Any]) -> list[str]:
         }
         if sku not in all_pns:
             errors.append(f"expected SKU {sku!r} in primary or alternatives")
-
-    finish_count = len(matched.browse_finish_options)
-    if min_finishes := expect.get("finish_options_min"):
-        if finish_count < min_finishes:
-            errors.append(
-                f"finish_options: expected >={min_finishes}, got {finish_count}"
-            )
-    if max_finishes := expect.get("finish_options_max"):
-        if finish_count > max_finishes:
-            errors.append(
-                f"finish_options: expected <={max_finishes}, got {finish_count}"
-            )
 
     return errors
 
@@ -163,6 +179,20 @@ def run_offline_case(case: CrossTestCase) -> CrossTestCaseResult:
 
 def run_offline_cross_test(path: Path | None = None) -> list[CrossTestCaseResult]:
     return [run_offline_case(case) for case in load_cross_test_cases(path)]
+
+
+QUERY_ACCURACY_FIXTURE = (
+    REPO_ROOT / "tests" / "fixtures" / "bom_listing_query_cases.json"
+)
+
+
+def load_query_accuracy_cases(path: Path | None = None) -> list[CrossTestCase]:
+    """Load offline query-accuracy cases from the dummy BOM listing fixture."""
+    return load_cross_test_cases(path or QUERY_ACCURACY_FIXTURE)
+
+
+def run_query_accuracy_test(path: Path | None = None) -> list[CrossTestCaseResult]:
+    return [run_offline_case(case) for case in load_query_accuracy_cases(path)]
 
 
 async def run_live_case(

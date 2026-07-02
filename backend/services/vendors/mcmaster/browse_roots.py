@@ -52,7 +52,7 @@ def _load_roots() -> tuple[BrowseRoot, ...]:
 
 
 def list_finish_roots(category_id: str) -> list[BrowseRoot]:
-    """All finish browse roots for a fastener category, in default display order."""
+    """Material finish browse roots (excludes metric-only tables)."""
     roots = [
         root
         for root in _load_roots()
@@ -61,6 +61,14 @@ def list_finish_roots(category_id: str) -> list[BrowseRoot]:
     order_list = CATEGORY_FINISH_ORDER.get(category_id, DEFAULT_FINISH_ORDER)
     order = {finish_id: index for index, finish_id in enumerate(order_list)}
     return sorted(roots, key=lambda root: order.get(root.finish_id, 99))
+
+
+def get_metric_finish_root(category_id: str) -> BrowseRoot | None:
+    """Metric fastener table — required for ambiguous M-series nuts and washers."""
+    for root in _load_roots():
+        if root.category_id == category_id and root.finish_id == "metric":
+            return root
+    return None
 
 
 def get_browse_root(category_id: str, material_id: str) -> BrowseRoot | None:

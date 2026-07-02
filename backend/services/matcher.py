@@ -35,7 +35,6 @@ from backend.services.vendors.mcmaster.finish_browse import (
 )
 from backend.services.vendors.mcmaster.tiers import vendor_link_to_handler_link
 
-MCMASTER_SEARCH_BASE = "https://www.mcmaster.com/products/standard-components/"
 MAKERWORLD_CATEGORY_SPECS = frozenset({
     "maker's supply",
     "makers supply",
@@ -569,9 +568,13 @@ def match_part(part: Part) -> Part:
             part.specification,
         )
         selected = finish_option_for_id(finish_options, default_finish)
+        effective_finish = default_finish
+        if selected is None and finish_options:
+            effective_finish = finish_options[0].finish_id
+            selected = finish_options[0]
         browse_updates: dict[str, object] = {
             "browse_finish_options": finish_options,
-            "selected_finish_id": default_finish,
+            "selected_finish_id": effective_finish,
         }
         if selected:
             browse_updates["mcmaster_url"] = selected.mcmaster_url

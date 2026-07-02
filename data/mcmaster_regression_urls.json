@@ -12,7 +12,8 @@
       "expect": {
         "match_tier": "filtered_browse",
         "url_contains": ["thread-size~m3", "length~16-mm", "system-of-measurement~metric"],
-        "finish_options_min": 3,
+        "finish_options_count": 1,
+        "selected_finish_id": "black_oxide",
         "catalog_sku_in_alternatives": "91290A120"
       },
       "live": {
@@ -90,7 +91,9 @@
       },
       "expect": {
         "match_tier": "filtered_browse",
-        "url_contains": ["hex-nuts", "thread-size~m3", "system-of-measurement~metric"]
+        "url_contains": ["hex-nuts", "metric-hex-nuts", "thread-size~m3", "system-of-measurement~metric"],
+        "finish_options_count": 1,
+        "selected_finish_id": "metric"
       },
       "live": {
         "skip_browse_fetch": true

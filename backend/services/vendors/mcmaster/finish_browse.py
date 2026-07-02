@@ -5,10 +5,14 @@ from __future__ import annotations
 from backend.models.part import BrowseFinishOption, Part
 from backend.services.vendors.mcmaster.browse_roots import (
     BrowseRoot,
-    default_material_for_category,
+    get_browse_root,
+    get_metric_finish_root,
     list_finish_roots,
 )
-from backend.services.vendors.mcmaster.filters import infer_finish_from_bom
+from backend.services.vendors.mcmaster.filters import (
+    infer_finish_from_bom,
+    infer_material_variant_id,
+)
 from backend.services.vendors.mcmaster.urls import filtered_browse_url
 
 
@@ -17,17 +21,32 @@ def applicable_finish_roots(
     query: str,
     specification: str,
 ) -> list[BrowseRoot]:
-    """Finish roots to offer — one when BOM names a finish, all when ambiguous."""
-    roots = list_finish_roots(category_id)
-    if not roots:
-        return []
+    """
+    Finish roots to hydrate — one precise table per BOM line.
 
+    Ambiguous metric nuts/washers use the metric catalog (not imperial material
+  roots with metric thread filters). Ambiguous screws default to black oxide
+  only; name a finish in the BOM to target zinc or stainless.
+    """
     bom_finish = infer_finish_from_bom(query, specification)
     if bom_finish:
-        matched = [root for root in roots if root.finish_id == bom_finish]
-        return matched or roots[:1]
+        root = get_browse_root(category_id, bom_finish)
+        return [root] if root else []
 
-    return roots
+    if category_id in {"nut", "washer"}:
+        metric = get_metric_finish_root(category_id)
+        return [metric] if metric else []
+
+    default_id = infer_material_variant_id(
+        query,
+        specification,
+        category_id=category_id,
+    )
+    root = get_browse_root(category_id, default_id)
+    if root:
+        return [root]
+    material_roots = list_finish_roots(category_id)
+    return material_roots[:1]
 
 
 def default_finish_id(
