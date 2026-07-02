@@ -8,7 +8,9 @@ import type {
   ReportSide,
 } from "@/lib/api";
 import { formatConfidence, matchTierLabel } from "@/lib/mcmaster";
+import { needsMcMasterVerification } from "@/lib/mcmaster";
 import {
+  defaultIssueForSide,
   MAKERWORLD_ISSUE_OPTIONS,
   MCMASTER_ISSUE_OPTIONS,
   type IssueOption,
@@ -37,10 +39,14 @@ interface ReportErrorFormFieldsProps {
   onChange: (patch: Partial<ReportFormState>) => void;
 }
 
-function partSummary(part: Part): string {
+export function partLineSummary(part: Part): string {
   const bits = [part.original_name];
   if (part.specification) bits.push(part.specification);
   return bits.join(" · ");
+}
+
+function partSummary(part: Part): string {
+  return partLineSummary(part);
 }
 
 function matchSummary(part: Part): string {
@@ -551,13 +557,100 @@ export function ReportErrorFormFields(props: ReportErrorFormFieldsProps) {
   return <McMasterFields {...props} />;
 }
 
+function defaultIssueTypeForPart(
+  part: Part,
+  reportSide: ReportSide,
+): MatchIssueType | MakerWorldIssueType {
+  if (reportSide === "makerworld") {
+    return "makerworld_wrong_line";
+  }
+
+  if (part.mcmaster_status === "not_applicable") {
+    return "should_be_not_applicable";
+  }
+  if (!part.mcmaster_url.trim()) {
+    return "missed_hardware";
+  }
+  if (
+    (part.browse_finish_options?.length ?? 0) > 1 &&
+    (part.hardware_match_status === "spec_conflict" ||
+      Boolean(part.selected_finish_id))
+  ) {
+    return "wrong_finish_or_material";
+  }
+  const tier = part.match_tier;
+  if (
+    tier === "category_search" ||
+    tier === "site_search" ||
+    (tier === "filtered_browse" && needsMcMasterVerification(part))
+  ) {
+    return "wrong_category_or_search";
+  }
+  if (needsMcMasterVerification(part)) {
+    return "wrong_category_or_search";
+  }
+  if (part.mcmaster_part_number) {
+    return "wrong_part_number";
+  }
+  return defaultIssueForSide("mcmaster");
+}
+
+function buildLineContextMessage(part: Part): string {
+  const lines: string[] = [
+    `BOM line: ${partLineSummary(part)} (qty ${part.quantity})`,
+  ];
+
+  if (part.mcmaster_status === "not_applicable") {
+    lines.push(
+      `Marked not applicable${part.mcmaster_reason ? `: ${part.mcmaster_reason}` : ""}`,
+    );
+  } else {
+    lines.push(`Imported match: ${matchSummary(part)}`);
+    if (part.mcmaster_url.trim()) {
+      lines.push(`McMaster link: ${part.mcmaster_url.trim()}`);
+    }
+    if (part.mcmaster_reason.trim()) {
+      lines.push(`Match note: ${part.mcmaster_reason.trim()}`);
+    }
+  }
+
+  if (part.notes.trim()) {
+    lines.push(`Editor notes: ${part.notes.trim()}`);
+  }
+
+  lines.push("", "What went wrong:");
+  return lines.join("\n");
+}
+
+export function reportFormFromPart(
+  part: Part,
+  partIndex: string,
+  reportSide: ReportSide,
+  projectMakerworldUrl = "",
+): ReportFormState {
+  const issueType = defaultIssueTypeForPart(part, reportSide);
+  const form: ReportFormState = {
+    ...emptyReportForm(partIndex, reportSide),
+    issueType,
+    message: buildLineContextMessage(part),
+    makerworldLineText: partLineSummary(part),
+    makerworldUrl: projectMakerworldUrl.trim(),
+  };
+
+  if (issueType === "should_be_not_applicable") {
+    form.expectedLineText = partLineSummary(part);
+  }
+
+  return form;
+}
+
 export function emptyReportForm(
   partIndex: string,
   reportSide: ReportSide,
 ): ReportFormState {
   return {
     partIndex,
-    issueType: reportSide === "mcmaster" ? "wrong_part_number" : "makerworld_wrong_line",
+    issueType: defaultIssueForSide(reportSide),
     message: "",
     expectedPartNumber: "",
     expectedUrl: "",

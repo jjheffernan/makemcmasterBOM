@@ -14,6 +14,7 @@ import { REPORT_SIDES } from "@/components/reportError/config";
 import {
   emptyReportForm,
   ReportErrorFormFields,
+  reportFormFromPart,
   type ReportFormState,
 } from "@/components/reportError/ReportErrorFormFields";
 
@@ -77,9 +78,29 @@ export function ReportMatchErrorDialog({
   const initialPart =
     initialPartIndex != null ? String(initialPartIndex) : "";
 
+  const buildForm = useCallback(
+    (side: ReportSide, partIndexValue: string) => {
+      const index =
+        partIndexValue !== "" && !Number.isNaN(Number(partIndexValue))
+          ? Number(partIndexValue)
+          : null;
+      const part = index != null ? parts[index] : undefined;
+      if (part) {
+        return reportFormFromPart(
+          part,
+          partIndexValue,
+          side,
+          project.makerworld_url,
+        );
+      }
+      return emptyReportForm(partIndexValue, side);
+    },
+    [parts, project.makerworld_url],
+  );
+
   const [reportSide, setReportSide] = useState<ReportSide>("mcmaster");
   const [form, setForm] = useState<ReportFormState>(() =>
-    emptyReportForm(initialPart, "mcmaster"),
+    buildForm("mcmaster", initialPart),
   );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -88,12 +109,12 @@ export function ReportMatchErrorDialog({
   const pageUrl = `${window.location.origin}${location.pathname}${location.search}${location.hash}`;
 
   const resetForm = useCallback(
-    (side: ReportSide, partIndex = initialPart) => {
-      setForm(emptyReportForm(partIndex, side));
+    (side: ReportSide, partIndexValue = initialPart) => {
+      setForm(buildForm(side, partIndexValue));
       setError(null);
       setSuccess(false);
     },
-    [initialPart],
+    [buildForm, initialPart],
   );
 
   useEffect(() => {
