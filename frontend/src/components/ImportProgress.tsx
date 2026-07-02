@@ -13,6 +13,9 @@ export type StageState = {
   status: ImportStageStatus;
   message: string;
   thumbnailUrl?: string;
+  /** Hydration step: parts completed before the current line (0-based). */
+  progressCurrent?: number;
+  progressTotal?: number;
 };
 
 const STATUS_ICON: Record<ImportStageStatus, ComponentType<{ className?: string }>> = {
@@ -65,7 +68,7 @@ export const DEFAULT_IMPORT_STAGES: ImportStageDefinition[] = [
   },
   {
     id: "enrich_mcmaster",
-    notebook: "04_match_mcmaster.ipynb",
+    notebook: "05_api_payload.ipynb",
     label: "Hydrate McMaster listings",
     description: "Fetch live SKUs, finishes, and listing prices from McMaster-Carr",
   },
@@ -76,6 +79,68 @@ export const DEFAULT_IMPORT_STAGES: ImportStageDefinition[] = [
     description: "Assemble the editable BOM for the editor",
   },
 ];
+
+function parseHydrationProgress(debug?: Record<string, unknown> | null): {
+  progressCurrent?: number;
+  progressTotal?: number;
+} {
+  if (!debug) return {};
+  const total =
+    typeof debug.part_total === "number" && debug.part_total > 0
+      ? debug.part_total
+      : undefined;
+  if (total === undefined) return {};
+  const rawIndex =
+    typeof debug.part_index === "number" ? debug.part_index : undefined;
+  if (rawIndex === undefined || rawIndex < 0) {
+    return { progressTotal: total };
+  }
+  return { progressCurrent: rawIndex, progressTotal: total };
+}
+
+function HydrationProgressBar({
+  current,
+  total,
+  indeterminate,
+}: {
+  current: number;
+  total: number;
+  indeterminate?: boolean;
+}) {
+  const percent =
+    !indeterminate && total > 0
+      ? Math.min(100, Math.round(((current + 1) / total) * 100))
+      : undefined;
+
+  return (
+    <div className="mt-3 space-y-1">
+      <div
+        className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={percent ?? undefined}
+        aria-label="McMaster listing hydration progress"
+      >
+        {percent !== undefined ? (
+          <div
+            className="h-full rounded-full bg-primary transition-[width] duration-300 ease-out"
+            style={{ width: `${Math.max(percent, 4)}%` }}
+          />
+        ) : (
+          <div className="h-full w-2/5 animate-pulse rounded-full bg-primary" />
+        )}
+      </div>
+      {total > 0 && (
+        <p className="text-xs text-muted-foreground tabular-nums">
+          {indeterminate
+            ? `Preparing ${total} hardware line${total === 1 ? "" : "s"}…`
+            : `Part ${current + 1} of ${total}`}
+        </p>
+      )}
+    </div>
+  );
+}
 
 function activeStageId(
   stages: ImportStageDefinition[],
@@ -248,6 +313,15 @@ export function ImportProgress({
                 >
                   {state.message}
                 </p>
+                {stage.id === "enrich_mcmaster" &&
+                  isRunning &&
+                  (state.progressTotal ?? 0) > 0 && (
+                    <HydrationProgressBar
+                      current={state.progressCurrent ?? 0}
+                      total={state.progressTotal ?? 0}
+                      indeterminate={state.progressCurrent === undefined}
+                    />
+                  )}
               </div>
             </li>
           );
@@ -261,16 +335,44 @@ export function applyStageEvent(
   prev: Partial<Record<ImportStageId, StageState>>,
   event: ImportStageEvent,
 ): Partial<Record<ImportStageId, StageState>> {
+  const prior = prev[event.stage];
+  const thumbnail = event.thumbnail_url
+    ? { thumbnailUrl: event.thumbnail_url }
+    : prior?.thumbnailUrl
+      ? { thumbnailUrl: prior.thumbnailUrl }
+      : {};
+
+  let progress: Pick<StageState, "progressCurrent" | "progressTotal"> = {};
+  if (event.stage === "enrich_mcmaster") {
+    if (event.status === "running") {
+      const hydration = parseHydrationProgress(event.debug);
+      progress = {
+        ...(hydration.progressCurrent !== undefined
+          ? { progressCurrent: hydration.progressCurrent }
+          : prior?.progressCurrent !== undefined
+            ? { progressCurrent: prior.progressCurrent }
+            : {}),
+        ...(hydration.progressTotal !== undefined
+          ? { progressTotal: hydration.progressTotal }
+          : prior?.progressTotal !== undefined
+            ? { progressTotal: prior.progressTotal }
+            : {}),
+      };
+    } else if (event.status === "done" && prior?.progressTotal) {
+      progress = {
+        progressCurrent: prior.progressTotal,
+        progressTotal: prior.progressTotal,
+      };
+    }
+  }
+
   return {
     ...prev,
     [event.stage]: {
       status: event.status,
       message: event.message,
-      ...(event.thumbnail_url
-        ? { thumbnailUrl: event.thumbnail_url }
-        : prev[event.stage]?.thumbnailUrl
-          ? { thumbnailUrl: prev[event.stage]?.thumbnailUrl }
-          : {}),
+      ...thumbnail,
+      ...progress,
     },
   };
 }

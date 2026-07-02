@@ -128,6 +128,7 @@ async def enrich_parts(
                 if total
                 else "No McMaster hardware lines need live hydration"
             ),
+            debug={"part_total": total, "part_index": -1} if total else None,
         ),
     )
 
