@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { BomDragHandle, readBomPartDragIndex } from "@/components/BomDragHandle";
+import { HardwareCheckHint } from "@/components/HardwareCheckHint";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -11,6 +13,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { syncPartsPricing, type Part } from "@/lib/api";
+import {
+  buildBomDisplayRows,
+  resolveBomHeadings,
+  type BomSectionKey,
+} from "@/lib/bomSections";
 import {
   computeLinePricing,
   formatCurrency,
@@ -23,8 +30,10 @@ const compactInput =
 
 export interface BomPricingTabProps {
   parts: Part[];
+  bomHeadings?: Partial<Record<BomSectionKey, string>>;
   onUpdatePart: (index: number, patch: Partial<Part>) => void;
   onPartsSynced: (parts: Part[]) => void;
+  onReorderPart: (fromIndex: number, toIndex: number) => void;
 }
 
 function markManualPricing(patch: Partial<Part>): Partial<Part> {
@@ -51,13 +60,31 @@ function partsNeedPricingSync(parts: Part[]): boolean {
 
 export function BomPricingTab({
   parts,
+  bomHeadings: bomHeadingsProp,
   onUpdatePart,
   onPartsSynced,
+  onReorderPart,
 }: BomPricingTabProps) {
   const [syncing, setSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [dragPartIndex, setDragPartIndex] = useState<number | null>(null);
+  const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
   const partsSnapshotRef = useRef(parts);
   partsSnapshotRef.current = parts;
+
+  const headings = useMemo(
+    () => resolveBomHeadings(bomHeadingsProp),
+    [bomHeadingsProp],
+  );
+  const displayRows = useMemo(
+    () => buildBomDisplayRows(parts, headings),
+    [parts, headings],
+  );
+
+  const clearDragState = useCallback(() => {
+    setDragPartIndex(null);
+    setDropTargetIndex(null);
+  }, []);
 
   const runSync = useCallback(async () => {
     const snapshot = partsSnapshotRef.current;
@@ -85,15 +112,25 @@ export function BomPricingTab({
     void runSync();
   }, [runSync]);
 
-  const rows = useMemo(
-    () =>
-      parts.map((part, index) => ({
+  const rowByIndex = useMemo(() => {
+    const map = new Map<
+      number,
+      {
+        index: number;
+        part: Part;
+        pricing: ReturnType<typeof computeLinePricing>;
+      }
+    >();
+    for (let index = 0; index < parts.length; index += 1) {
+      const part = parts[index];
+      map.set(index, {
         index,
         part,
         pricing: computeLinePricing(part),
-      })),
-    [parts],
-  );
+      });
+    }
+    return map;
+  }, [parts]);
 
   const summary = useMemo(() => summarizeProjectPricing(parts), [parts]);
   const pendingCount = useMemo(
@@ -119,7 +156,8 @@ export function BomPricingTab({
       <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
         <p>
           Prices come from McMaster listings during import. This tab fills any
-          missing lines and lets you override pack size or unit cost.
+          missing lines and lets you override pack size or unit cost. Row order
+          matches the Parts tab.
         </p>
         {syncing && (
           <span className="inline-flex items-center gap-1.5 text-xs text-primary">
@@ -144,6 +182,9 @@ export function BomPricingTab({
       <Table className="bom-pricing-table w-full">
         <TableHeader>
           <TableRow>
+            <TableHead className="w-9 px-1.5 py-1.5">
+              <span className="sr-only">Reorder</span>
+            </TableHead>
             <TableHead className="px-1.5 py-1.5">Part</TableHead>
             <TableHead className="px-1.5 py-1.5 w-16">BOM qty</TableHead>
             <TableHead className="px-1.5 py-1.5 w-20">Min / pack</TableHead>
@@ -154,24 +195,77 @@ export function BomPricingTab({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {rows.map(({ index, part, pricing }) => {
+          {displayRows.map((displayRow) => {
+            if (displayRow.kind === "heading") {
+              return (
+                <TableRow
+                  key={`heading-${displayRow.id}`}
+                  className="bg-muted/40 hover:bg-muted/40"
+                >
+                  <TableCell
+                    colSpan={8}
+                    className="px-2 py-2 text-sm font-semibold tracking-tight"
+                  >
+                    {displayRow.text}
+                  </TableCell>
+                </TableRow>
+              );
+            }
+
+            const row = rowByIndex.get(displayRow.partIndex);
+            if (!row) return null;
+
+            const { index, part, pricing } = row;
             const showBatch = pricing.minQty > 1 || pricing.batchCost != null;
             const na = part.mcmaster_status === "not_applicable";
             const fromListing =
               part.price_source === "listing" || part.price_source === "api";
+
             return (
               <TableRow
                 key={index}
                 className={cn(
                   pricing.needsBatchOrder && "bg-warning/5 hover:bg-warning/10",
                   na && "opacity-70",
+                  dragPartIndex === index && "opacity-60",
+                  dropTargetIndex === index &&
+                    "outline outline-2 -outline-offset-2 outline-primary/60",
                 )}
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  event.dataTransfer.dropEffect = "move";
+                  setDropTargetIndex(index);
+                }}
+                onDragLeave={() => {
+                  setDropTargetIndex((current) =>
+                    current === index ? null : current,
+                  );
+                }}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  const fromIndex = readBomPartDragIndex(event.dataTransfer);
+                  if (fromIndex != null) {
+                    onReorderPart(fromIndex, index);
+                  }
+                  clearDragState();
+                }}
               >
+                <TableCell className="px-1 py-1.5 align-top">
+                  <BomDragHandle
+                    partIndex={index}
+                    label={`Reorder ${part.original_name || "row"}`}
+                    onDragStart={setDragPartIndex}
+                    onDragEnd={clearDragState}
+                  />
+                </TableCell>
                 <TableCell className="px-1.5 py-1.5 align-top">
                   <div className="space-y-0.5">
-                    <p className="text-xs font-medium leading-snug">
-                      {part.original_name || "—"}
-                    </p>
+                    <div className="flex items-start gap-1">
+                      <p className="min-w-0 flex-1 text-xs font-medium leading-snug">
+                        {part.original_name || "—"}
+                      </p>
+                      <HardwareCheckHint part={part} className="mt-0.5" />
+                    </div>
                     {part.mcmaster_part_number && (
                       <p className="font-mono text-[10px] text-muted-foreground">
                         {part.mcmaster_part_number}

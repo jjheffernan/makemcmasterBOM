@@ -98,6 +98,137 @@ function parseHydrationProgress(debug?: Record<string, unknown> | null): {
   return { progressCurrent: rawIndex, progressTotal: total };
 }
 
+function runningStageFraction(
+  stageId: ImportStageId,
+  state: StageState | undefined,
+): number {
+  if (stageId === "enrich_mcmaster") {
+    const total = state?.progressTotal ?? 0;
+    if (total > 0 && state?.progressCurrent !== undefined) {
+      return (state.progressCurrent + 1) / total;
+    }
+    if (total > 0) {
+      return 0.12;
+    }
+  }
+  return 0.4;
+}
+
+function computePipelineProgress(
+  stages: ImportStageDefinition[],
+  stageState: Partial<Record<ImportStageId, StageState>>,
+): { percent: number; label: string; indeterminate: boolean } {
+  const totalStages = stages.length;
+  if (totalStages === 0) {
+    return { percent: 0, label: "", indeterminate: false };
+  }
+
+  let units = 0;
+  let runningStage: ImportStageDefinition | null = null;
+  let runningState: StageState | undefined;
+
+  for (const stage of stages) {
+    const state = stageState[stage.id];
+    const status = state?.status ?? "pending";
+    if (status === "done" || status === "skipped") {
+      units += 1;
+      continue;
+    }
+    if (status === "running") {
+      units += runningStageFraction(stage.id, state);
+      runningStage = stage;
+      runningState = state;
+      break;
+    }
+    break;
+  }
+
+  const allComplete = units >= totalStages;
+  const percent = allComplete
+    ? 100
+    : Math.min(99, Math.round((units / totalStages) * 100));
+
+  if (allComplete) {
+    return { percent: 100, label: "Import complete", indeterminate: false };
+  }
+
+  if (!runningStage) {
+    const completed = stages.filter((stage) => {
+      const status = stageState[stage.id]?.status ?? "pending";
+      return status === "done" || status === "skipped";
+    }).length;
+    return {
+      percent: Math.round((completed / totalStages) * 100),
+      label: completed > 0 ? `Step ${completed + 1} of ${totalStages}` : "Starting import…",
+      indeterminate: completed === 0,
+    };
+  }
+
+  const completedBefore = stages.findIndex((s) => s.id === runningStage.id);
+  const stepNumber = completedBefore + 1;
+  let label = `Step ${stepNumber} of ${totalStages} — ${runningStage.label}`;
+
+  if (
+    runningStage.id === "enrich_mcmaster" &&
+    (runningState?.progressTotal ?? 0) > 0
+  ) {
+    const partTotal = runningState?.progressTotal ?? 0;
+    if (runningState?.progressCurrent !== undefined) {
+      label = `Step ${stepNumber} of ${totalStages} — part ${runningState.progressCurrent + 1} of ${partTotal}`;
+    } else {
+      label = `Step ${stepNumber} of ${totalStages} — preparing ${partTotal} hardware lines`;
+    }
+  }
+
+  const indeterminate =
+    runningStage.id === "enrich_mcmaster" &&
+    (runningState?.progressTotal ?? 0) > 0 &&
+    runningState?.progressCurrent === undefined;
+
+  return { percent, label, indeterminate };
+}
+
+function ProgressBar({
+  percent,
+  indeterminate,
+  ariaLabel,
+  size = "md",
+}: {
+  percent: number;
+  indeterminate?: boolean;
+  ariaLabel: string;
+  size?: "md" | "sm";
+}) {
+  const height = size === "sm" ? "h-1.5" : "h-2";
+  return (
+    <div
+      className={cn("w-full overflow-hidden rounded-full bg-muted", height)}
+      role="progressbar"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={indeterminate ? undefined : percent}
+      aria-label={ariaLabel}
+    >
+      {indeterminate ? (
+        <div
+          className={cn(
+            "h-full w-2/5 animate-pulse rounded-full bg-primary",
+            height,
+          )}
+        />
+      ) : (
+        <div
+          className={cn(
+            "h-full rounded-full bg-primary transition-[width] duration-300 ease-out",
+            height,
+          )}
+          style={{ width: `${Math.max(percent, percent > 0 ? 3 : 0)}%` }}
+        />
+      )}
+    </div>
+  );
+}
+
 function HydrationProgressBar({
   current,
   total,
@@ -114,23 +245,12 @@ function HydrationProgressBar({
 
   return (
     <div className="mt-3 space-y-1">
-      <div
-        className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
-        role="progressbar"
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={percent ?? undefined}
-        aria-label="McMaster listing hydration progress"
-      >
-        {percent !== undefined ? (
-          <div
-            className="h-full rounded-full bg-primary transition-[width] duration-300 ease-out"
-            style={{ width: `${Math.max(percent, 4)}%` }}
-          />
-        ) : (
-          <div className="h-full w-2/5 animate-pulse rounded-full bg-primary" />
-        )}
-      </div>
+      <ProgressBar
+        percent={percent ?? 0}
+        indeterminate={percent === undefined}
+        ariaLabel="McMaster listing hydration progress"
+        size="sm"
+      />
       {total > 0 && (
         <p className="text-xs text-muted-foreground tabular-nums">
           {indeterminate
@@ -188,6 +308,7 @@ export function ImportProgress({
   const isWorking = displayStages.some(
     (stage) => stageState[stage.id]?.status === "running",
   );
+  const pipelineProgress = computePipelineProgress(displayStages, stageState);
 
   return (
     <div
@@ -214,6 +335,20 @@ export function ImportProgress({
             size="sm"
           />
         )}
+      </div>
+
+      <div className="mb-4 space-y-1.5">
+        <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+          <span className="min-w-0 truncate">{pipelineProgress.label}</span>
+          {!pipelineProgress.indeterminate && (
+            <span className="shrink-0 tabular-nums">{pipelineProgress.percent}%</span>
+          )}
+        </div>
+        <ProgressBar
+          percent={pipelineProgress.percent}
+          indeterminate={pipelineProgress.indeterminate && isWorking}
+          ariaLabel="Overall BOM import pipeline progress"
+        />
       </div>
 
       {currentStage && currentState && (
