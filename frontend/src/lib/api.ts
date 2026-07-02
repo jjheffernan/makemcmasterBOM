@@ -15,6 +15,7 @@ export type ImportStageId =
   | "extract_bom"
   | "parse_bom"
   | "match_mcmaster"
+  | "enrich_mcmaster"
   | "finalize";
 
 export type ImportStageStatus =
@@ -85,6 +86,12 @@ export interface BrowseFinishOption {
   finish_id: string;
   label: string;
   mcmaster_url: string;
+  mcmaster_part_number?: string;
+  product_url?: string;
+  unit_cost?: number | null;
+  price_min_qty?: number;
+  price_batch_cost?: number | null;
+  price_listing_note?: string;
 }
 
 export interface Part {
@@ -110,6 +117,13 @@ export interface Part {
   hardware_diameter_mm?: number | null;
   hardware_length_mm?: number | null;
   hardware_match_status?: HardwareMatchStatus;
+  price_min_qty?: number;
+  price_batch_cost?: number | null;
+  unit_cost?: number | null;
+  price_source?: string;
+  price_listing_note?: string;
+  match_selection_policy?: string;
+  match_option_count?: number;
 }
 
 export interface Project {
@@ -434,6 +448,8 @@ export async function listNotebooks(): Promise<NotebooksResponse> {
   return res.json();
 }
 
+export type ReportSide = "mcmaster" | "makerworld";
+
 export type MatchIssueType =
   | "wrong_part_number"
   | "wrong_category_or_search"
@@ -442,16 +458,56 @@ export type MatchIssueType =
   | "should_be_not_applicable"
   | "other";
 
+export type MakerWorldIssueType =
+  | "makerworld_wrong_line"
+  | "makerworld_missing_hardware"
+  | "makerworld_wrong_quantity"
+  | "makerworld_parse_error"
+  | "makerworld_other";
+
+export type AnyIssueType = MatchIssueType | MakerWorldIssueType;
+
 export interface MatchErrorReportRequest {
   project_id: string;
   project_title?: string;
   makerworld_url?: string;
+  report_side?: ReportSide;
   part_index?: number | null;
   part?: Part | null;
-  issue_type: MatchIssueType;
+  issue_type: AnyIssueType;
   message: string;
   expected_part_number?: string;
   expected_url?: string;
+  expected_finish?: string;
+  makerworld_line_text?: string;
+  expected_line_text?: string;
+  expected_quantity?: number | null;
+  parse_context?: string;
+  page_url?: string;
+}
+
+export interface SyncPricingResponse {
+  parts: Part[];
+  synced_count: number;
+}
+
+export async function syncPartsPricing(
+  parts: Part[],
+): Promise<SyncPricingResponse> {
+  const res = await apiFetch("/api/bom/sync-pricing", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ parts }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(
+      typeof err.detail === "string"
+        ? err.detail
+        : "Could not sync pricing from McMaster listings",
+    );
+  }
+  return res.json();
 }
 
 export interface MatchErrorReportResponse {

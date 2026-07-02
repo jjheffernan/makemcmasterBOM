@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/card";
 import { ProjectThumbnail } from "@/components/ProjectThumbnail";
 import { DescriptionPreview } from "@/components/DescriptionPreview";
-import { ReportMatchErrorDialog } from "@/components/ReportMatchErrorDialog";
+import { BomPricingTab } from "@/components/BomPricingTab";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import {
@@ -53,11 +53,13 @@ import {
   summarizeMcMasterParts,
 } from "@/lib/mcmaster";
 import type { BrowseFinishOption, MatchAlternative } from "@/lib/api";
+import { formatCurrency } from "@/lib/pricing";
 import {
   specInputClassName,
   specPlaceholderForPart,
   worstSpecIssue,
 } from "@/lib/specMetadata";
+import { useReportMatchError } from "@/lib/reportContext";
 
 function confidenceDisplay(part: Part): string {
   if (part.mcmaster_status === "not_applicable") return "—";
@@ -75,6 +77,8 @@ const compactInput =
   "h-8 min-h-8 px-2 text-xs shadow-none";
 const compactSelect = "h-8 min-h-8 px-2 text-xs shadow-none";
 
+type BomViewTab = "parts" | "pricing";
+
 export function BomEditorPage() {
   const { projectId } = useParams<{ projectId: string }>();
   const location = useLocation();
@@ -91,8 +95,8 @@ export function BomEditorPage() {
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({});
   const [bulkQuantity, setBulkQuantity] = useState("");
-  const [reportOpen, setReportOpen] = useState(false);
-  const [reportPartIndex, setReportPartIndex] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<BomViewTab>("parts");
+  const { openReport, registerBomContext } = useReportMatchError();
 
   useEffect(() => {
     if (!projectId) return;
@@ -107,6 +111,15 @@ export function BomEditorPage() {
       .finally(() => setLoading(false));
   }, [projectId, project]);
 
+  useEffect(() => {
+    if (!projectId || !project) {
+      registerBomContext(null);
+      return;
+    }
+    registerBomContext({ projectId, project, parts });
+    return () => registerBomContext(null);
+  }, [projectId, project, parts, registerBomContext]);
+
   const applyFinish = useCallback(
     (index: number, finishId: string) => {
       setParts((prev) =>
@@ -116,10 +129,19 @@ export function BomEditorPage() {
             (candidate) => candidate.finish_id === finishId,
           );
           if (!option) return p;
+          const productUrl = option.product_url || option.mcmaster_url;
           return {
             ...p,
             selected_finish_id: finishId,
-            mcmaster_url: option.mcmaster_url,
+            match_selection_policy: "finish",
+            mcmaster_url: productUrl,
+            mcmaster_part_number:
+              option.mcmaster_part_number ?? p.mcmaster_part_number,
+            unit_cost: option.unit_cost ?? p.unit_cost,
+            price_min_qty: option.price_min_qty ?? p.price_min_qty,
+            price_batch_cost: option.price_batch_cost ?? p.price_batch_cost,
+            price_listing_note: option.price_listing_note ?? p.price_listing_note,
+            price_source: option.unit_cost != null ? "listing" : p.price_source,
           };
         }),
       );
@@ -182,11 +204,6 @@ export function BomEditorPage() {
     },
     [deleteRows],
   );
-
-  const openReport = useCallback((partIndex: number | null = null) => {
-    setReportPartIndex(partIndex);
-    setReportOpen(true);
-  }, []);
 
   const applyBulkQuantity = useCallback(() => {
     const qty = Number(bulkQuantity);
@@ -329,9 +346,22 @@ export function BomEditorPage() {
                   {finishOptions.map((option: BrowseFinishOption) => (
                     <option key={option.finish_id} value={option.finish_id}>
                       Finish: {option.label}
+                      {option.mcmaster_part_number
+                        ? ` · ${option.mcmaster_part_number}`
+                        : ""}
+                      {option.unit_cost != null
+                        ? ` · ${formatCurrency(option.unit_cost)}/ea`
+                        : ""}
                     </option>
                   ))}
                 </Select>
+              )}
+              {finishOptions.length > 1 && (
+                <p className="text-[10px] text-muted-foreground">
+                  {row.original.match_selection_policy === "finish"
+                    ? "Finish selected manually"
+                    : "Default: lowest $/ea from McMaster listing"}
+                </p>
               )}
               {issue && (
                 <p
@@ -379,6 +409,14 @@ export function BomEditorPage() {
               {row.original.match_tier && (
                 <p className="truncate text-[10px] text-muted-foreground">
                   {matchTierLabel(row.original.match_tier)}
+                </p>
+              )}
+              {(row.original.match_option_count ?? 0) > 3 && (
+                <p
+                  className="truncate text-[10px] text-warning"
+                  title="Many McMaster paths match this line — confirm finish and link"
+                >
+                  {row.original.match_option_count} match options — verify pick
                 </p>
               )}
               {hardwareMatchLabel(row.original.hardware_match_status) && (
@@ -486,7 +524,7 @@ export function BomEditorPage() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => openReport(row.index)}
+              onClick={() => openReport({ partIndex: row.index })}
               aria-label="Report matching error for this row"
               title="Report matching error"
             >
@@ -606,14 +644,6 @@ export function BomEditorPage() {
             </div>
           </div>
           <div className="flex shrink-0 flex-wrap gap-2">
-            <Button
-              variant="outline"
-              onClick={() => openReport(null)}
-              disabled={parts.length === 0}
-            >
-              <Flag className="h-4 w-4" />
-              Report error
-            </Button>
             <Button variant="outline" onClick={handleSave} disabled={saving}>
               {saving ? "Saving…" : "Save"}
             </Button>
@@ -628,6 +658,34 @@ export function BomEditorPage() {
           </div>
         </CardHeader>
         <CardContent>
+          {parts.length > 0 && (
+            <div className="mb-4 flex gap-1 rounded-lg border border-border bg-muted/40 p-1">
+              <button
+                type="button"
+                className={cn(
+                  "rounded-md px-4 py-2 text-sm font-medium transition-colors",
+                  activeTab === "parts"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+                onClick={() => setActiveTab("parts")}
+              >
+                Parts
+              </button>
+              <button
+                type="button"
+                className={cn(
+                  "rounded-md px-4 py-2 text-sm font-medium transition-colors",
+                  activeTab === "pricing"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+                onClick={() => setActiveTab("pricing")}
+              >
+                Pricing
+              </button>
+            </div>
+          )}
           {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
           {project.warnings && project.warnings.length > 0 && (
             <div className="mb-4 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm">
@@ -638,7 +696,7 @@ export function BomEditorPage() {
               ))}
             </div>
           )}
-          {parts.length > 0 && verifyCount > 0 && (
+          {parts.length > 0 && verifyCount > 0 && activeTab === "parts" && (
             <div className="mb-4 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm">
               <p className="font-medium text-warning">
                 {verifyCount} part{verifyCount === 1 ? "" : "s"} need manual McMaster
@@ -652,7 +710,7 @@ export function BomEditorPage() {
                 <button
                   type="button"
                   className="font-medium text-link underline hover:text-[var(--link-hover)]"
-                  onClick={() => openReport(null)}
+                  onClick={() => openReport()}
                 >
                   Report error
                 </button>
@@ -660,7 +718,7 @@ export function BomEditorPage() {
               </p>
             </div>
           )}
-          {parts.length > 0 && notApplicableCount > 0 && (
+          {parts.length > 0 && notApplicableCount > 0 && activeTab === "parts" && (
             <div className="mb-4 rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm">
               <p className="font-medium">
                 {notApplicableCount} part{notApplicableCount === 1 ? "" : "s"}{" "}
@@ -680,6 +738,12 @@ export function BomEditorPage() {
                 ? " This MakerWorld project has no bill of materials — try uploading a BOM file (CSV, JSON, Markdown, etc.) from the import page."
                 : " Parsing rules may need tuning in the notebooks."}
             </p>
+          ) : activeTab === "pricing" ? (
+            <BomPricingTab
+              parts={parts}
+              onUpdatePart={updatePart}
+              onPartsSynced={setParts}
+            />
           ) : (
             <>
               {selectedCount > 0 && (
@@ -792,15 +856,6 @@ export function BomEditorPage() {
           )}
         </CardContent>
       </Card>
-
-      <ReportMatchErrorDialog
-        open={reportOpen}
-        onClose={() => setReportOpen(false)}
-        projectId={projectId}
-        project={project}
-        parts={parts}
-        initialPartIndex={reportPartIndex}
-      />
     </div>
   );
 }
