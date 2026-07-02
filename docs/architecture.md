@@ -69,7 +69,8 @@ makerworld-bom/
 │   │   └── progress.py      # Pipeline stage events (SSE)
 │   ├── routers/
 │   │   ├── import_router.py # POST /api/import*, GET /stages
-│   │   ├── bom_router.py    # GET/PUT /api/bom/{id}, export
+│   │   ├── bom_router.py    # GET/PUT /api/bom/{id}, export, sync-pricing
+│   │   ├── feedback_router.py # POST /api/feedback/match-error
 │   │   ├── notebooks_router.py
 │   │   └── debug_router.py  # /api/debug/* (when DEBUG=1)
 │   └── services/
@@ -97,7 +98,8 @@ makerworld-bom/
 │       └── lib/api.ts       # Typed fetch wrappers
 ├── notebooks/               # Pipeline development notebooks
 ├── tests/                   # pytest suite
-├── data/                    # Sample BOM files, regression_urls.json
+├── data/                    # McMaster routing JSON, regression fixtures — see data/README.md
+├── .github/workflows/       # test.yml (CI), monthly-taxonomy-crawl.yml
 └── docs/                    # This documentation
 ```
 
@@ -151,3 +153,24 @@ In development, the Vite dev server proxies:
 | `/jupyter/*` | `http://127.0.0.1:8888` |
 
 In production, FastAPI can serve the built frontend from `frontend/dist/` on the same origin.
+
+## Security
+
+The MVP targets **localhost development** — no API authentication. Outbound fetches (MakerWorld scrape, McMaster browse/pricing) run server-side from user-influenced URLs.
+
+| Topic | Doc |
+|-------|-----|
+| Threat model and audit findings | [Security](security.md) |
+| Credential guardrails | `tests/test_guardrails.py` |
+| Rate limits | [Rate limiting](#rate-limiting) above |
+
+Before exposing the API beyond your machine, read the [deployment checklist](security.md#safe-deployment-checklist).
+
+## CI automation
+
+| Workflow | Schedule | Purpose |
+|----------|----------|---------|
+| `.github/workflows/test.yml` | Push / PR | Offline pytest, regression scripts, guardrails |
+| `.github/workflows/monthly-taxonomy-crawl.yml` | 1st of month, 12:00 UTC | Polite McMaster taxonomy refresh → PR |
+
+See [McMaster taxonomy](backend/mcmaster-taxonomy.md).

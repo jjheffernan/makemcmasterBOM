@@ -104,11 +104,17 @@ Fetches notebook catalog from `GET /api/notebooks`.
 - Delete row button per row
 - **Column resize** — drag the right edge of a header (TanStack Table `columnResizeMode: onChange`)
 - **Bulk edit** — checkbox column; toolbar to set quantity on selected rows or delete selected
+- **Section headings** — editable group titles; drag handle to reorder parts within a section
+- **Hardware check hints** — `?` tooltips with per-family verification checklists (`hardwareCheckTips.ts`)
 - **Finish dropdown** — in the **Specification** column when multiple McMaster finishes apply (black oxide, zinc plated, stainless)
-- **Other guesses** — compact dropdown in the Link column to swap primary match
+- **Other guesses** — grouped dropdown in the Link column (same-size vs wider-scope alternatives)
+- **Pricing tab** — pack-aware line totals when listing prices are synced
+- **Report error** — flag wrong matches; optional reporter email
 - **Match column** — status badge + confidence + tier (compact layout)
-- Save persists via `updateProject`
+- Save persists via `updateProject` (includes optional `bom_headings`)
 - Export CSV via direct download link
+
+External links (`mcmaster_url`, `makerworld_url`) open in a new tab. Validate `http(s)` only before public deployment — see [Security](security.md).
 
 See `src/lib/mcmaster.ts` for status/tier label helpers.
 

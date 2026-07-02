@@ -117,7 +117,7 @@ Install: `pip install -e '.[playwright]' && playwright install chromium`
 
 When browse resolve succeeds, `mcmaster_part_number` is filled from the table and confidence ≈ 0.9.
 
-**Terms of use:** McMaster limits automated load to what is needed for purchasing decisions. Keep `RATE_LIMIT_OUTBOUND_MIN_INTERVAL`, disable browse in CI, and use curated catalog + offline filters by default.
+**Terms of use:** McMaster limits automated load to what is needed for purchasing decisions. Keep `RATE_LIMIT_OUTBOUND_MIN_INTERVAL`, disable browse in CI, and use curated catalog + offline filters by default. **Monthly taxonomy crawl** uses a separate polite batch job — see [McMaster taxonomy](mcmaster-taxonomy.md). Security considerations for outbound URLs: [Security](../security.md).
 
 ## Part number extraction
 
@@ -132,9 +132,16 @@ When browse resolve succeeds, `mcmaster_part_number` is filled from the table an
 |------|---------|
 | `data/mcmaster_catalog.json` | Curated phrase → SKU |
 | `data/mcmaster_categories.json` | Category routes + signals |
+| `data/mcmaster_metacategories.json` | 26 nav departments + product slug → department |
+| `data/mcmaster_category_routing.json` | Parent/escape routing weights |
 | `data/mcmaster_browse_roots.json` | Material-specific browse roots for filters |
+| `data/mcmaster_site_taxonomy.json` | Monthly-crawled product-family tiles (Fastening & Joining) |
+
+Taxonomy crawl schedule, field reference, and workflow:
+[McMaster taxonomy](mcmaster-taxonomy.md).
 
 Integrity: `scripts/check_catalog_integrity.py` (keys/titles vs rules).
+Coverage: `pytest tests/test_category_coverage.py -m "not integration"`.
 
 ## Matcher fields
 

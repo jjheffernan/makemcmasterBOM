@@ -55,8 +55,9 @@ notebooks/     Pipeline development notebooks (shared entry points with API)
 backend/       FastAPI app, services, models, routers, rate limiting
 frontend/      React UI
 tests/         pytest suite (unit + optional live integration)
-data/          Sample BOM files, regression_urls.json
-docs/          Documentation
+data/          McMaster routing JSON, taxonomy crawl output — see data/README.md
+docs/          Documentation (start at docs/README.md)
+.github/       CI: tests on push/PR; monthly McMaster taxonomy crawl
 ```
 
 ## Documentation
@@ -64,7 +65,10 @@ docs/          Documentation
 Full documentation lives in [`docs/`](docs/README.md):
 
 - [Architecture](docs/architecture.md) — system overview, pipeline, rate limiting
-- [API reference](docs/api.md) — HTTP endpoints (import, SSE, debug)
+- [API reference](docs/api.md) — HTTP endpoints (import, BOM, feedback, pricing sync)
 - [Backend services](docs/backend/scraper.md) — scraper, parser, matcher, pipeline
+- [McMaster taxonomy](docs/backend/mcmaster-taxonomy.md) — category data + monthly crawl
+- [Security](docs/security.md) — threat model and deployment checklist
 - [Development guide](docs/development.md) — setup, env vars, debug mode
-- [Execution plan](PLAN.md) — phased delivery roadmap
+- [Data files](data/README.md) — routing JSON reference
+- [Execution plan](PLAN.md) — phased delivery status and backlog

@@ -12,6 +12,8 @@ Reference documentation for the MakerWorld BOM → McMaster-Carr generator.
 | [Testing](testing.md) | Running tests and what they cover |
 | [Parsers](backend/parsers.md) | Site-specific BOM parser layout and imports |
 | [Feedback dispatch](backend/feedback-dispatch.md) | Email, GitHub issues, and webhooks for bug reports |
+| [McMaster taxonomy](backend/mcmaster-taxonomy.md) | Category data files, monthly crawl, department routing |
+| [Security](security.md) | Threat model, audit findings, deployment checklist |
 
 ## Reference
 
@@ -39,5 +41,7 @@ Each service module owns one stage of the import pipeline. Functions are documen
 
 ## Quick links
 
-- [Documentation](docs/README.md) — full reference including function docs
-- [Execution plan](PLAN.md) — phased delivery roadmap
+- [Execution plan](../PLAN.md) — phased delivery status and backlog
+- [Security](security.md) — deployment and known gaps
+- [Data files](../data/README.md) — McMaster routing JSON reference
+- [Archives](archive/README.md) — superseded planning and upstream scraper reference

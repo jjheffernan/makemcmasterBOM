@@ -59,6 +59,8 @@ Security and hygiene checks that **fail the build** when violated:
 
 Leak-bait values live in `tests/guardrails.py` and are injected via `monkeypatch` — they must never appear in API output.
 
+Known gaps (SSRF URL validation, `sync-pricing` limits) are documented in [Security](security.md) — not yet enforced by tests.
+
 ## Regression CLI checks (`tests/test_regression_checks.py`)
 
 Wraps the runtime validator scripts so golden fixtures stay clean:
@@ -100,7 +102,14 @@ Tests: `tests/test_mcmaster_cross_test.py` (offline always; one `@integration` l
 
 ## CI
 
-GitHub Actions (`.github/workflows/test.yml`) runs `pytest -m 'not integration'`, regression CLI checks, and guardrails on push/PR.
+GitHub Actions:
+
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `.github/workflows/test.yml` | Push / PR to `main` | `pytest -m 'not integration'`, regression CLI, guardrails |
+| `.github/workflows/monthly-taxonomy-crawl.yml` | 1st of month + manual | McMaster taxonomy crawl → PR when data changes |
+
+Local equivalent: `./scripts/run_checks.sh` (offline validators) and `./scripts/run_monthly_taxonomy_crawl.sh` (live crawl).
 
 ## Test files
 
@@ -149,6 +158,21 @@ See [Feedback dispatch](backend/feedback-dispatch.md).
 ### `tests/test_query_accuracy.py`
 
 Offline McMaster query accuracy from `tests/fixtures/bom_listing_query_cases.json` — URL fragments, finish counts, `selected_finish_id` per hardware line (no app or network).
+
+---
+
+### `tests/test_category_coverage.py`
+
+McMaster category and taxonomy alignment (mostly offline).
+
+| Test | What it verifies |
+|------|------------------|
+| `test_twenty_six_top_level_metacategories` | `mcmaster_metacategories.json` matches site nav |
+| `test_all_matcher_categories_have_metacategory` | Every matcher category maps to a department |
+| `test_crawled_fastening_families_map_to_fastening_department` | Monthly crawl slugs → `fastening_and_joining` |
+| `test_matcher_category_routes_resolve_http` | Live HTTP 200 for all matcher routes (`@integration`) |
+
+Refresh crawl data: `./scripts/run_monthly_taxonomy_crawl.sh`. See [McMaster taxonomy](backend/mcmaster-taxonomy.md).
 
 ---
 
@@ -220,6 +244,8 @@ Metric size/length extraction and post-match catalog verification (`hardware_spe
 | `scripts/check_hardware_specs.py` | Validate metric size/length vs catalog match |
 | `scripts/check_catalog_integrity.py` | Catalog keys/titles vs `M3_SOCKET_HEAD_BY_LENGTH_MM` |
 | `scripts/run_checks.sh` | Run all offline validators on golden fixtures |
+| `scripts/run_monthly_taxonomy_crawl.sh` | Monthly McMaster taxonomy crawl + offline coverage tests |
+| `scripts/crawl_mcmaster_taxonomy.py` | Low-level ProdPageWebPart taxonomy extractor |
 
 ---
 
@@ -342,4 +368,4 @@ pytest tests/test_guardrails.py tests/test_regression_checks.py
 - Live SMTP email send (dispatch email channel is config-gated; not exercised in CI)
 - Live GitHub issue creation (mocked via `pytest-httpx` in CI)
 
-See [PLAN.md](../PLAN.md) Phase 6 for iteration backlog.
+See [PLAN.md](../PLAN.md) Phase 10 for the active backlog.

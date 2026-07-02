@@ -8,7 +8,9 @@ Interactive docs are available at [http://localhost:8000/docs](http://localhost:
 
 ## Rate limiting
 
-When `RATE_LIMIT_ENABLED=1` (default), all `POST /api/import*` endpoints are limited per client IP (default **12 requests/minute**). Excess requests return **429** with a `Retry-After` header.
+When `RATE_LIMIT_ENABLED=1` (default), `POST /api/import*` endpoints are limited per client IP (default **12 requests/minute**). `POST /api/feedback/match-error` is limited to **10/minute**. Excess requests return **429** with a `Retry-After` header.
+
+`POST /api/bom/sync-pricing` is **not** rate limited — see [Security](security.md).
 
 Outbound MakerWorld fetches are throttled separately (min interval + max concurrent scrapes) — this does not surface as an API error but slows imports under load.
 
@@ -210,6 +212,94 @@ Update the parts list for a project (user edits from the BOM editor).
 
 **Handler:** `bom_router.update_bom`
 
+Optional body field `bom_headings` — editable section titles for grouped BOM rows (see [Frontend](frontend.md)).
+
+---
+
+## `POST /api/bom/validate-specifications`
+
+Validate that `specification` fields hold metadata only (not duplicated qty/size from `original_name`).
+
+**Request body**
+
+```json
+{ "parts": [ /* Part objects */ ] }
+```
+
+**Response** `200`
+
+```json
+{
+  "issues": [
+    {
+      "part_index": 0,
+      "original_name": "M3 Nut",
+      "specification": "qty 4",
+      "code": "qty_in_spec",
+      "message": "Quantity belongs in the quantity column",
+      "severity": "error",
+      "hint": "Move '4' to quantity"
+    }
+  ],
+  "error_count": 1,
+  "warning_count": 0
+}
+```
+
+**Handler:** `bom_router.validate_specifications`
+
+---
+
+## `GET /api/bom/spec-guidance`
+
+Return field hints for the specification column in the BOM editor.
+
+**Response** `200` — `{ "hints": { "screw": "...", "nut": "..." } }`
+
+---
+
+## `POST /api/bom/sync-pricing`
+
+Pull price tiers from McMaster listings (B2B API when enabled, else browse table parse).
+
+**Not rate-limited today** — intended for local use; see [Security](security.md) before exposing publicly.
+
+**Request body**
+
+```json
+{ "parts": [ /* Part objects with mcmaster_url or mcmaster_part_number */ ] }
+```
+
+**Response** `200`
+
+```json
+{
+  "parts": [ /* Part objects with price_batch_cost, unit_cost, price_source */ ],
+  "synced_count": 3
+}
+```
+
+**Handler:** `bom_router.sync_pricing` → `pricing_listing.sync_parts_pricing_from_listings`
+
+---
+
+## `GET /api/bom/history`
+
+List recently imported projects (in-memory store, last 5).
+
+**Response** `200`
+
+```json
+{
+  "items": [
+    { "project_id": "...", "title": "...", "imported_at": "..." }
+  ],
+  "limit": 5
+}
+```
+
+**Note:** Project IDs are UUIDs (hard to guess) but this endpoint is unauthenticated — see [Security](security.md).
+
 ---
 
 ## `GET /api/bom/{project_id}/export`
@@ -253,6 +343,31 @@ List pipeline development notebooks for the web UI.
 ```
 
 **Handler:** `notebooks_router.list_notebooks`
+
+---
+
+## `POST /api/feedback/match-error`
+
+Submit a user report when McMaster matching is wrong. Always appends to `data/match_reports.jsonl`. Optional outbound dispatch when `FEEDBACK_DISPATCH_ENABLED=1`.
+
+**Rate limited:** 10 requests/minute per client key (same keying as import — see [Security](security.md)).
+
+**Request body** — see `MatchErrorReportCreate` in [models](models.md) / OpenAPI docs. Key fields: `issue_type`, `message`, `project_id`, `part_index`, `expected_part_number`, `reporter_email`.
+
+**Response** `200`
+
+```json
+{
+  "id": "report-uuid",
+  "reported_at": "2026-07-01T12:00:00+00:00",
+  "message": "Thank you — your report was saved.",
+  "dispatch": [
+    { "channel": "github", "ok": true, "detail": "", "url": "https://github.com/..." }
+  ]
+}
+```
+
+See [Feedback dispatch](backend/feedback-dispatch.md).
 
 ---
 

@@ -96,6 +96,28 @@ Optional McMaster enrichment (see [McMaster adapter](backend/mcmaster.md)):
 
 Contact [eprocurement@mcmaster.com](mailto:eprocurement@mcmaster.com) for API access. See [official API docs](https://www.mcmaster.com/help/api/).
 
+### McMaster taxonomy crawl (monthly batch)
+
+Refreshes `data/mcmaster_site_taxonomy.json` and optionally syncs fastening
+product slugs into `mcmaster_metacategories.json`. Runs on a polite delay so we
+do not stress McMaster on every import. See [McMaster taxonomy](backend/mcmaster-taxonomy.md).
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `MCMASTER_CRAWL_DELAY_SECONDS` | `5` | Pause between Playwright page loads in batch mode |
+| `MCMASTER_CRAWL_MAX_ERRORS` | `3` | Batch exit code 1 when more pages fail |
+
+```bash
+pip install -e ".[playwright]" && playwright install chromium
+./scripts/run_monthly_taxonomy_crawl.sh --sync-metacategories
+```
+
+Scheduled in GitHub Actions: `.github/workflows/monthly-taxonomy-crawl.yml` (1st of month, 12:00 UTC).
+
+### Security
+
+Local MVP — **no API authentication**. Before binding to `0.0.0.0` or deploying publicly, read [Security](security.md) (SSRF URL validation, `sync-pricing` limits, upload caps, deployment checklist).
+
 ### Match-error report dispatch
 
 Optional outbound notifications when users submit **Report an error**. Reports always persist to `data/match_reports.jsonl` first. See [Feedback dispatch](backend/feedback-dispatch.md).
