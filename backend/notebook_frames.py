@@ -29,6 +29,9 @@ PART_COLUMNS: tuple[str, ...] = (
     "hardware_match_status",
     "hardware_diameter_mm",
     "hardware_length_mm",
+    "price_min_qty",
+    "price_batch_cost",
+    "unit_cost",
     "alternatives_count",
     "finish_options_count",
 )
@@ -58,6 +61,9 @@ def part_to_row(part: Part) -> dict[str, Any]:
         "hardware_match_status": part.hardware_match_status,
         "hardware_diameter_mm": part.hardware_diameter_mm,
         "hardware_length_mm": part.hardware_length_mm,
+        "price_min_qty": part.price_min_qty,
+        "price_batch_cost": part.price_batch_cost,
+        "unit_cost": part.unit_cost,
         "alternatives_count": len(part.match_alternatives),
         "finish_options_count": len(part.browse_finish_options),
     }

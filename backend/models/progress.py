@@ -10,6 +10,7 @@ StageId = Literal[
     "extract_bom",
     "parse_bom",
     "match_mcmaster",
+    "enrich_mcmaster",
     "finalize",
 ]
 
@@ -44,7 +45,13 @@ PIPELINE_STAGES: list[dict[str, str]] = [
         "id": "match_mcmaster",
         "notebook": "04_match_mcmaster.ipynb",
         "label": "Match McMaster-Carr",
-        "description": "Generate search links and confidence scores",
+        "description": "Rank browse links and default part options",
+    },
+    {
+        "id": "enrich_mcmaster",
+        "notebook": "04_match_mcmaster.ipynb",
+        "label": "Hydrate McMaster listings",
+        "description": "Fetch live SKUs, finishes, and listing prices from McMaster-Carr",
     },
     {
         "id": "finalize",

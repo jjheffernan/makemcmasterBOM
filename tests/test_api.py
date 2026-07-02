@@ -20,8 +20,9 @@ async def test_list_import_stages():
         response = await client.get("/api/import/stages")
     assert response.status_code == 200
     body = response.json()
-    assert len(body["stages"]) == 6
+    assert len(body["stages"]) == 7
     assert body["stages"][0]["id"] == "validate"
+    assert any(stage["id"] == "enrich_mcmaster" for stage in body["stages"])
 
 
 @pytest.mark.asyncio

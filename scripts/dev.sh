@@ -55,6 +55,7 @@ free_port 5173
 unset HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY all_proxy
 export NO_PROXY="*"
 export SCRAPER="${SCRAPER:-auto}"
+export MCMASTER_BROWSE_RESOLVE_ENABLED="${MCMASTER_BROWSE_RESOLVE_ENABLED:-1}"
 
 if [[ "$DEBUG_MODE" == "1" ]]; then
   export DEBUG=1
@@ -96,6 +97,7 @@ if [[ "$DEBUG_MODE" == "1" ]]; then
 fi
 echo "  Notebooks:  http://localhost:5173/notebooks"
 echo "  JupyterLab: http://localhost:5173/jupyter/lab/tree/notebooks"
+echo "  McMaster:   live browse resolve ON (MCMASTER_BROWSE_RESOLVE_ENABLED=${MCMASTER_BROWSE_RESOLVE_ENABLED})"
 echo ""
 echo "Press Ctrl+C to stop all services."
 

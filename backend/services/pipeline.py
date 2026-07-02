@@ -34,14 +34,25 @@ def _normalize_parsed_parts(parts: list) -> list:
     return [normalize_part_specification(p) for p in parts]
 
 
-async def _maybe_enrich_parts(parts: list) -> list:
+async def _maybe_enrich_parts(
+    parts: list,
+    on_progress: ProgressCallback | None = None,
+) -> list:
     from backend import config
 
     if not (config.MCMASTER_API_ENABLED or config.MCMASTER_BROWSE_RESOLVE_ENABLED):
+        _emit(
+            on_progress,
+            StageEvent(
+                stage="enrich_mcmaster",
+                status="skipped",
+                message="Live McMaster hydration disabled",
+            ),
+        )
         return parts
     from backend.services.vendors.mcmaster.enrichment import enrich_parts
 
-    return await enrich_parts(parts)
+    return await enrich_parts(parts, on_progress=on_progress)
 
 
 def _parse_and_match(
@@ -97,7 +108,7 @@ def _parse_and_match(
         StageEvent(
             stage="match_mcmaster",
             status="running",
-            message="Building McMaster-Carr search links…",
+            message="Ranking McMaster-Carr browse links…",
         ),
     )
     parts = matcher.match_parts(parts)
@@ -172,7 +183,7 @@ async def import_from_file(
     )
 
     parts = _parse_and_match(content, filename, on_progress)
-    parts = await _maybe_enrich_parts(parts)
+    parts = await _maybe_enrich_parts(parts, on_progress)
     project = Project(
         title=title or Path(filename).stem.replace("_", " ").replace("-", " "),
         makerworld_url="",
@@ -285,7 +296,7 @@ def match_parts_only(
         StageEvent(
             stage="match_mcmaster",
             status="running",
-            message="Building McMaster-Carr search links…",
+            message="Ranking McMaster-Carr browse links…",
         ),
     )
     matched = matcher.match_parts(parts)
@@ -355,7 +366,7 @@ async def import_from_url(
 
     warnings: list[str] = list(result.warnings)
     parts = parts_from_scrape_result(result, on_progress)
-    parts = await _maybe_enrich_parts(parts)
+    parts = await _maybe_enrich_parts(parts, on_progress)
 
     project = Project(
         title=result.title,

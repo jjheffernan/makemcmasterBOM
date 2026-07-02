@@ -86,8 +86,8 @@ Optional McMaster enrichment (see [McMaster adapter](backend/mcmaster.md)):
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `MCMASTER_FILTERED_BROWSE_ENABLED` | `1` | Build filtered browse URLs (metric thread + length facets) when no catalog hit |
-| `MCMASTER_BROWSE_RESOLVE_ENABLED` | `0` | Live Playwright browse table → part number (slow; integration only) |
+| `MCMASTER_FILTERED_BROWSE_ENABLED` | `1` | Build filtered browse URLs (metric thread + length facets) |
+| `MCMASTER_BROWSE_RESOLVE_ENABLED` | `0` (dev.sh sets `1`) | Live Playwright browse table → part number |
 | `MCMASTER_API_ENABLED` | `0` | Official McMaster Product Information API enrichment |
 | `MCMASTER_API_USERNAME` | — | B2B API username (never commit) |
 | `MCMASTER_API_PASSWORD` | — | B2B API password (never commit) |
