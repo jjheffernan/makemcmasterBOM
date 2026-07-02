@@ -46,6 +46,15 @@ class BomHistoryResponse(BaseModel):
     limit: int
 
 
+class SyncPricingRequest(BaseModel):
+    parts: list[Part]
+
+
+class SyncPricingResponse(BaseModel):
+    parts: list[Part]
+    synced_count: int
+
+
 @router.get("/spec-guidance", response_model=SpecGuidanceResponse)
 async def get_spec_guidance() -> SpecGuidanceResponse:
     return SpecGuidanceResponse(hints=dict(SPEC_HINTS))
@@ -74,6 +83,24 @@ async def validate_specifications(
         error_count=errors,
         warning_count=warnings,
     )
+
+
+@router.post("/sync-pricing", response_model=SyncPricingResponse)
+async def sync_pricing(body: SyncPricingRequest) -> SyncPricingResponse:
+    """Pull price tiers from McMaster hardware listings (API or browse table)."""
+    from backend.services.pricing_listing import sync_parts_pricing_from_listings
+
+    updated = await sync_parts_pricing_from_listings(body.parts)
+    synced = sum(
+        1
+        for before, after in zip(body.parts, updated, strict=True)
+        if after.price_source and after.price_source != before.price_source
+        or (
+            after.price_batch_cost != before.price_batch_cost
+            or after.unit_cost != before.unit_cost
+        )
+    )
+    return SyncPricingResponse(parts=updated, synced_count=synced)
 
 
 @router.get("/history", response_model=BomHistoryResponse)
