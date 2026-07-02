@@ -18,6 +18,9 @@ PART_COLUMNS: tuple[str, ...] = (
     "specification",
     "notes",
     "normalized_name",
+    "mcmaster_category",
+    "mcmaster_metacategory",
+    "mcmaster_metacategory_label",
     "match_tier",
     "mcmaster_status",
     "confidence",
@@ -29,11 +32,25 @@ PART_COLUMNS: tuple[str, ...] = (
     "hardware_match_status",
     "hardware_diameter_mm",
     "hardware_length_mm",
+    "selected_finish_id",
+    "match_option_count",
+    "same_size_alts",
+    "wider_scope_alts",
+    "finish_options_count",
     "price_min_qty",
     "price_batch_cost",
     "unit_cost",
-    "alternatives_count",
-    "finish_options_count",
+)
+
+ALT_COLUMNS: tuple[str, ...] = (
+    "original_name",
+    "guess_scope",
+    "guess_label",
+    "match_tier",
+    "confidence",
+    "mcmaster_part_number",
+    "mcmaster_url",
+    "mcmaster_reason",
 )
 
 BROWSE_ROW_COLUMNS: tuple[str, ...] = (
@@ -44,12 +61,21 @@ BROWSE_ROW_COLUMNS: tuple[str, ...] = (
 
 
 def part_to_row(part: Part) -> dict[str, Any]:
+    same_size = sum(
+        1 for alt in part.match_alternatives if alt.guess_scope == "same_size"
+    )
+    wider_scope = sum(
+        1 for alt in part.match_alternatives if alt.guess_scope != "same_size"
+    )
     return {
         "quantity": part.quantity,
         "original_name": part.original_name,
         "specification": part.specification,
         "notes": part.notes,
         "normalized_name": part.normalized_name,
+        "mcmaster_category": part.mcmaster_category,
+        "mcmaster_metacategory": part.mcmaster_metacategory,
+        "mcmaster_metacategory_label": part.mcmaster_metacategory_label,
         "match_tier": part.match_tier,
         "mcmaster_status": part.mcmaster_status,
         "confidence": part.confidence,
@@ -61,11 +87,14 @@ def part_to_row(part: Part) -> dict[str, Any]:
         "hardware_match_status": part.hardware_match_status,
         "hardware_diameter_mm": part.hardware_diameter_mm,
         "hardware_length_mm": part.hardware_length_mm,
+        "selected_finish_id": part.selected_finish_id,
+        "match_option_count": part.match_option_count,
+        "same_size_alts": same_size,
+        "wider_scope_alts": wider_scope,
+        "finish_options_count": len(part.browse_finish_options),
         "price_min_qty": part.price_min_qty,
         "price_batch_cost": part.price_batch_cost,
         "unit_cost": part.unit_cost,
-        "alternatives_count": len(part.match_alternatives),
-        "finish_options_count": len(part.browse_finish_options),
     }
 
 
@@ -75,6 +104,28 @@ def parts_to_dataframe(parts: list[Part]) -> pd.DataFrame:
         return pd.DataFrame(columns=list(PART_COLUMNS))
     df = pd.DataFrame([part_to_row(part) for part in parts])
     return df.reindex(columns=list(PART_COLUMNS))
+
+
+def alternatives_to_dataframe(parts: list[Part]) -> pd.DataFrame:
+    """Flatten primary + secondary McMaster guesses for notebook inspection."""
+    records: list[dict[str, Any]] = []
+    for part in parts:
+        for alt in part.match_alternatives:
+            records.append(
+                {
+                    "original_name": part.original_name,
+                    "guess_scope": alt.guess_scope,
+                    "guess_label": alt.guess_label,
+                    "match_tier": alt.match_tier,
+                    "confidence": alt.confidence,
+                    "mcmaster_part_number": alt.mcmaster_part_number,
+                    "mcmaster_url": alt.mcmaster_url,
+                    "mcmaster_reason": alt.mcmaster_reason,
+                }
+            )
+    if not records:
+        return pd.DataFrame(columns=list(ALT_COLUMNS))
+    return pd.DataFrame(records).reindex(columns=list(ALT_COLUMNS))
 
 
 def project_parts_dataframe(project: Project) -> pd.DataFrame:

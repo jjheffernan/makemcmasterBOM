@@ -14,7 +14,10 @@ from backend.services.pricing_listing import (
     pricing_from_browse_row,
 )
 from backend.services.vendors.mcmaster.browse_fetch import fetch_browse_rows
-from backend.services.vendors.mcmaster.browse_row_select import pick_lowest_price_row
+from backend.services.vendors.mcmaster.browse_row_select import (
+    pick_lowest_price_row,
+    pick_simplest_browse_row,
+)
 from backend.services.vendors.mcmaster.filters import infer_finish_from_bom
 from backend.services.vendors.mcmaster.finish_browse import (
     build_browse_finish_options,
@@ -39,10 +42,16 @@ class _HydratedVariant:
 def _resolve_policy(part: Part) -> str:
     if infer_finish_from_bom(part.normalized_name or part.original_name, part.specification):
         return "finish"
-    policy = (part.match_selection_policy or "lowest_price").strip().lower()
-    if policy in {"finish", "lowest_price"}:
+    policy = (part.match_selection_policy or "simplest").strip().lower()
+    if policy in {"finish", "lowest_price", "simplest"}:
         return policy
-    return "lowest_price"
+    return "simplest"
+
+
+def _pick_browse_row(part: Part, rows: list, *, browse_url: str, policy: str):
+    if policy == "lowest_price":
+        return pick_lowest_price_row(part, rows, browse_url=browse_url)
+    return pick_simplest_browse_row(part, rows, browse_url=browse_url)
 
 
 def _build_finish_option(
@@ -109,7 +118,7 @@ async def _hydrate_single_url(
     if not rows:
         return None
 
-    row = pick_lowest_price_row(part, rows, browse_url=browse_url)
+    row = _pick_browse_row(part, rows, browse_url=browse_url, policy=_resolve_policy(part))
     if not row:
         return None
     variant = _build_finish_option(finish_id, label, browse_url, row, part)
@@ -172,7 +181,7 @@ async def hydrate_part_from_browse(
     """
     Load live McMaster product tables for finish variants (or the primary browse URL).
 
-    Defaults to lowest unit cost when the BOM does not specify a finish.
+    Defaults to the simplest standard catalog row when the BOM does not specify a finish.
     """
     if not config.MCMASTER_BROWSE_RESOLVE_ENABLED:
         return part
@@ -341,7 +350,7 @@ def _filter_path_from_url(url: str) -> str:
         segment
         for segment in segments
         if segment.startswith(
-            ("system-of-measurement", "thread-size", "length", "trade")
+            ("system-of-measurement", "thread-size", "screw-size", "length", "trade")
         )
     ]
     if not filter_segments:

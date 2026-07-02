@@ -22,6 +22,8 @@ async def test_list_import_stages():
     body = response.json()
     assert len(body["stages"]) == 7
     assert body["stages"][0]["id"] == "validate"
+    enrich = next(stage for stage in body["stages"] if stage["id"] == "enrich_mcmaster")
+    assert enrich["notebook"] == "05_api_payload.ipynb"
     assert any(stage["id"] == "enrich_mcmaster" for stage in body["stages"])
 
 

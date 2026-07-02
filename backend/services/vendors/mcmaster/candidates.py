@@ -16,13 +16,30 @@ from backend.services.mcmaster_catalog import CatalogHit, catalog_lookup
 from backend.services.mcmaster_handler import classify_category
 from backend.services.vendors.base import MatchTier, VendorLink
 from backend.services.vendors.mcmaster.filters import infer_material_variant_id
+from backend.services.vendors.mcmaster.metacategories import (
+    metacategory_label,
+    resolve_link_metacategory,
+)
 from backend.services.vendors.mcmaster.tiers import (
     _try_explicit_part_number,
     _try_filtered_browse,
     _try_metric_category_browse,
     _vendor_link_from_catalog,
 )
+from backend.services.vendors.mcmaster.guess_strategy import (
+    build_same_size_finish_alternatives,
+    classify_guess_scope,
+    primary_sort_key,
+)
 from backend.services.vendors.mcmaster.urls import category_search_url
+
+_GUESS_LABELS = {
+    "catalog": "Catalog SKU",
+    "rule": "Length rule",
+    "part_number": "BOM part #",
+    "filtered_browse": "Filtered table",
+    "category_search": "Category table",
+}
 
 _TIER_RANK: dict[MatchTier, int] = {
     "filtered_browse": 0,
@@ -49,16 +66,29 @@ class ScoredCandidate:
     reason: str
     verification: HardwareMatchCheck | None = None
 
-    def to_alternative(self) -> MatchAlternative:
+    def to_alternative(self, *, guess_scope: str = "wider_scope") -> MatchAlternative:
+        tier = self.link.tier
+        label = _GUESS_LABELS.get(tier, tier.replace("_", " ").title())
+        finish = self.link.extras.get("browse_finish")
+        if finish and guess_scope == "same_size":
+            label = str(self.link.extras.get("finish_label") or finish).replace("_", " ")
+        meta_id = resolve_link_metacategory(
+            category_id=self.link.category_id,
+            url=self.link.url,
+        )
         return MatchAlternative(
             mcmaster_url=self.link.url,
             mcmaster_part_number=self.link.part_number,
             mcmaster_category=self.link.category_id,
+            mcmaster_metacategory=meta_id or "",
+            mcmaster_metacategory_label=metacategory_label(meta_id) if meta_id else "",
             match_tier=self.link.tier,
             confidence=self.confidence,
             confidence_low=self.confidence_low,
             confidence_high=self.confidence_high,
             mcmaster_reason=self.reason,
+            guess_scope=guess_scope,
+            guess_label=label,
         )
 
 
@@ -111,26 +141,26 @@ def _score_filtered_browse(
 
     if spec and spec.diameter_mm and spec.length_mm is not None:
         return (
-            0.90,
-            0.86,
-            0.94,
-            f"Best guess — McMaster filtered table for {spec.label()}{finish_note}",
+            0.92,
+            0.88,
+            0.96,
+            f"Primary guess — filtered McMaster table for {spec.label()}{finish_note}",
         )
     if spec and spec.diameter_mm:
         if spec.kind in {"nut", "washer"}:
             return (
-                0.82,
-                0.78,
                 0.86,
-                f"Best guess — McMaster filtered table for {spec.label()}{finish_note}",
+                0.82,
+                0.90,
+                f"Primary guess — filtered McMaster table for {spec.label()}{finish_note}",
             )
         return (
-            0.78,
-            0.72,
             0.82,
-            f"Filtered browse — metric thread {spec.label()} (length not in BOM){finish_note}",
+            0.76,
+            0.86,
+            f"Primary guess — metric thread {spec.label()} (length not in BOM){finish_note}",
         )
-    return 0.70, 0.65, 0.75, f"McMaster {link.category_label} filtered browse"
+    return 0.70, 0.65, 0.75, f"Primary guess — McMaster {link.category_label} filtered browse"
 
 
 def _score_catalog(
@@ -207,12 +237,17 @@ def _score_part_number(link: VendorLink) -> tuple[float, float, float, str]:
 def _score_category_search(link: VendorLink) -> tuple[float, float, float, str]:
     if link.method == "metric_category_browse" and link.filter_path:
         return (
-            0.62,
-            0.56,
-            0.68,
-            f"McMaster {link.category_label} — metric thread table (pre-filtered)",
+            0.58,
+            0.52,
+            0.64,
+            f"Wider search — McMaster {link.category_label} metric thread table",
         )
-    return 0.52, 0.45, 0.58, f"McMaster {link.category_label} category search"
+    return (
+        0.48,
+        0.42,
+        0.54,
+        f"Wider search — McMaster {link.category_label} category browse",
+    )
 
 
 def _score_site_search() -> tuple[float, float, float, str]:
@@ -383,10 +418,113 @@ def collect_scored_candidates(
 def pick_primary_and_alternatives(
     candidates: list[ScoredCandidate],
     *,
-    max_alternatives: int = 4,
+    query: str = "",
+    part: Part | None = None,
+    max_same_size: int = 3,
+    max_wider_scope: int = 3,
 ) -> tuple[ScoredCandidate | None, list[ScoredCandidate]]:
     if not candidates:
         return None, []
-    primary = candidates[0]
-    alternatives = candidates[1 : max_alternatives + 1]
-    return primary, alternatives
+
+    specification = part.specification if part else ""
+    ranked = sorted(
+        candidates,
+        key=lambda c: primary_sort_key(
+            c,
+            tier_rank=_TIER_RANK,
+            query=query,
+            specification=specification,
+        ),
+        reverse=True,
+    )
+    primary = ranked[0]
+    remainder = [c for c in ranked if c.link.url != primary.link.url]
+
+    same_size: list[ScoredCandidate] = []
+    wider_scope: list[ScoredCandidate] = []
+    for candidate in remainder:
+        scope = classify_guess_scope(
+            candidate.link,
+            primary.link,
+            verification_status=(
+                candidate.verification.status if candidate.verification else None
+            ),
+            query=query,
+            specification=specification,
+        )
+        if scope == "same_size":
+            same_size.append(candidate)
+        else:
+            wider_scope.append(candidate)
+
+    if part and primary.link.tier == "filtered_browse" and primary.link.filter_path:
+        primary_finish = str(primary.link.extras.get("browse_finish", ""))
+        finish_alts = build_same_size_finish_alternatives(
+            query,
+            part,
+            category_id=primary.link.category_id,
+            filter_path=primary.link.filter_path,
+            primary_finish_id=primary_finish,
+        )
+        existing_urls = {primary.link.url} | {c.link.url for c in same_size}
+        for alt in finish_alts:
+            if alt.mcmaster_url in existing_urls:
+                continue
+            existing_urls.add(alt.mcmaster_url)
+            same_size.append(
+                ScoredCandidate(
+                    link=VendorLink(
+                        url=alt.mcmaster_url,
+                        link_kind="filtered_browse",
+                        tier="filtered_browse",
+                        category_id=alt.mcmaster_category,
+                        category_label=primary.link.category_label,
+                        filter_path=primary.link.filter_path,
+                        method="finish_alternate",
+                        confidence_hint=alt.confidence,
+                        extras={
+                            "browse_finish": alt.guess_label,
+                            "finish_label": alt.guess_label,
+                        },
+                    ),
+                    catalog_hit=None,
+                    confidence=alt.confidence,
+                    confidence_low=alt.confidence_low or alt.confidence,
+                    confidence_high=alt.confidence_high or alt.confidence,
+                    reason=alt.mcmaster_reason,
+                )
+            )
+
+    same_size.sort(
+        key=lambda c: (-c.confidence, _TIER_RANK.get(c.link.tier, 50)),
+    )
+    wider_scope.sort(
+        key=lambda c: (-c.confidence, _TIER_RANK.get(c.link.tier, 50)),
+    )
+
+    structured: list[ScoredCandidate] = []
+    structured.extend(same_size[:max_same_size])
+    structured.extend(wider_scope[:max_wider_scope])
+    return primary, structured
+
+
+def alternatives_with_scope(
+    alt_candidates: list[ScoredCandidate],
+    primary: ScoredCandidate,
+    *,
+    query: str = "",
+    specification: str = "",
+) -> list[MatchAlternative]:
+    results: list[MatchAlternative] = []
+    for candidate in alt_candidates:
+        scope = classify_guess_scope(
+            candidate.link,
+            primary.link,
+            verification_status=(
+                candidate.verification.status if candidate.verification else None
+            ),
+            query=query,
+            specification=specification,
+        )
+        results.append(candidate.to_alternative(guess_scope=scope))
+    return results

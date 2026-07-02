@@ -41,10 +41,11 @@ def test_stainless_spec_prefers_filtered_browse_over_black_oxide_catalog():
     assert catalog_alt.confidence < matched.confidence
 
 
-def test_category_search_tier_is_possible():
+def test_imperial_screw_gets_filtered_browse_tier():
     matched = match_part(Part(original_name="#6-32 x 1/2\"", specification=""))
-    assert matched.match_tier == "category_search"
-    assert matched.mcmaster_status == "possible"
+    assert matched.match_tier == "filtered_browse"
+    assert matched.mcmaster_status in {"likely", "possible"}
+    assert "system-of-measurement~inch" in matched.mcmaster_url
 
 
 def test_unclassified_hardware_not_site_search():

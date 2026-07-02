@@ -24,9 +24,15 @@ from backend.services.hardware_spec import (
 )
 from backend.services.mcmaster_catalog import catalog_lookup
 from backend.services.mcmaster_handler import build_mcmaster_link
+from backend.services.vendors.mcmaster.metacategories import (
+    infer_bom_metacategory,
+    metacategory_label,
+    resolve_link_metacategory,
+)
 from backend.services.vendors.mcmaster.candidates import (
     collect_scored_candidates,
     pick_primary_and_alternatives,
+    alternatives_with_scope,
 )
 from backend.services.vendors.mcmaster.finish_browse import (
     build_browse_finish_options,
@@ -493,7 +499,11 @@ def match_part(part: Part) -> Part:
         )
 
     candidates = collect_scored_candidates(query, part)
-    primary, alt_candidates = pick_primary_and_alternatives(candidates)
+    primary, alt_candidates = pick_primary_and_alternatives(
+        candidates,
+        query=query,
+        part=part,
+    )
 
     if primary is None or primary.link.tier in {"site_search", "not_applicable"}:
         search_reason = (
@@ -526,7 +536,12 @@ def match_part(part: Part) -> Part:
     if preliminary_status == "unlikely":
         confidence = min(confidence, 0.25)
     link = vendor_link_to_handler_link(primary.link)
-    alternatives = [candidate.to_alternative() for candidate in alt_candidates]
+    alternatives = alternatives_with_scope(
+        alt_candidates,
+        primary,
+        query=query,
+        specification=part.specification,
+    )
 
     final_status = resolve_match_status(
         confidence,
@@ -537,12 +552,24 @@ def match_part(part: Part) -> Part:
     if not preliminary_reason and primary.link.tier not in {"site_search"}:
         reason = primary.reason
 
+    meta_id = (
+        resolve_link_metacategory(
+            category_id=primary.link.category_id,
+            url=primary.link.url,
+        )
+        or infer_bom_metacategory(query, part.specification)
+        or ""
+    )
+    meta_label = metacategory_label(meta_id) if meta_id else ""
+
     matched = part.model_copy(
         update={
             "normalized_name": query,
             "mcmaster_url": primary.link.url,
             "mcmaster_part_number": primary.link.part_number,
             "mcmaster_category": primary.link.category_id,
+            "mcmaster_metacategory": meta_id,
+            "mcmaster_metacategory_label": meta_label,
             "confidence": confidence,
             "confidence_low": primary.confidence_low,
             "confidence_high": primary.confidence_high,

@@ -38,6 +38,7 @@ async def test_hydrate_part_defaults_to_lowest_price(monkeypatch):
     )
     part = Part(
         original_name="M3x8 socket head cap screw",
+        match_selection_policy="lowest_price",
         match_tier="filtered_browse",
         mcmaster_url=(
             "https://www.mcmaster.com/products/screws/socket-head-screws-2~/"

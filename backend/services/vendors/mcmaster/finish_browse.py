@@ -14,6 +14,10 @@ from backend.services.vendors.mcmaster.filters import (
     infer_material_variant_id,
 )
 from backend.services.vendors.mcmaster.urls import filtered_browse_url
+from backend.services.vendors.mcmaster.nut_subtype import NUT_CATEGORY_IDS
+from backend.services.vendors.mcmaster.washer_subtype import lock_washer_finish_id
+
+NUT_METRIC_TABLE_CATEGORIES = NUT_CATEGORY_IDS
 
 
 def applicable_finish_roots(
@@ -33,9 +37,14 @@ def applicable_finish_roots(
         root = get_browse_root(category_id, bom_finish)
         return [root] if root else []
 
-    if category_id in {"nut", "washer"}:
+    if category_id in NUT_METRIC_TABLE_CATEGORIES | {"flat_washer", "fender_washer"}:
         metric = get_metric_finish_root(category_id)
         return [metric] if metric else []
+
+    if category_id == "lock_washer":
+        finish_id = lock_washer_finish_id(query, specification)
+        root = get_browse_root(category_id, finish_id)
+        return [root] if root else []
 
     default_id = infer_material_variant_id(
         query,

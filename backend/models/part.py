@@ -26,6 +26,16 @@ class MatchAlternative(BaseModel):
     confidence_low: float | None = Field(default=None, ge=0.0, le=1.0)
     confidence_high: float | None = Field(default=None, ge=0.0, le=1.0)
     mcmaster_reason: str = ""
+    guess_scope: str = Field(
+        default="wider_scope",
+        description="same_size = same thread/length/material variant; wider_scope = broader table/search",
+    )
+    guess_label: str = Field(
+        default="",
+        description="Short UI label (e.g. finish name or 'Category search')",
+    )
+    mcmaster_metacategory: str = ""
+    mcmaster_metacategory_label: str = ""
 
 
 class BrowseFinishOption(BaseModel):
@@ -51,6 +61,8 @@ class Part(BaseModel):
     mcmaster_url: str = ""
     mcmaster_part_number: str = ""
     mcmaster_category: str = ""
+    mcmaster_metacategory: str = ""
+    mcmaster_metacategory_label: str = ""
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
     confidence_low: float | None = Field(default=None, ge=0.0, le=1.0)
     confidence_high: float | None = Field(default=None, ge=0.0, le=1.0)
@@ -85,8 +97,8 @@ class Part(BaseModel):
         description="Human-readable note from McMaster listing or API tier",
     )
     match_selection_policy: str = Field(
-        default="lowest_price",
-        description="How multi-option rows are picked: lowest_price or finish",
+        default="simplest",
+        description="How multi-option rows are picked: simplest, lowest_price, or finish",
     )
     match_option_count: int = Field(
         default=0,

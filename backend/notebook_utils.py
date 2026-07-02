@@ -14,6 +14,7 @@ from backend.notebook_frames import (
     BROWSE_ROW_COLUMNS,
     PART_COLUMNS,
     browse_rows_to_dataframe,
+    alternatives_to_dataframe,
     parts_to_dataframe,
     project_parts_dataframe,
 )
