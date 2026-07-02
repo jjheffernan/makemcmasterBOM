@@ -19,6 +19,23 @@
       ]
     },
     {
+      "id": "flat_head_screw",
+      "label": "Flat Head Socket Screws",
+      "route": "/products/socket-flat-head-screws/",
+      "catalog_categories": [],
+      "priority": 11,
+      "signals": [
+        "flat head",
+        "flat head cap screw",
+        "countersunk",
+        "countersink",
+        "fhcs",
+        "csfh",
+        "din7991",
+        "iso10642"
+      ]
+    },
+    {
       "id": "screw",
       "label": "Screws",
       "route": "/products/screws/",

@@ -24,6 +24,25 @@ MCMASTER_SITE_BASE = "https://www.mcmaster.com"
 
 LinkType = Literal["product", "filtered_browse", "category_search", "site_search"]
 
+_FLAT_HEAD_QUERY_RE = re.compile(
+    r"\b(flat[\s-]*head|countersinks?|countersunk|countersinked|fhcs|csfh|din7991|iso10642)\b",
+    re.I,
+)
+_SOCKET_HEAD_QUERY_RE = re.compile(
+    r"\b(socket[\s-]*head|shcs|cap[\s-]*screw|din912|iso4762)\b",
+    re.I,
+)
+
+
+def infer_screw_head_type(query: str) -> str | None:
+    """Return flat_head, socket_head, or None when head type is unspecified."""
+    lower = query.lower()
+    if _FLAT_HEAD_QUERY_RE.search(lower):
+        return "flat_head"
+    if _SOCKET_HEAD_QUERY_RE.search(lower):
+        return "socket_head"
+    return None
+
 
 @dataclass(frozen=True)
 class McMasterCategory:
@@ -117,6 +136,12 @@ def _signal_score(query: str, category: McMasterCategory) -> float:
             score += 1.0
     if category.id == "bearing" and BEARING_DESIGNATION_RE.search(lower):
         score += 3.0
+    if category.id == "flat_head_screw" and _FLAT_HEAD_QUERY_RE.search(lower):
+        score += 3.0
+    if category.id == "socket_head_screw" and _SOCKET_HEAD_QUERY_RE.search(lower):
+        score += 2.0
+    if category.id == "socket_head_screw" and _FLAT_HEAD_QUERY_RE.search(lower):
+        score -= 3.0
     if category.id in {"socket_head_screw", "screw"} and has_metric_fastener(lower):
         if has_fastener_type(lower) or "screw" in lower or "bolt" in lower:
             score += 1.5
@@ -133,33 +158,10 @@ def classify_category(
     catalog_category: str | None = None,
 ) -> CategoryMatch:
     """Pick the best McMaster site category for a hardware query."""
-    if catalog_category:
-        mapped = _catalog_category_index().get(catalog_category.lower())
-        if mapped:
-            return CategoryMatch(mapped, 1.0, "catalog")
+    from backend.services.vendors.mcmaster.category_router import route_category
 
-    if not query or not query.strip():
-        default = _default_category()
-        return CategoryMatch(default, 0.0, "default")
-
-    best: McMasterCategory | None = None
-    best_score = 0.0
-    for category in _load_categories():
-        score = _signal_score(query, category)
-        if score > best_score:
-            best = category
-            best_score = score
-
-    if best and best_score >= 1.0:
-        return CategoryMatch(best, min(best_score / 4.0, 1.0), "signal")
-
-    if has_metric_fastener(query) and FASTENER_TYPE_RE.search(query):
-        for category in _load_categories():
-            if category.id == "socket_head_screw":
-                return CategoryMatch(category, 0.6, "metric")
-
-    default = _default_category()
-    return CategoryMatch(default, 0.0, "default")
+    routed = route_category(query, catalog_category=catalog_category)
+    return CategoryMatch(routed.category, routed.score, routed.method)
 
 
 def category_search_url(category: McMasterCategory, query: str) -> str:

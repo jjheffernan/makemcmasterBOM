@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "description": "Category routing weights for McMaster /products/ browse. catalog_size is approximate SKU count for tie-breaking; escape_keywords narrow broad parents.",
+  "categories": [
+    {
+      "category_id": "screw",
+      "parent_id": null,
+      "catalog_size": 12000,
+      "escape_keywords": []
+    },
+    {
+      "category_id": "socket_head_screw",
+      "parent_id": "screw",
+      "catalog_size": 8847,
+      "escape_keywords": ["socket head", "shcs", "cap screw", "din912", "iso4762"]
+    },
+    {
+      "category_id": "flat_head_screw",
+      "parent_id": "screw",
+      "catalog_size": 2524,
+      "escape_keywords": [
+        "flat head",
+        "countersink",
+        "countersunk",
+        "fhcs",
+        "csfh",
+        "din7991",
+        "iso10642"
+      ]
+    },
+    {
+      "category_id": "nut",
+      "parent_id": null,
+      "catalog_size": 4500,
+      "escape_keywords": ["hex nut", "lock nut", "nyloc", "jam nut", "flange nut"]
+    },
+    {
+      "category_id": "washer",
+      "parent_id": null,
+      "catalog_size": 3800,
+      "escape_keywords": ["flat washer", "lock washer", "fender washer"]
+    },
+    {
+      "category_id": "bearing",
+      "parent_id": null,
+      "catalog_size": 3200,
+      "escape_keywords": ["bearing", "ball bearing", "608", "693"]
+    },
+    {
+      "category_id": "insert",
+      "parent_id": null,
+      "catalog_size": 900,
+      "escape_keywords": ["heat insert", "threaded insert"]
+    },
+    {
+      "category_id": "standoff",
+      "parent_id": null,
+      "catalog_size": 1200,
+      "escape_keywords": ["standoff"]
+    },
+    {
+      "category_id": "tubing",
+      "parent_id": null,
+      "catalog_size": 2500,
+      "escape_keywords": ["tubing", "ptfe", "hose"]
+    },
+    {
+      "category_id": "magnet",
+      "parent_id": null,
+      "catalog_size": 800,
+      "escape_keywords": ["magnet", "neodymium"]
+    }
+  ]
+}

@@ -119,6 +119,15 @@ def extract_fastener_specs(text: str) -> list[MetricFastenerSpec]:
             )
         )
 
+    # Bare metric thread + nut/washer (e.g. "M3 Nut", "M4 washer")
+    diameter_only = METRIC_THREAD_RE.search(text)
+    if diameter_only:
+        kind = _kind_from_text(text)
+        if kind in {"nut", "washer"}:
+            diameter = float(diameter_only.group(1))
+            if not any(s.diameter_mm == diameter and s.kind == kind for s in found):
+                add(_spec_from_metric_match(diameter, None, text))
+
     # Diameter from M-label + trailing screw length (e.g. after normalization)
     diameter_match = METRIC_THREAD_RE.search(text)
     length_match = FASTENER_TRAILING_LENGTH_MM.search(text)
@@ -200,7 +209,9 @@ def build_explicit_fastener_query(spec: MetricFastenerSpec, *, hint_text: str = 
     if length is not None:
         if "button head" in hint or "bhcs" in hint:
             return f"M{d:g}x{length} mm button head cap screw"
-        if "flat head" in hint or "fhcs" in hint:
+        if "flat head" in hint or "fhcs" in hint or re.search(
+            r"\b(countersink(?:ed)?)\b", hint
+        ):
             return f"M{d:g}x{length} mm flat head cap screw"
         if "hex bolt" in hint or re.search(r"\bbolt\b", hint):
             return f"M{d:g}x{length} mm hex bolt"

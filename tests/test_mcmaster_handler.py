@@ -28,14 +28,14 @@ def test_classify_category_common_hardware(query, category_id):
     assert match.category.id == category_id
 
 
-def test_build_mcmaster_link_category_scoped_search():
+def test_build_mcmaster_link_unclassified_without_site_search():
     link = build_mcmaster_link(
         "random widget bracket",
         part=Part(original_name="random widget bracket"),
     )
-    assert link.link_type in {"category_search", "site_search"}
-    assert "/products/" in link.url
-    assert "searchQuery=" in link.url
+    assert link.link_type == "site_search"
+    assert link.url == ""
+    assert link.method == "unclassified"
 
 
 def test_build_mcmaster_link_catalog_product():
