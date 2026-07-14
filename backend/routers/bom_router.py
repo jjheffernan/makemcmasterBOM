@@ -1,14 +1,17 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel
 
+from backend import config
 from backend.api.store import get, list_history, update
 from backend.models.part import Part
 from backend.models.project import Project, ProjectHistoryItem
+from backend.rate_limit import check_sync_pricing_rate_limit
 from backend.services.parsers.helpers.spec_metadata import SPEC_HINTS, normalize_part_specification
 from backend.services.parsers.helpers.specification_checks import check_parts_specifications
 from backend.services.pipeline import parts_to_csv
+from backend.services.vendors.mcmaster.urls import is_mcmaster_url
 
 router = APIRouter(prefix="/bom", tags=["bom"])
 
@@ -86,10 +89,31 @@ async def validate_specifications(
     )
 
 
-@router.post("/sync-pricing", response_model=SyncPricingResponse)
+@router.post(
+    "/sync-pricing",
+    response_model=SyncPricingResponse,
+    dependencies=[Depends(check_sync_pricing_rate_limit)],
+)
 async def sync_pricing(body: SyncPricingRequest) -> SyncPricingResponse:
     """Pull price tiers from McMaster hardware listings (API or browse table)."""
     from backend.services.pricing_listing import sync_parts_pricing_from_listings
+
+    if len(body.parts) > config.SYNC_PRICING_MAX_PARTS:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Too many parts for sync-pricing "
+                f"({len(body.parts)} > {config.SYNC_PRICING_MAX_PARTS})."
+            ),
+        )
+
+    for part in body.parts:
+        url = (part.mcmaster_url or "").strip()
+        if url and not is_mcmaster_url(url):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid McMaster URL for part {part.original_name!r}",
+            )
 
     updated = await sync_parts_pricing_from_listings(body.parts)
     synced = sum(

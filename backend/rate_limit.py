@@ -125,6 +125,35 @@ async def check_feedback_rate_limit(request: Request) -> None:
         hits.append(now)
 
 
+async def check_sync_pricing_rate_limit(request: Request) -> None:
+    """Raise 429 if this client exceeds sync-pricing requests per minute."""
+    if not config.RATE_LIMIT_ENABLED:
+        return
+
+    key = f"sync-pricing:{_client_key(request)}"
+    limit = config.RATE_LIMIT_SYNC_PRICING_PER_MINUTE
+    window_seconds = 60.0
+    now = time.monotonic()
+
+    async with _client_lock:
+        hits = _client_windows[key]
+        while hits and now - hits[0] > window_seconds:
+            hits.popleft()
+
+        if len(hits) >= limit:
+            retry_after = int(window_seconds - (now - hits[0])) + 1
+            raise HTTPException(
+                status_code=429,
+                detail=(
+                    f"Sync-pricing rate limit exceeded ({limit} per minute). "
+                    f"Try again in {retry_after}s."
+                ),
+                headers={"Retry-After": str(retry_after)},
+            )
+
+        hits.append(now)
+
+
 def reset_rate_limits_for_tests() -> None:
     """Clear state between tests."""
     global _last_outbound_at, _scrape_semaphore

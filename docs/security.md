@@ -46,7 +46,7 @@ Prioritized for **public or shared-network** deployment. Acceptable for solo loc
 | Priority | Issue | Location | Mitigation |
 |----------|-------|----------|------------|
 | **High** | Substring URL validation → SSRF | `mcmaster/urls.py` `is_mcmaster_url()`; `scraper.py` `normalize_makerworld_url()` | Parse hostname; allow only `*.mcmaster.com` / `*.makerworld.com`; block private IPs |
-| **Medium** | `POST /api/bom/sync-pricing` unauthenticated, uncapped | `bom_router.py` | Rate limit, max parts/request, re-validate URLs |
+| **Medium** | `POST /api/bom/sync-pricing` — still unauthenticated | `bom_router.py` | **Partially mitigated:** rate limit + max parts + URL re-check (`RATE_LIMIT_SYNC_PRICING_PER_MINUTE`, `SYNC_PRICING_MAX_PARTS`). Auth still required before public exposure. |
 | **Medium** | Spoofable `X-Forwarded-For` for rate limits | `rate_limit.py` | Trust forwarded headers only from known reverse proxies |
 | **Medium** | Unbounded upload `file.read()` | `import_router.py` | Max upload size (413) |
 | **Medium** | No API auth | All routers | API key or OAuth before exposing beyond localhost |
