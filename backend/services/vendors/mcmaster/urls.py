@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import ipaddress
 import re
-from urllib.parse import quote_plus
+from urllib.parse import quote_plus, urlparse
 
 from backend.services.mcmaster_handler import _is_excluded_route
 
@@ -73,5 +74,30 @@ def part_number_from_url(url: str) -> str | None:
     return match.group(1).upper() if match else None
 
 
+def _hostname_allowed_for_domain(url: str, base_domain: str) -> bool:
+    """True when URL is http(s) with host exactly base_domain or a subdomain thereof.
+
+    Rejects private / link-local / loopback IP literals.
+    """
+    if not url or not str(url).strip():
+        return False
+    parsed = urlparse(str(url).strip())
+    if parsed.scheme not in ("http", "https"):
+        return False
+    host = (parsed.hostname or "").lower().rstrip(".")
+    if not host:
+        return False
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        ip = None
+    if ip is not None:
+        if ip.is_private or ip.is_loopback or ip.is_link_local:
+            return False
+        # Public IP literals are never valid vendor hostnames.
+        return False
+    return host == base_domain or host.endswith(f".{base_domain}")
+
+
 def is_mcmaster_url(url: str) -> bool:
-    return bool(url and "mcmaster.com" in url.lower())
+    return _hostname_allowed_for_domain(url, "mcmaster.com")

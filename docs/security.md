@@ -24,6 +24,7 @@ Threat model and deployment guidance for the MakerWorld BOM → McMaster-Carr MV
 |---------|----------|
 | Credentials from env only | `backend/config.py` — never returned in API JSON |
 | Guardrail tests | `tests/test_guardrails.py` — leak-bait scan on API responses + tracked files |
+| Strict vendor URL hosts | `is_mcmaster_url` / `normalize_makerworld_url` — http(s) + hostname allowlist; reject private/link-local/loopback IP literals (`tests/test_urls.py`) |
 | CORS defaults | `backend/main.py` — localhost origins unless `CORS_ORIGINS` overridden |
 | Import rate limit | `POST /api/import*` — 12/min per client key |
 | Feedback rate limit | `POST /api/feedback/match-error` — 10/min |
@@ -45,7 +46,6 @@ Prioritized for **public or shared-network** deployment. Acceptable for solo loc
 
 | Priority | Issue | Location | Mitigation |
 |----------|-------|----------|------------|
-| **High** | Substring URL validation → SSRF | `mcmaster/urls.py` `is_mcmaster_url()`; `scraper.py` `normalize_makerworld_url()` | Parse hostname; allow only `*.mcmaster.com` / `*.makerworld.com`; block private IPs |
 | **Medium** | `POST /api/bom/sync-pricing` unauthenticated, uncapped | `bom_router.py` | Rate limit, max parts/request, re-validate URLs |
 | **Medium** | Spoofable `X-Forwarded-For` for rate limits | `rate_limit.py` | Trust forwarded headers only from known reverse proxies |
 | **Medium** | Unbounded upload `file.read()` | `import_router.py` | Max upload size (413) |
@@ -68,7 +68,7 @@ Use this before binding to `0.0.0.0` or deploying to a shared host:
 - [ ] Keep `FEEDBACK_DISPATCH_ENABLED=0` unless outbound channels are locked down
 - [ ] Store McMaster API cert and feedback tokens in secrets manager / env — never commit
 - [ ] Run `pytest tests/test_guardrails.py` in CI (see `.github/workflows/test.yml`)
-- [ ] Implement strict URL validation before enabling `sync-pricing` on a public instance
+- [x] Strict McMaster / MakerWorld hostname URL validation (substring SSRF fixed)
 - [ ] Place reverse proxy in front and configure trusted `X-Forwarded-For` handling
 
 ---

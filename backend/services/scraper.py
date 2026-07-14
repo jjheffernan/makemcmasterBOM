@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ipaddress
 import re
 from dataclasses import dataclass, field
 from typing import Literal
@@ -60,11 +61,35 @@ class ScrapeResult:
     warnings: list[str] = field(default_factory=list)
 
 
+def _is_allowed_makerworld_host(url: str) -> bool:
+    """True when URL is http(s) with host makerworld.com or a subdomain thereof.
+
+    Rejects private / link-local / loopback IP literals.
+    """
+    if not url or not str(url).strip():
+        return False
+    parsed = urlparse(str(url).strip())
+    if parsed.scheme not in ("http", "https"):
+        return False
+    host = (parsed.hostname or "").lower().rstrip(".")
+    if not host:
+        return False
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        ip = None
+    if ip is not None:
+        if ip.is_private or ip.is_loopback or ip.is_link_local:
+            return False
+        return False
+    return host == "makerworld.com" or host.endswith(".makerworld.com")
+
+
 def normalize_makerworld_url(url: str) -> str:
-    parsed = urlparse(url.strip())
-    if "makerworld.com" not in parsed.netloc:
+    cleaned = url.strip()
+    if not _is_allowed_makerworld_host(cleaned):
         raise ValueError("URL must be a makerworld.com project link")
-    return url.split("?")[0].rstrip("/")
+    return cleaned.split("?")[0].rstrip("/")
 
 
 @retry(
