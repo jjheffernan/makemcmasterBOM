@@ -33,7 +33,7 @@ Plan: [docs/plans/engineer-density-v1.md](docs/plans/engineer-density-v1.md)
   - verification: `cd frontend && npm run build`
   - risk: medium
 
-- [ ] Exact vs lazy guess wiring
+- [x] Exact vs lazy guess wiring
   - Acceptance: see feature-spec slice F
   - verification: `pytest -q -k 'guess or length or alternative'`
   - risk: medium

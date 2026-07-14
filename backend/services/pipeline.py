@@ -289,6 +289,8 @@ def parse_bom_only(
 def match_parts_only(
     parts: list,
     on_progress: ProgressCallback | None = None,
+    *,
+    guess_mode: str = "lazy",
 ) -> list:
     """McMaster matching — notebook 04 / pipeline match stage."""
     _emit(
@@ -299,7 +301,7 @@ def match_parts_only(
             message="Ranking McMaster-Carr browse links…",
         ),
     )
-    matched = matcher.match_parts(parts)
+    matched = matcher.match_parts(parts, guess_mode=guess_mode)
     na_count = sum(1 for p in matched if p.mcmaster_status == "not_applicable")
     match_msg = f"Matched {len(matched)} parts"
     if na_count:
