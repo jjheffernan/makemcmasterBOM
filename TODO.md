@@ -43,7 +43,7 @@ Plan: [docs/plans/engineer-density-v1.md](docs/plans/engineer-density-v1.md)
   - verification: `pytest -q -k export`
   - risk: low
 
-- [ ] Multi-site ingestion scaffold (no live other sites)
+- [x] Multi-site ingestion scaffold (no live other sites)
   - Acceptance: see feature-spec slice H
   - verification: `pytest -q -k site_adapter`
   - risk: low
