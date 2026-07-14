@@ -1,0 +1,7 @@
+BOM:
+- 14x M3 heat-set inserts M3x5x5
+- 8x M2.5 screws 8mm
+- 1x Raspberry Pi 4 (non McMaster)
+- PTFE tube 4mm OD
+Tools:
+ignore

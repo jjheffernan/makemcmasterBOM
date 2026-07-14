@@ -1,0 +1,321 @@
+{
+  "parser": "description",
+  "from_explicit_section": true,
+  "parts": [
+    {
+      "original_name": "You can print Mega Python in just about any filament you like",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "I recommend placing the AMS next to the printer or wall mounting it",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "Around (?) Kg of filament is required at\u2026",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "Filament",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "eSUN PLA+",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "eSUN PETG",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "Prusament Galaxy Black",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "M3-16 mm",
+      "quantity": 13.0,
+      "specification": ""
+    },
+    {
+      "original_name": "M3-16 mm",
+      "quantity": 2.0,
+      "specification": ""
+    },
+    {
+      "original_name": "M3-16 mm",
+      "quantity": 36.0,
+      "specification": ""
+    },
+    {
+      "original_name": "M3-16 mm",
+      "quantity": 6.0,
+      "specification": ""
+    },
+    {
+      "original_name": "M3-16 mm",
+      "quantity": 10.0,
+      "specification": ""
+    },
+    {
+      "original_name": "M3-16 mm",
+      "quantity": 2.0,
+      "specification": ""
+    },
+    {
+      "original_name": "M3-16 mm",
+      "quantity": 2.0,
+      "specification": ""
+    },
+    {
+      "original_name": "M3-16 mm",
+      "quantity": 8.0,
+      "specification": ""
+    },
+    {
+      "original_name": "M3-25 mm",
+      "quantity": 8.0,
+      "specification": ""
+    },
+    {
+      "original_name": "M3-16 mm",
+      "quantity": 4.0,
+      "specification": ""
+    },
+    {
+      "original_name": "M3-12 mm",
+      "quantity": 4.0,
+      "specification": ""
+    },
+    {
+      "original_name": "M3-25 mm",
+      "quantity": 20.0,
+      "specification": ""
+    },
+    {
+      "original_name": "M3-12 mm",
+      "quantity": 2.0,
+      "specification": ""
+    },
+    {
+      "original_name": "You can use 18 mm screws in place\u2026",
+      "quantity": 1.0,
+      "specification": "You can use 18 mm in place of the 16 mm in most locations in case you run out of certain screw lengths"
+    },
+    {
+      "original_name": "M3-12 mm",
+      "quantity": 6.0,
+      "specification": ""
+    },
+    {
+      "original_name": "M3-16 mm",
+      "quantity": 75.0,
+      "specification": ""
+    },
+    {
+      "original_name": "M3-25 mm",
+      "quantity": 28.0,
+      "specification": ""
+    },
+    {
+      "original_name": "If you don't have any at home it's\u2026",
+      "quantity": 1.0,
+      "specification": "If you don't have any at home it's best to grab the kit below, it will have everything you need for this build and more"
+    },
+    {
+      "original_name": "M3 Hex Socket Head Kit",
+      "quantity": 150.0,
+      "specification": ""
+    },
+    {
+      "original_name": "Cable Extensions",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "If you want genuine Molex Picoblade, I recommend you get them from",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "Molex Picoblade 7-pin (225 mm extension, 2 pcs required)",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "Molex Picoblade 8-pin (225 mm extension, 2 pcs required)",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "Bearings",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "For the spool holders you also need 8 x 608-ZZ bearings",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "608-ZZ bearings (or 608-RS)",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "You also need 12 x 693-ZZ bearings for\u2026",
+      "quantity": 1.0,
+      "specification": "You also need 12 x 693-ZZ bearings for the front drive gears sleeves and the 28T and 29T gears"
+    },
+    {
+      "original_name": "693-ZZ bearings",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "PTFE tubes",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "Bambu Lab PTFE Tube 4 m",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "AMS hub cable (1500 mm)",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "Bambu Bus Cable (select 6-pin, 1500 mm)",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "Optional",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "Extruder Gear for Bambu X1/P1P/P1S CNC Nano Coating",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "(Alternative Source)",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "BigTreeTech Panda Extruder",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "Build Plate PEO/PEI/PEY Spring Steel Sheet (Super 3D)",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "Build Plate PEO/PEI/PEY Spring Steel Sheet (IdeaFormer)",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "Hex Tools (1.5 mm - 3.0 mm)",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "So it's important you print exactly these files",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "front-left-print-2pcs-1.02.3mf",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "front-right-print-2pcs-1.02.3mf",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "middle-module-print-4pcs-1.02.3mf",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "rear-left-and-right-print-2pcs-1.02.3mf",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "rear-pcb-print-1pc-1.02.3mf",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "rear-motor-print-1pc-1.02.3mf",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "main-pcb-base-print-1pc-1.02.3mf",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "front-roller-holder-left-print-2pcs-1.02.3mf",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "front-roller-holder-right-print-2pcs-1.02.3mf",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "drive-gear-sleeve-adapter-print-4pcs-1.02.3mf",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "gear-block-print-8pcs-1.02.3mf",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "roller-block-print-8pcs-1.02.3mf",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "front-gear-29t-hard-print-4pcs-1.02.3mf",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "front-gear-29t-tpu-print-4pcs-1.02.3mf",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "rear-gear-28t-hard-print-4pcs-1.02.3mf",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "rear-gear-28t-tpu-print-4pcs-1.02.3mf",
+      "quantity": 1.0,
+      "specification": ""
+    }
+  ]
+}

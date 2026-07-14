@@ -1,0 +1,5 @@
+Bill of Materials (BOM)
+CAZN RJ45 ethernet port - https://example.com/x
+External Antenna 2 dBi - https://example.com/y
+14 M3 screws 4 M3 bolts
+ApplicationsMore text
