@@ -43,6 +43,7 @@ import {
   type Project,
   type SpecificationIssue,
 } from "@/lib/api";
+import { getMatchPreferences } from "@/lib/matchPreferences";
 import {
   mcmasterStatusClass,
   mcmasterStatusLabel,
@@ -527,12 +528,15 @@ export function BomEditorPage() {
         cell: ({ row }) => {
           const isNa = row.original.mcmaster_status === "not_applicable";
           const alternatives = row.original.match_alternatives ?? [];
+          const showWider =
+            getMatchPreferences().show_wider_scope_alternatives;
           const sameSizeAlts = alternatives.filter(
             (alt) => alt.guess_scope === "same_size",
           );
-          const widerAlts = alternatives.filter(
-            (alt) => alt.guess_scope !== "same_size",
-          );
+          const widerAlts = showWider
+            ? alternatives.filter((alt) => alt.guess_scope !== "same_size")
+            : [];
+          const visibleAlts = [...sameSizeAlts, ...widerAlts];
           return (
             <div className="space-y-1">
               <div className="flex min-w-0 items-center gap-1">
@@ -562,9 +566,9 @@ export function BomEditorPage() {
                   {row.original.mcmaster_part_number}
                 </p>
               )}
-              {alternatives.length > 0 && (
+              {visibleAlts.length > 0 && (
                 <Select
-                  key={`${row.index}-${row.original.mcmaster_url}`}
+                  key={`${row.index}-${row.original.mcmaster_url}-${showWider}`}
                   defaultValue=""
                   className={compactSelect}
                   aria-label="Other McMaster guesses"
