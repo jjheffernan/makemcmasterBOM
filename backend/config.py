@@ -38,6 +38,9 @@ def _env_int(name: str, default: int) -> int:
 
 DEBUG: bool = _env_bool("DEBUG")
 
+# BOM file uploads (`POST /api/import/file`) — 5 MiB default
+MAX_UPLOAD_BYTES: int = _env_int("MAX_UPLOAD_BYTES", 5 * 1024 * 1024)
+
 # Rate limiting (inbound API + outbound MakerWorld fetches)
 RATE_LIMIT_ENABLED: bool = _env_bool("RATE_LIMIT_ENABLED", default=True)
 RATE_LIMIT_IMPORT_PER_MINUTE: int = _env_int("RATE_LIMIT_IMPORT_PER_MINUTE", 12)

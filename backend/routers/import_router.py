@@ -6,7 +6,7 @@ import traceback
 from collections.abc import Awaitable, Callable
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
@@ -24,6 +24,40 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 REGRESSION_URLS_PATH = REPO_ROOT / "data" / "regression_urls.json"
 
 router = APIRouter(prefix="/import", tags=["import"])
+
+
+def _upload_too_large_detail(max_bytes: int) -> str:
+    return f"Upload exceeds maximum size of {max_bytes} bytes"
+
+
+def _reject_if_content_length_too_large(request: Request, max_bytes: int) -> None:
+    """Reject early when Content-Length is present and exceeds the upload cap."""
+    raw = request.headers.get("content-length")
+    if raw is None:
+        return
+    try:
+        length = int(raw)
+    except ValueError:
+        return
+    if length > max_bytes:
+        raise HTTPException(
+            status_code=413,
+            detail=_upload_too_large_detail(max_bytes),
+        )
+
+
+async def _read_upload_bytes(request: Request, file: UploadFile) -> bytes:
+    """Read upload bytes with Content-Length + post-read size guards (HTTP 413)."""
+    max_bytes = config.MAX_UPLOAD_BYTES
+    _reject_if_content_length_too_large(request, max_bytes)
+    # Cap the read so chunked / missing Content-Length cannot force unbounded memory use.
+    content = await file.read(max_bytes + 1)
+    if len(content) > max_bytes:
+        raise HTTPException(
+            status_code=413,
+            detail=_upload_too_large_detail(max_bytes),
+        )
+    return content
 
 
 class ImportRequest(BaseModel):
@@ -182,10 +216,11 @@ async def import_project_stream(body: ImportRequest) -> StreamingResponse:
 
 @router.post("/file", response_model=ImportResponse, dependencies=[Depends(check_import_rate_limit)])
 async def import_bom_file(
+    request: Request,
     file: UploadFile = File(...),
     title: str = Form(""),
 ) -> ImportResponse:
-    content = await file.read()
+    content = await _read_upload_bytes(request, file)
     filename = file.filename or "bom.csv"
     try:
         project = await import_from_file(content, filename, title=title)
@@ -203,10 +238,11 @@ async def import_bom_file(
 
 @router.post("/file/stream", dependencies=[Depends(check_import_rate_limit)])
 async def import_bom_file_stream(
+    request: Request,
     file: UploadFile = File(...),
     title: str = Form(""),
 ) -> StreamingResponse:
-    content = await file.read()
+    content = await _read_upload_bytes(request, file)
     filename = file.filename or "bom.csv"
 
     async def runner(on_progress: Callable[[StageEvent], None]) -> Project:
