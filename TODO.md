@@ -23,7 +23,7 @@ Plan: [docs/plans/engineer-density-v1.md](docs/plans/engineer-density-v1.md)
   - verification: `pytest -q -k 'import or upload'`
   - risk: low
 
-- [ ] Cap and rate-limit sync-pricing
+- [x] Cap and rate-limit sync-pricing
   - Acceptance: see feature-spec slice D
   - verification: `pytest -q -k sync_pricing`
   - risk: medium
