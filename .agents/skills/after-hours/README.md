@@ -10,15 +10,17 @@ Part of [heff-skills](https://github.com/jjheffernan/heff-skills).
 
 | Command | Role |
 |---------|------|
-| `/after-hours` | Primary — bootstrap, tick 0, arm sentinel |
+| `/after-hours` | Primary — bootstrap, tick 0, arm **recurring** sentinel |
 | `/after-hours --dry-run` | Queue only; no state / coding |
 | `/after-hours doctor` | Env + readiness scan; no arm |
-| `/after-hours 30m` | Same with custom interval |
+| `/after-hours 20m` / `30m` / `45m` | Custom **interval** between ticks (not a total time box) |
 | `/loop …` + this skill | Equivalent when pointed here |
 | Cursor Automation | Unattended cron (office-hours close) — [docs/automation.md](https://github.com/jjheffernan/heff-skills/blob/main/docs/automation.md) · [instructions template](./templates/automation-instructions.office-hours.close.txt) |
 | Mega-PR (unsafe) | Dual-token only — [mega-pr.md](./references/mega-pr.md); never config-sticky |
 
-Stop: `stop after-hours` / `stop loop`.## Install
+Stop (kills sentinel): `stop after-hours` / `stop loop`. Soft budgets (`maxPrs`, empty queue) **park** a tick only.
+
+## Install
 
 Primary (when published / registry-available):
 

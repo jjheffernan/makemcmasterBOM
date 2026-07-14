@@ -47,13 +47,11 @@ Config: `.cursor/after-hours-loop.config.json` ← [templates/config.example.jso
 
 | Trigger | Behavior |
 |---------|----------|
-| **`/after-hours`** | Primary. `/after-hours 45m`, `/after-hours --dry-run`, `/after-hours doctor`. Mega-PR only with `--mega-pr` **and** confirm line — [mega-pr](./references/mega-pr.md). |
+| **`/after-hours`** | Primary. `/after-hours 45m` (or `20m` / `30m`) sets the **recurring tick interval**, not a total time box. Also: `--dry-run`, `doctor`. Mega-PR only with `--mega-pr` **and** confirm line — [mega-pr](./references/mega-pr.md). |
 | **`/loop`** + this skill | Equivalent when pointed here. |
 | **Cursor Automation** | Cron (e.g. office hours close); same Sources in Instructions. See skill [tick-and-runners](./references/tick-and-runners.md) + install-tree / heff-skills [docs/automation.md](https://github.com/jjheffernan/heff-skills/blob/main/docs/automation.md). |
 
-Flow: load skill → **preflight** → bootstrap → tick 0 (unless dry-run) → arm sentinel ([tick-and-runners](./references/tick-and-runners.md)).
-
-Stop: `stop loop`, `stop after-hours`, `/after-hours stop`.
+Flow: load skill → **preflight** → bootstrap → tick 0 (unless dry-run) → arm **recurring** sentinel ([tick-and-runners](./references/tick-and-runners.md)). Soft budgets (`maxPrs`, empty queue) **park** a tick; they do **not** kill the sentinel. Stop: `stop loop`, `stop after-hours`, `/after-hours stop`.
 
 ## Modules
 

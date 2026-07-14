@@ -4,20 +4,26 @@ Loaded from the orchestrator when arming or continuing ticks — keep bash / cad
 
 ## In-session sentinel
 
-After bootstrap + tick 0 (not dry-run):
+After bootstrap + tick 0 (not dry-run), arm a **recurring** interval loop. The duration in `/after-hours 20m` / `30m` / `45m` is the **sleep between ticks**, not a total run budget.
 
 ```bash
+# INTERVAL_SECONDS from kickoff (default 2700 = 45m). Example tonight: 20m → 1200.
 while true; do
-  sleep 2700
-  echo 'AGENT_LOOP_TICK_AFTERHOURS {"prompt":"Continue after-hours tick per .agents/skills/after-hours-loop/SKILL.md"}'
+  sleep "${INTERVAL_SECONDS:-2700}"
+  echo 'AGENT_LOOP_TICK_AFTERHOURS {"prompt":"Continue after-hours tick per .agents/skills/after-hours/SKILL.md","intervalSeconds":'"${INTERVAL_SECONDS:-2700}"',"mode":"recurring"}'
 done
 ```
 
-- Check terminals for an existing matching loop before starting another.
-- Start background shell with `notify_on_output` on `^AGENT_LOOP_TICK_AFTERHOURS`.
-- Track PID for stop (`stop after-hours` / `stop loop`).
-- Re-arm only if agent-ready `open` items remain and `maxPrs` not hit.
-- Default interval **45m** (`2700`). `/after-hours 30m` or `/loop 30m` adjusts sleep.
+| Rule | Behavior |
+|------|----------|
+| Interval | Default **45m** (`2700`). `/after-hours Nm` or `/loop Nm` sets sleep to `N` minutes. |
+| Lifetime | Sentinel keeps looping until **user stop** (`stop after-hours` / `stop loop`) or a **hard safety stop** (denylist, auth weaken, dirty-tree fail-closed when configured to stop). |
+| Duplicate check | Check terminals for an existing `AGENT_LOOP_TICK_AFTERHOURS` loop before starting another. |
+| Arming | Background shell + `notify_on_output` on `^AGENT_LOOP_TICK_AFTERHOURS`. Track PID for stop. |
+| Soft budgets | Hitting `maxPrs`, empty agent-ready queue, or only deferred/`blocked` items → **park the tick** (noop / brief note). **Do not kill the sentinel** — the next interval still fires so Sources can refresh or the human can add work. |
+| Do not confuse | Never treat the interval as “run for N minutes then exit.” |
+
+Soft park on empty/`maxPrs` still updates state `tick` / optional `lastTickNotes`; morning brief is written on **hard stop** or user stop, not on every soft park (optional one-line chat note is enough).
 
 ## Each tick (summary)
 
@@ -28,7 +34,7 @@ done
 5. Run [outcome adapter](./outcomes.md) for `outcomeKind` (if `megaPr`, use bundled draft-pr path in [mega-pr.md](./mega-pr.md) — only for `draft-pr`; leave `branch-only` / `report-only` / `doc-artifact` / `external-ticket-update` on their own adapters); record status; append to `prs` if `draft-pr`; else record in item `notes` ([state-schema.md](./state-schema.md)). Update `consecutiveBlocked` (increment on blocked/skipped; reset on `done`).
 6. If `runsPath` set, write run evidence ([run-artifacts.md](./run-artifacts.md)).
 7. End of tick: if `babysitCi: true` and a PR opened, poll `gh pr checks` once ([guardrails.md](./guardrails.md) CI babysit). On red → block item; if `stopOnCiRed` → stop loop.
-8. Stop if `consecutiveBlocked >= maxConsecutiveBlocked` or other [guardrails](./guardrails.md); persist coarse `stopReason` + `stopDetail`; on stop write [morning-brief.md](./morning-brief.md).
+8. Soft park vs hard stop ([guardrails](./guardrails.md)): empty queue / `maxPrs` → park tick, **keep sentinel**; consecutive-blocked / dirty-tree / escalate conditions → stop + kill sentinel + morning brief.
 
 ## Cursor Automation
 

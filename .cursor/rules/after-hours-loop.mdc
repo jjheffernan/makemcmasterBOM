@@ -11,4 +11,4 @@ When the user runs **`/after-hours`**, **`/after-hours-loop`**, or **`/loop`** w
 
 Night Sources preset: `.cursor/after-hours-Sources.txt`
 
-Do **not** treat this rule as a standing overnight mandate. The loop only runs when the user (or an explicit Cursor Automation) invokes it. Stop phrases: `stop after-hours`, `stop loop`, `/after-hours stop`.
+`/after-hours Nm` sets a **recurring** tick every N minutes; empty queue / `maxPrs` parks a tick and **keeps** the sentinel. Stop phrases (kill sentinel): `stop after-hours`, `stop loop`, `/after-hours stop`.

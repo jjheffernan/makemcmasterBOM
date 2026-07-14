@@ -3,13 +3,14 @@ from __future__ import annotations
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from backend import config
 from backend.api.store import get, list_history, update
 from backend.models.part import Part
 from backend.models.project import Project, ProjectHistoryItem
 from backend.rate_limit import check_sync_pricing_rate_limit
+from backend.services.matcher import match_parts
 from backend.services.parsers.helpers.spec_metadata import SPEC_HINTS, normalize_part_specification
 from backend.services.parsers.helpers.specification_checks import check_parts_specifications
 from backend.services.pipeline import parts_to_csv, parts_to_tsv, parts_to_xlsx
@@ -72,6 +73,19 @@ class SyncPricingResponse(BaseModel):
     synced_count: int
 
 
+class RematchRequest(BaseModel):
+    parts: list[Part]
+    guess_mode: Literal["exact", "lazy"] = Field(
+        default="lazy",
+        description="exact suppresses wider_scope alternatives; lazy keeps current behavior",
+    )
+
+
+class RematchResponse(BaseModel):
+    parts: list[Part]
+    guess_mode: Literal["exact", "lazy"]
+
+
 @router.get("/spec-guidance", response_model=SpecGuidanceResponse)
 async def get_spec_guidance() -> SpecGuidanceResponse:
     return SpecGuidanceResponse(hints=dict(SPEC_HINTS))
@@ -100,6 +114,14 @@ async def validate_specifications(
         error_count=errors,
         warning_count=warnings,
     )
+
+
+@router.post("/rematch", response_model=RematchResponse)
+async def rematch_parts(body: RematchRequest) -> RematchResponse:
+    """Re-run McMaster matching with an exact|lazy guess mode."""
+    mode = body.guess_mode if body.guess_mode in {"exact", "lazy"} else "lazy"
+    matched = match_parts(body.parts, guess_mode=mode)
+    return RematchResponse(parts=matched, guess_mode=mode)
 
 
 @router.post(

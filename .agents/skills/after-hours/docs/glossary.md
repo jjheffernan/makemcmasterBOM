@@ -72,9 +72,11 @@ maxPrs: 3
 priority: github-first
 ```
 
-Equivalent: `/loop 45m` followed by “Follow `.agents/skills/after-hours-loop/SKILL.md`” plus the same Sources block.
+The `45m` (or `20m` / `30m`) token is the **recurring tick interval**, not a total night duration.
 
-Run bootstrap immediately (tick 0), then arm sentinel `AGENT_LOOP_TICK_AFTERHOURS`.
+Equivalent: `/loop 45m` followed by “Follow `.agents/skills/after-hours/SKILL.md`” plus the same Sources block.
+
+Run bootstrap immediately (tick 0), then arm recurring sentinel `AGENT_LOOP_TICK_AFTERHOURS`.
 
 ## Bootstrap (Cursor Automation)
 
@@ -97,11 +99,13 @@ Checkout configured **`baseBranch`**.
 | Cloud ledger | config `cloudLedgerPath` (default off / `null`; e.g. `.cursor/after-hours-ledger.json`) | No — must be committed when enabled |
 | Config | `.cursor/after-hours-loop.config.json` | Optional (often commit) |
 
-## Stop
+## Stop vs park
 
-- Empty queue → `stopReason: noop` (`stopDetail: empty-queue`)
-- `maxPrs` reached → `budget` / `maxPrs`
-- Guardrail / preflight / blocked streak / CI stop → `blocked` + matching `stopDetail`
-- User: **stop after-hours** / **stop loop** → `done` / `user-stop` (kill sentinel PID)
+| Condition | In-session behavior |
+|-----------|---------------------|
+| Empty agent-ready queue | **Park tick** — keep sentinel; note `empty-queue` |
+| `maxPrs` reached | **Park tick** — keep sentinel; further work may still be `branch-only` / local |
+| Guardrail / preflight / blocked streak / CI stop | **Stop loop** — kill sentinel; `blocked` + matching `stopDetail` |
+| User: **stop after-hours** / **stop loop** | **Stop loop** — `done` / `user-stop` (kill sentinel PID) |
 
-On stop, write the morning brief (pointers to PRs, non-PR outcomes, and blocked items). Coarse stop enum: [state-schema.md](../references/state-schema.md).
+On **hard stop**, write the morning brief (pointers to PRs, non-PR outcomes, and blocked items). Soft parks do not close the night. Coarse stop enum: [state-schema.md](../references/state-schema.md).

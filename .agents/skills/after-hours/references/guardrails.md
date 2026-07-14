@@ -9,11 +9,13 @@ Four severity levels. Use the lightest that still keeps overnight safe.
 | **Skip item** | `skipped` | Leave item; pick next. No PR. Note in morning brief. |
 | **Block item** | `blocked` | Same as skip for queue progress, but `blockReason` required (`needs-info`, `needs-grill`, `tests`, `hitl`, `ci-red`, …). Deferred ledger — must not vanish. |
 | **Stop loop** | stop | Kill sentinel / do not re-arm; write morning brief; persist coarse `stopReason` + optional `stopDetail` ([state-schema.md](./state-schema.md)). |
+| **Park tick** | noop tick | No new work this interval; **leave sentinel running**; optional `lastTickNotes`; do **not** write a closing morning brief solely for park. |
 | **Escalate** | stop + alert | Stop loop **and** surface hard safety (auth/secrets/denylist) first in Summary — human must act before next AFK. |
 
 ## Condition → severity map
 
 On **Stop loop**, set coarse `stopReason` (`done` / `blocked` / `noop` / `budget`) and `stopDetail` as noted.
+On **Park tick**, do **not** set terminal `stoppedAt` / do **not** kill the in-session sentinel.
 
 | Condition | Severity | `stopReason` / `stopDetail` |
 |-----------|----------|------------------------------|
@@ -23,8 +25,8 @@ On **Stop loop**, set coarse `stopReason` (`done` / `blocked` / `noop` / `budget
 | Tests / verification fail after one fix attempt | **Block item** | `tests` or `verification-failed` |
 | Item `verification[]` present but skipped/weakened to force pass | **Block item** + note | Never green-wash — [readiness.md](./readiness.md) |
 | `risk: high` without kickoff `allowHighRisk: true` | **Skip item** | Leave for daytime; do not invent low risk |
-| Empty queue (no agent-ready work) | **Stop loop** | `noop` / `empty-queue` (dry-run stays noop) |
-| `prs.length >= maxPrs` | **Stop loop** | `budget` / `maxPrs` |
+| Empty queue (no agent-ready work) | **Park tick** | Note `empty-queue` in `lastTickNotes`; keep sentinel (in-session). Dry-run / doctor still exit without arming. |
+| `prs.length >= maxPrs` | **Park tick** | Note `maxPrs` in `lastTickNotes`; keep sentinel. Further code can still use `branch-only` / local commits when Sources allow. |
 | User: stop after-hours / stop loop | **Stop loop** | `done` / `user-stop` — kill sentinel PID |
 | Dirty working tree at tick start and `safety.stopOnDirtyTree` | **Stop loop** | `blocked` / `preflight` (or `guardrail`) — fail-closed; do not start coding |
 | Staged/changed path matches `safety.pathDenylist` | **Escalate** | `blocked` / `guardrail` — before commit/push; never open PR |
@@ -35,7 +37,7 @@ On **Stop loop**, set coarse `stopReason` (`done` / `blocked` / `noop` / `budget
 | Preflight fail (base branch, state unwritable, empty Sources without allow) | **Stop loop** | `blocked` / `preflight` |
 | Mega-PR: only one of `megaPr` / `CONFIRM_MEGA_PR` present | **Stop loop** | `blocked` / `preflight` — require both or neither ([mega-pr.md](./mega-pr.md)) |
 | `gh` auth missing when Sources need GitHub | **Stop loop** | `blocked` / `preflight` |
-| Dry-run finished | **Stop loop** | `noop` / `dry-run` |
+| Dry-run finished | **Stop loop** | `noop` / `dry-run` (never arms sentinel) |
 
 ## Dirty tree (fail-closed)
 

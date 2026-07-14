@@ -528,6 +528,33 @@ export interface SyncPricingResponse {
   synced_count: number;
 }
 
+export type GuessMode = "exact" | "lazy";
+
+export interface RematchResponse {
+  parts: Part[];
+  guess_mode: GuessMode;
+}
+
+export async function rematchParts(
+  parts: Part[],
+  guessMode: GuessMode = "lazy",
+): Promise<RematchResponse> {
+  const res = await apiFetch("/api/bom/rematch", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ parts, guess_mode: guessMode }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(
+      typeof err.detail === "string"
+        ? err.detail
+        : "Could not rematch parts with the selected guess mode",
+    );
+  }
+  return res.json();
+}
+
 export async function syncPartsPricing(
   parts: Part[],
 ): Promise<SyncPricingResponse> {
