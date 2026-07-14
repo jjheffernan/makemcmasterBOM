@@ -10,7 +10,7 @@ Interactive docs are available at [http://localhost:8000/docs](http://localhost:
 
 When `RATE_LIMIT_ENABLED=1` (default), `POST /api/import*` endpoints are limited per client IP (default **12 requests/minute**). `POST /api/feedback/match-error` is limited to **10/minute**. Excess requests return **429** with a `Retry-After` header.
 
-`POST /api/bom/sync-pricing` is **not** rate limited — see [Security](security.md).
+`POST /api/bom/sync-pricing` is rate-limited separately (`RATE_LIMIT_SYNC_PRICING_PER_MINUTE`, default 10) and capped at `SYNC_PRICING_MAX_PARTS` (default 200). Invalid McMaster URLs are rejected. Still unauthenticated — see [Security](security.md).
 
 Outbound MakerWorld fetches are throttled separately (min interval + max concurrent scrapes) — this does not surface as an API error but slows imports under load.
 
@@ -304,7 +304,13 @@ List recently imported projects (in-memory store, last 5).
 
 ## `GET /api/bom/{project_id}/export`
 
-Download the current parts list. Query `format` (default `csv`):
+Download the current parts list.
+
+**Query**
+
+| Param | Values | Default |
+|-------|--------|---------|
+| `format` | `csv` \| `tsv` \| `xlsx` | `csv` |
 
 | `format` | Content-Type | Filename |
 |----------|--------------|----------|
@@ -312,7 +318,7 @@ Download the current parts list. Query `format` (default `csv`):
 | `tsv` | `text/tab-separated-values` | `{title}.tsv` |
 | `xlsx` | `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` | `{title}.xlsx` |
 
-**Response** `200` — attachment body in the requested format.
+**Response** `200` — attachment body in the requested format (CSV/TSV text; XLSX via openpyxl).
 
 **Errors**
 
@@ -322,6 +328,8 @@ Download the current parts list. Query `format` (default `csv`):
 | `422` | Invalid `format` |
 
 **Handler:** `bom_router.export_bom` → `pipeline.parts_to_csv` / `parts_to_tsv` / `parts_to_xlsx`
+
+**Deferred (deps review):** Google Docs/Sheets OAuth export; PDF engines.
 
 ---
 

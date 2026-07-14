@@ -59,7 +59,26 @@ Security and hygiene checks that **fail the build** when violated:
 
 Leak-bait values live in `tests/guardrails.py` and are injected via `monkeypatch` — they must never appear in API output.
 
-Known gaps (SSRF URL validation, `sync-pricing` limits) are documented in [Security](security.md) — not yet enforced by tests.
+Known gaps (SSRF URL validation, `sync-pricing` limits, upload size) are tracked in [Security](security.md). Several have draft after-hours PRs against `dev`.
+
+## Golden BOM corpus (`tests/test_golden_boms.py`)
+
+Complex MakerWorld-style description BOMs live under `tests/fixtures/golden_boms/<case>/`:
+
+| File | Role |
+|------|------|
+| `input.txt` | Raw prose / run-on BOM text |
+| `expected.json` | Locked name + quantity truth |
+
+Score must be **100%** name+qty match. Expand this corpus when adding parser diversity; regenerate expected only with intentional parser changes.
+
+```bash
+pytest tests/test_golden_boms.py -q
+```
+
+## Multi-site scaffold
+
+`backend/services/sites/` (`SiteAdapter` + `MakerWorldAdapter` registry) is scaffold-only — no live Printables/Thingiverse ingestion until daylight review. See `docs/backend/sites.md` when that PR merges.
 
 ## Regression CLI checks (`tests/test_regression_checks.py`)
 

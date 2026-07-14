@@ -77,15 +77,18 @@ refreshes monthly without per-import crawl load.
 
 Config: `.cursor/after-hours-loop.config.json` (`baseBranch: dev`, `testCommand: pytest`). Skills: `.agents/skills/after-hours*`.
 
-Night kickoff (see [TODO.md](TODO.md)):
+Night kickoff (see [TODO.md](TODO.md) + [docs/plans/engineer-density-v1.md](docs/plans/engineer-density-v1.md)):
 
 ```text
-/after-hours 45m
+/after-hours 30m
 Sources:
+  - feature-spec: docs/plans/engineer-density-v1.md
   - todo-md: section "Now"
-maxPrs: 3
+maxPrs: 12
 priority: todo-first
 ```
+
+**Later (deps review — do not leap overnight):** Google Docs/Sheets OAuth, PDF export libs, Vitest/RTL, live multi-site adapters.
 
 Stop: `stop after-hours` / `stop loop`.
 

@@ -58,7 +58,7 @@ Plan: [docs/plans/engineer-density-v1.md](docs/plans/engineer-density-v1.md)
   - verification: `cd frontend && npm run build`
   - risk: medium
 
-- [ ] Docs pass for v1 surfaces
+- [x] Docs pass for v1 surfaces
   - Acceptance: see feature-spec slice K
   - verification: `rg -n 'Settings|export|golden|SiteAdapter' docs/ PLAN.md`
   - risk: low

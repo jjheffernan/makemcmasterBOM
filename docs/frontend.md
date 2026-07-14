@@ -7,12 +7,27 @@ React application in `frontend/`. Built with Vite, Tailwind CSS v4, and shadcn-s
 | Path | Component | Purpose |
 |------|-----------|---------|
 | `/` | `ImportPage` | MakerWorld URL input and import trigger |
-| `/bom/:projectId` | `BomEditorPage` | Editable parts table |
+| `/bom/:projectId` | `BomEditorPage` | Editable parts table (engineer-density sticky toolbar) |
 | `/notebooks` | `NotebooksPage` | Pipeline notebook catalog + JupyterLab embed |
-| `/settings` | `SettingsPage` | Matching preferences (localStorage) |
+| `/settings` | `SettingsPage` | Matching preferences (localStorage; exact/lazy guess, etc.) |
 
 Routing is handled by `react-router-dom` in `src/App.tsx`.
 
+### Matching preferences (client)
+
+`frontend/src/lib/matchPreferences.ts` (when merged) persists:
+
+| Pref | Values | Default |
+|------|--------|---------|
+| `guess_mode` | `exact` \| `lazy` | `lazy` (current matcher behavior) |
+| `prefer_length_filter` | bool | `true` |
+| `show_wider_scope_alternatives` | bool | `true` |
+
+Backend `match_parts(..., guess_mode=)` honors `exact` by suppressing `wider_scope` alternatives (see `tests/test_guess_mode.py`).
+
+### Export
+
+BOM editor exports via `GET /api/bom/{id}/export` (CSV default; TSV/XLSX via `?format=` when export-pack lands). Prefer a single Export control with format choices for density.
 ---
 
 ## Matching preferences (`src/lib/matchPreferences.ts`)
