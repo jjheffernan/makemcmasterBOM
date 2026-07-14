@@ -144,13 +144,13 @@ Import from an uploaded BOM file (skip MakerWorld scrape).
 
 **Response** `200` — same shape as `POST /api/import` (`bom_status: "upload"`)
 
-**Errors:** `400`, `429`, `502`
+**Errors:** `400`, `413` (upload over **5 MiB** / `MAX_UPLOAD_BYTES`), `429`, `502`
 
 ---
 
 ## `POST /api/import/file/stream`
 
-SSE variant of file import. Same multipart body as `POST /api/import/file`.
+SSE variant of file import. Same multipart body and size limit as `POST /api/import/file`.
 
 ---
 

@@ -27,6 +27,7 @@ Threat model and deployment guidance for the MakerWorld BOM → McMaster-Carr MV
 | Strict vendor URL hosts | `is_mcmaster_url` / `normalize_makerworld_url` — http(s) + hostname allowlist; reject private/link-local/loopback IP literals (`tests/test_urls.py`) |
 | CORS defaults | `backend/main.py` — localhost origins unless `CORS_ORIGINS` overridden |
 | Import rate limit | `POST /api/import*` — 12/min per client key |
+| Upload size limit | `POST /api/import/file` (+ `/file/stream`) — **5 MiB** (`MAX_UPLOAD_BYTES`); HTTP **413** via `Content-Length` when present, and again after a capped read |
 | Feedback rate limit | `POST /api/feedback/match-error` — 10/min |
 | Debug log gate | `GET /api/debug/logs` — 404 unless `DEBUG=1` |
 | Feedback webhooks | URLs from `FEEDBACK_WEBHOOK_URLS` env only (not user input) |
@@ -48,7 +49,6 @@ Prioritized for **public or shared-network** deployment. Acceptable for solo loc
 |----------|-------|----------|------------|
 | **Medium** | `POST /api/bom/sync-pricing` unauthenticated, uncapped | `bom_router.py` | Rate limit, max parts/request, re-validate URLs |
 | **Medium** | Spoofable `X-Forwarded-For` for rate limits | `rate_limit.py` | Trust forwarded headers only from known reverse proxies |
-| **Medium** | Unbounded upload `file.read()` | `import_router.py` | Max upload size (413) |
 | **Medium** | No API auth | All routers | API key or OAuth before exposing beyond localhost |
 | **Medium** | `javascript:` / `data:` in BOM link columns | `BomEditorPage.tsx` | Allow only `http:` / `https:` in `href` |
 | **Medium** | BOM attachment download without host allowlist | `scraper.py` | Restrict download hosts to MakerWorld CDNs |
