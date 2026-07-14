@@ -724,18 +724,20 @@ export function BomEditorPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader className="flex flex-row items-start justify-between gap-4">
-          <div className="flex min-w-0 flex-1 gap-4">
+    <div className="space-y-3">
+      <Card className="overflow-visible shadow-none">
+        <CardHeader className="sticky top-0 z-20 flex flex-row items-center justify-between gap-3 border-b border-border bg-card/95 px-3 py-2 backdrop-blur supports-[backdrop-filter]:bg-card/85">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
             <ProjectThumbnail
               url={project.thumbnail_url}
               title={project.title || "Project"}
-              size="lg"
+              size="sm"
             />
             <div className="min-w-0">
-              <CardTitle>{project.title || "Untitled Project"}</CardTitle>
-              <CardDescription className="mt-1 space-y-1">
+              <CardTitle className="truncate text-base leading-tight">
+                {project.title || "Untitled Project"}
+              </CardTitle>
+              <CardDescription className="mt-0.5 space-y-0.5 text-xs">
                 <DescriptionPreview
                   description={project.description}
                   fallback={
@@ -751,26 +753,33 @@ export function BomEditorPage() {
                     rel="noreferrer"
                     className="inline-block text-link hover:text-[var(--link-hover)]"
                   >
-                    View on MakerWorld
+                    MakerWorld
                   </a>
                 )}
               </CardDescription>
             </div>
           </div>
-          <div className="flex shrink-0 flex-wrap gap-2">
-            <Button variant="outline" onClick={handleSave} disabled={saving}>
+          <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 px-2.5 text-xs"
+              onClick={handleSave}
+              disabled={saving}
+            >
               {saving ? "Saving…" : "Save"}
             </Button>
-            <div className="inline-flex items-stretch">
+            <div className="inline-flex h-8 items-stretch">
               <a
                 href={exportBomUrl(projectId, exportFormat)}
                 download
                 className={cn(
-                  buttonVariants({ variant: "outline" }),
-                  "rounded-r-none border-r-0",
+                  buttonVariants({ variant: "outline", size: "sm" }),
+                  "h-8 rounded-r-none border-r-0 px-2.5 text-xs",
                 )}
+                title="Export BOM"
               >
-                <Download className="h-4 w-4" />
+                <Download className="h-3.5 w-3.5" />
                 Export
               </a>
               <Select
@@ -778,7 +787,7 @@ export function BomEditorPage() {
                 onChange={(e) =>
                   setExportFormat(e.target.value as BomExportFormat)
                 }
-                className={cn(compactSelect, "w-[4.75rem] rounded-l-none")}
+                className={cn(compactSelect, "h-8 w-[4.75rem] rounded-l-none text-xs")}
                 aria-label="Export format"
               >
                 <option value="csv">CSV</option>
@@ -788,13 +797,13 @@ export function BomEditorPage() {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-3 py-3">
           {parts.length > 0 && (
-            <div className="mb-4 flex gap-1 rounded-lg border border-border bg-muted/40 p-1">
+            <div className="mb-2 flex gap-0.5 rounded-md border border-border bg-muted/40 p-0.5">
               <button
                 type="button"
                 className={cn(
-                  "rounded-md px-4 py-2 text-sm font-medium transition-colors",
+                  "rounded px-3 py-1 text-xs font-medium transition-colors",
                   activeTab === "parts"
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground",
@@ -806,7 +815,7 @@ export function BomEditorPage() {
               <button
                 type="button"
                 className={cn(
-                  "rounded-md px-4 py-2 text-sm font-medium transition-colors",
+                  "rounded px-3 py-1 text-xs font-medium transition-colors",
                   activeTab === "pricing"
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground",
@@ -817,9 +826,9 @@ export function BomEditorPage() {
               </button>
             </div>
           )}
-          {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
+          {error && <p className="mb-2 text-sm text-destructive">{error}</p>}
           {project.warnings && project.warnings.length > 0 && (
-            <div className="mb-4 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm">
+            <div className="mb-2 rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-xs">
               {project.warnings.map((warning) => (
                 <p key={warning} className="text-warning">
                   {warning}
@@ -828,16 +837,12 @@ export function BomEditorPage() {
             </div>
           )}
           {parts.length > 0 && verifyCount > 0 && activeTab === "parts" && (
-            <div className="mb-4 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm">
+            <div className="mb-2 rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-xs">
               <p className="font-medium text-warning">
-                {verifyCount} part{verifyCount === 1 ? "" : "s"} need manual McMaster
-                verification
+                {verifyCount} part{verifyCount === 1 ? "" : "s"} need McMaster verification
               </p>
-              <p className="mt-1 text-muted-foreground">
-                Rows marked <span className="font-medium">Verify</span> or{" "}
-                <span className="font-medium">Unlikely</span> use category or site search —
-                open the link and confirm the SKU. Catalog matches show a part number and
-                higher confidence. Wrong guess? Use{" "}
+              <p className="mt-0.5 text-muted-foreground">
+                Verify / Unlikely rows use category search — confirm the SKU.{" "}
                 <button
                   type="button"
                   className="font-medium text-link underline hover:text-[var(--link-hover)]"
@@ -845,21 +850,18 @@ export function BomEditorPage() {
                 >
                   Report error
                 </button>
-                .
               </p>
             </div>
           )}
           {parts.length > 0 && notApplicableCount > 0 && activeTab === "parts" && (
-            <div className="mb-4 rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+            <div className="mb-2 rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
               Items under{" "}
               <span className="font-medium text-foreground">
                 {bomHeadings.not_applicable}
               </span>{" "}
-              (3D-printed parts, electronics, filament, etc.) stay in your BOM with
-              a blank McMaster link.
+              stay in the BOM with a blank McMaster link.
             </div>
-          )}
-          {parts.length === 0 ? (
+          )}          {parts.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               No parts in this BOM.
               {project.bom_status === "none"
@@ -926,14 +928,14 @@ export function BomEditorPage() {
                   </div>
                 </div>
               )}
-              <Table className="bom-editor-table w-full">
+              <Table className="bom-editor-table bom-editor-table-dense w-full text-xs">
               <TableHeader>
                 {table.getHeaderGroups().map((hg) => (
                   <TableRow key={hg.id}>
                     {hg.headers.map((header) => (
                       <TableHead
                         key={header.id}
-                        className="relative px-1.5 py-1.5"
+                        className="relative px-1 py-1"
                         style={{ width: header.getSize() }}
                       >
                         {flexRender(

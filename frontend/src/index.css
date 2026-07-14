@@ -178,3 +178,15 @@ h4 {
   overflow: hidden;
   word-break: break-word;
 }
+
+.bom-editor-table-dense th,
+.bom-editor-table-dense td {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+.bom-editor-table-dense input,
+.bom-editor-table-dense select,
+.bom-editor-table-dense button {
+  min-height: 1.75rem;
+}

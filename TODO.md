@@ -53,7 +53,7 @@ Plan: [docs/plans/engineer-density-v1.md](docs/plans/engineer-density-v1.md)
   - verification: `pytest tests/test_golden_boms.py -q`
   - risk: medium
 
-- [ ] Engineer UI density
+- [x] Engineer UI density
   - Acceptance: see feature-spec slice J
   - verification: `cd frontend && npm run build`
   - risk: medium
