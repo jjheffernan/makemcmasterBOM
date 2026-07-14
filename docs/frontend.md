@@ -9,8 +9,23 @@ React application in `frontend/`. Built with Vite, Tailwind CSS v4, and shadcn-s
 | `/` | `ImportPage` | MakerWorld URL input and import trigger |
 | `/bom/:projectId` | `BomEditorPage` | Editable parts table |
 | `/notebooks` | `NotebooksPage` | Pipeline notebook catalog + JupyterLab embed |
+| `/settings` | `SettingsPage` | Matching preferences (localStorage) |
 
 Routing is handled by `react-router-dom` in `src/App.tsx`.
+
+---
+
+## Matching preferences (`src/lib/matchPreferences.ts`)
+
+Browser-local prefs (key `makerworld-bom-match-prefs`):
+
+| Key | Values | Default | Effect today |
+|-----|--------|---------|--------------|
+| `guess_mode` | `exact` \| `lazy` | `lazy` | Persisted only — no rematch API yet (slice F) |
+| `prefer_length_filter` | bool | `true` | Persisted only until backend honors it |
+| `show_wider_scope_alternatives` | bool | `true` | BOM Link column hides “Wider search” when false |
+
+`matchPreferencesForApi()` returns the same fields for a future rematch/import options request. Unset storage uses the defaults above so matching behavior matches pre-Settings imports.
 
 ---
 
@@ -107,7 +122,7 @@ Fetches notebook catalog from `GET /api/notebooks`.
 - **Section headings** — editable group titles; drag handle to reorder parts within a section
 - **Hardware check hints** — `?` tooltips with per-family verification checklists (`hardwareCheckTips.ts`)
 - **Finish dropdown** — in the **Specification** column when multiple McMaster finishes apply (black oxide, zinc plated, stainless)
-- **Other guesses** — grouped dropdown in the Link column (same-size vs wider-scope alternatives)
+- **Other guesses** — grouped dropdown in the Link column (same-size vs wider-scope alternatives; wider group respects Settings)
 - **Pricing tab** — pack-aware line totals when listing prices are synced
 - **Report error** — flag wrong matches; optional reporter email
 - **Match column** — status badge + confidence + tier (compact layout)
@@ -117,6 +132,12 @@ Fetches notebook catalog from `GET /api/notebooks`.
 External links (`mcmaster_url`, `makerworld_url`) open in a new tab. Validate `http(s)` only before public deployment — see [Security](security.md).
 
 See `src/lib/mcmaster.ts` for status/tier label helpers.
+
+### `SettingsPage`
+
+- Dense form for matching prefs (guess mode, length-filtered browse, wider-scope alts)
+- Writes immediately to localStorage via `matchPreferences.ts`
+- Nav link in `Layout` header
 
 ### `NotebooksPage`
 

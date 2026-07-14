@@ -1,4 +1,4 @@
-import { BookOpen, Flag, Import, Table2 } from "lucide-react";
+import { BookOpen, Flag, Import, Settings, Table2 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { DebugToggle } from "@/components/DebugPanel";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 const nav = [
   { to: "/", label: "Import", icon: Import },
   { to: "/notebooks", label: "Notebooks", icon: BookOpen },
+  { to: "/settings", label: "Settings", icon: Settings },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {

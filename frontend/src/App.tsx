@@ -6,6 +6,7 @@ import { ReportMatchErrorProvider } from "@/lib/reportContext";
 import { BomEditorPage } from "@/pages/BomEditorPage";
 import { ImportPage } from "@/pages/ImportPage";
 import { NotebooksPage } from "@/pages/NotebooksPage";
+import { SettingsPage } from "@/pages/SettingsPage";
 import { DebugProvider } from "@/lib/debug";
 import { ThemeProvider } from "@/lib/theme";
 
@@ -23,6 +24,7 @@ export default function App() {
                   <Route path="/" element={<ImportPage />} />
                   <Route path="/bom/:projectId" element={<BomEditorPage />} />
                   <Route path="/notebooks" element={<NotebooksPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
                 </Routes>
               </Layout>
             </ReportMatchErrorProvider>
