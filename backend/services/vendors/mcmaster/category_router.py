@@ -187,8 +187,8 @@ def route_category(
             best.id == "screw"
             and has_metric_fastener(query)
             and head_type is None
-            and re.search(r"\b(screw|shcs)\b", query, re.I)
-            and not re.search(r"\bbolt\b", query, re.I)
+            and re.search(r"\b(screws?|shcs)\b", query, re.I)
+            and not re.search(r"\bbolts?\b", query, re.I)
         ):
             socket = get_category("socket_head_screw")
             if socket:

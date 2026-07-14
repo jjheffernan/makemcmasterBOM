@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "startedAt": "2026-07-13T22:00:00Z",
+  "sources": [
+    {
+      "type": "github-issues",
+      "config": "label ready-for-agent limit 5"
+    }
+  ],
+  "queue": [
+    {
+      "id": "github:42",
+      "title": "Fix login redirect",
+      "source": "github-issues",
+      "executor": "pr-slice",
+      "ref": "https://github.com/example/app/issues/42",
+      "status": "ready",
+      "granularity": "single-pr"
+    }
+  ],
+  "prs": [],
+  "maxPrs": 3,
+  "tick": 0,
+  "priority": "github-first",
+  "baseBranch": "main",
+  "consecutiveBlocked": 0
+}

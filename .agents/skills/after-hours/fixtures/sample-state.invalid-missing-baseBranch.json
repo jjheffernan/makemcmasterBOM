@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "startedAt": "2026-07-13T22:00:00Z",
+  "sources": [],
+  "queue": [],
+  "prs": [],
+  "maxPrs": 3,
+  "tick": 0,
+  "priority": "github-first"
+}

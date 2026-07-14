@@ -21,7 +21,7 @@ DESCRIPTION_NOTE = "MakerWorld BOM (description)"
 
 SECTION_START = re.compile(
     r"^(?:"
-    r"bom|bill\s+of\s+materials|parts(?:\s+list)?|hardware(?:\s+list)?|"
+    r"bom|bill\s+of\s+materials(?:\s*\(bom\))?|parts(?:\s+list)?|hardware(?:\s+list)?|"
     r"materials?(?:\s+required|\s+needed|\s+list)?|shopping\s+list|"
     r"components?(?:\s+required|\s+needed|\s+list)?|"
     r"supplies(?:\s+list)?|fasteners(?:\s+needed|\s+list)?|"
@@ -37,7 +37,8 @@ SECTION_STOP = re.compile(
     r"settings?|print\s+settings?|assembl(?:y|ing)|instructions?|"
     r"printing|support|license|licence|features?|key[-\s]?features?|"
     r"reason|background|overview|credits?|thanks|note|next\s+steps|"
-    r"downloads?|files?|make\s+notes?|tips?|personalization|tools?"
+    r"downloads?|files?|make\s+notes?|tips?|personalization|tools?|"
+    r"applications?"
     r")\s*:?\s*$",
     re.I,
 )
@@ -87,6 +88,9 @@ def normalize_prose(text: str) -> str:
     if not text:
         return ""
 
+    text = _split_inline_bom_headers(text)
+    text = _split_glued_section_headers(text)
+
     text = re.sub(r"([a-z])(Parts:)", r"\1 \2", text, flags=re.I)
     text = re.sub(r"(Parts:)(\S)", r"\1 \2", text, flags=re.I)
     text = re.sub(r"screws(\d)", r"screws \1", text, flags=re.I)
@@ -95,7 +99,6 @@ def normalize_prose(text: str) -> str:
     text = re.sub(r"dimensionYou\b", "dimension You", text, flags=re.I)
     text = re.sub(r"PersonalizationThis\b", "Personalization This", text, flags=re.I)
     text = re.sub(r"joint\.Parts:", "joint.\nParts:", text, flags=re.I)
-    text = _split_inline_bom_headers(text)
 
     for label in (
         "Parts",
@@ -113,16 +116,28 @@ def normalize_prose(text: str) -> str:
 
 
 def _split_inline_bom_headers(text: str) -> str:
-    """Break inline 'Bill of Materials:' / 'BOM:' headers onto their own lines."""
+    """Break inline BOM headers onto their own lines (with or without a colon)."""
     text = re.sub(
-        r"(?<=\S)\s+(?=(?:bill\s+of\s+materials|bom)\s*:)",
+        r"(?<=\S)\s+(?=(?:bill\s+of\s+materials(?:\s*\(bom\))?|bom)\s*:?)",
         "\n",
+        text,
+        flags=re.I,
+    )
+    text = re.sub(
+        r"(?<=[.!?])\s*(bill\s+of\s+materials(?:\s*\(bom\))?)\s*:?\s*",
+        r"\n\1\n",
+        text,
+        flags=re.I,
+    )
+    text = re.sub(
+        r"(bill\s+of\s+materials(?:\s*\(bom\))?)\s*:?\s*(?=\S)",
+        r"\n\1\n",
         text,
         flags=re.I,
     )
     out: list[str] = []
     header_with_items = re.compile(
-        r"^(?P<header>(?:bill\s+of\s+materials|bom))\s*:\s*(?P<items>.+)$",
+        r"^(?P<header>(?:bill\s+of\s+materials(?:\s*\(bom\))?|bom))\s*:\s*(?P<items>.+)$",
         re.I,
     )
     for line in text.splitlines():
@@ -134,6 +149,103 @@ def _split_inline_bom_headers(text: str) -> str:
         else:
             out.append(line)
     return "\n".join(out)
+
+
+def _split_glued_section_headers(text: str) -> str:
+    """Split MakerWorld section titles glued to the following paragraph (BOM pages)."""
+    if not re.search(r"bill\s+of\s+materials(?:\s*\(bom\))?|\bbom\b", text, re.I):
+        return text
+    for label in (
+        "Overview",
+        "Applications",
+        "Settings",
+        "Assembly",
+        "Printing",
+        "License",
+        "Features",
+        "Key-Features",
+    ):
+        text = re.sub(rf"\b({label})(?=[A-Z])", r"\n\1\n", text)
+    return text
+
+
+GLUED_PRODUCT_NAME = re.compile(r"(?<=\bCard)(?=[A-Z])")
+HARDWARE_BUNDLE_SPLIT = re.compile(
+    r"(?<=[a-zA-Z)])(?=\d+\s+(?:M\d|18650))",
+)
+METRIC_QTY_ITEM = re.compile(r"\d+\s+M\d")
+URL_ONLY_LINE = re.compile(r"^-?\s*https?://\S+$", re.I)
+
+
+def _split_metric_hardware_runs(line: str) -> list[str]:
+    if len(METRIC_QTY_ITEM.findall(line)) < 2:
+        return [line]
+    return [part.strip() for part in re.split(r"(?<=\S)\s+(?=\d+\s+M\d)", line) if part.strip()]
+
+
+def _expand_runon_bom_line(line: str) -> list[str]:
+    """Split a single run-on MakerWorld BOM line into item rows."""
+    if "\xa0" in line or "\u00a0" in line:
+        chunks = [part.strip() for part in re.split(r"[\xa0\u00a0]+", line) if part.strip()]
+    else:
+        chunks = [line.strip()] if line.strip() else []
+
+    expanded: list[str] = []
+    for chunk in chunks:
+        chunk = GLUED_PRODUCT_NAME.sub("\n", chunk)
+        for piece in chunk.splitlines():
+            piece = piece.strip()
+            if not piece:
+                continue
+            for part in HARDWARE_BUNDLE_SPLIT.split(piece):
+                part = part.strip()
+                if part:
+                    expanded.extend(_split_metric_hardware_runs(part))
+
+    if not expanded:
+        return [line.strip()] if line.strip() else []
+
+    merged: list[str] = []
+    for chunk in expanded:
+        if URL_ONLY_LINE.match(chunk):
+            if merged:
+                merged[-1] = f"{merged[-1]} {chunk.lstrip('- ').strip()}"
+            continue
+        merged.append(chunk)
+    return merged
+
+
+def _section_line_needs_expand(line: str) -> bool:
+    return bool(
+        len(line) > 120
+        or "\xa0" in line
+        or "\u00a0" in line
+        or len(re.findall(r"\bpcs\b", line, re.I)) > 1
+        or len(METRIC_QTY_ITEM.findall(line)) > 1
+        or GLUED_PRODUCT_NAME.search(line)
+        or HARDWARE_BUNDLE_SPLIT.search(line)
+    )
+
+
+def _expand_section_line(line: str) -> list[str]:
+    """Expand long or run-on section lines."""
+    if len(line) > 120 or len(re.findall(r"\bpcs\b", line, re.I)) > 1:
+        inline = _extract_inline_parts_chunks(f"Parts: {line}")
+        if inline:
+            return inline
+        expanded = _expand_runon_bom_line(line)
+        if expanded and (len(expanded) > 1 or expanded[0] != line):
+            return expanded
+        return []
+
+    expanded = _expand_runon_bom_line(line)
+    return expanded or [line]
+
+
+def _expand_section_line_gate(line: str) -> list[str]:
+    if _section_line_needs_expand(line) or len(line) > 120:
+        return _expand_section_line(line)
+    return [line]
 
 
 def resolve_description_text(soup_description: str, design: dict | None) -> str:
@@ -256,7 +368,7 @@ def find_bom_section_lines(text: str) -> list[str]:
         text,
         section_start=SECTION_START,
         section_stop=SECTION_STOP,
-        expand_line=lambda line: _extract_inline_parts_chunks(f"Parts: {line}"),
+        expand_line=_expand_section_line_gate,
     )
 
 
@@ -313,6 +425,8 @@ def parse_description_bom(description: str) -> DescriptionBomParse:
     for line in lines:
         part = parse_bom_line(line, require_hardware_keyword=require_keyword)
         if not part:
+            continue
+        if re.fullmatch(r"https?", part.original_name, re.I):
             continue
         key = (
             part.original_name.strip().lower(),

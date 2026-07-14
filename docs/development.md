@@ -96,6 +96,8 @@ Optional McMaster enrichment (see [McMaster adapter](backend/mcmaster.md)):
 
 Contact [eprocurement@mcmaster.com](mailto:eprocurement@mcmaster.com) for API access. See [official API docs](https://www.mcmaster.com/help/api/).
 
+The public site follows a search → filters → product-detail flow that our filtered browse URLs approximate offline — see [McMaster adapter § Public catalog](backend/mcmaster.md#public-catalog-navigation).
+
 ### McMaster taxonomy crawl (monthly batch)
 
 Refreshes `data/mcmaster_site_taxonomy.json` and optionally syncs fastening

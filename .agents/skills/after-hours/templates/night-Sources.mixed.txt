@@ -1,0 +1,14 @@
+# Overnight Sources — GitHub + TODO (+ optional wayfinder-afk)
+# Paste into `/after-hours` chat or Cursor Automation Instructions.
+# GitHub remains default priority; TODO section must already be agent-ready.
+# Uncomment wayfinder-afk only for AFK research / safe map work — never HITL overnight.
+
+/after-hours 45m
+Sources:
+  - github-issues: label ready-for-agent limit 5
+  - todo-md: section "Now"
+  # opt-in: - wayfinder-afk: label wayfinder:map limit 5
+  # opt-in: - wayfinder-afk: map 88 include-task
+  # opt-in: - github-tickets: label ready-for-agent limit 5
+maxPrs: 3
+priority: github-first

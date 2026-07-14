@@ -1,0 +1,24 @@
+# Canonical Sources kickoff — copy into chat or Automation Instructions.
+# Night presets: night-Sources.github.txt · night-Sources.mixed.txt
+
+/after-hours 45m
+Sources:
+  - github-issues: label ready-for-agent limit 5
+  - todo-md: section "Now"
+  # optional: - feature-spec: docs/plans/example-plan.md phase 1
+  # opt-in: - wayfinder-afk: label wayfinder:map limit 5
+  # opt-in: - wayfinder-afk: map 88 include-task
+  # opt-in: - github-tickets: label ready-for-agent limit 5
+maxPrs: 3
+priority: github-first
+
+# Optional per-item overrides (defaults stay draft-pr / doc-artifact):
+# github:52 executor:docs-digest
+# github:52 outcomeKind:branch-only
+# github:88 outcomeKind:report-only
+# github:91 outcomeKind:external-ticket-update
+
+# MEGA-PR (unsafe) — OFF by default. To enable THIS run only, uncomment BOTH lines:
+# megaPr: true
+# CONFIRM_MEGA_PR: I_ACCEPT_BUNDLED_PRS
+# config.json cannot enable mega-PR. See references/mega-pr.md

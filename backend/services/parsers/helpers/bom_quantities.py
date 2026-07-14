@@ -29,6 +29,10 @@ QTY_PCS_LEADING = re.compile(
     r"^(\d+(?:\.\d+)?)\s*pcs?\s+(.+)$",
     re.I,
 )
+QTY_COUNT_M_THREAD = re.compile(
+    r"^(\d+(?:\.\d+)?)\s+(M\d.+)$",
+    re.I,
+)
 
 # Left side of ``<note>: N x hardware`` assembly-location lines (MakerWorld fastener lists)
 ASSEMBLY_NOTE_HINT = re.compile(
@@ -72,6 +76,10 @@ def parse_quantity_and_name(line: str) -> tuple[float, str, str, str]:
             return qty, rest, "", ""
 
     m = QTY_PCS_LEADING.match(line)
+    if m:
+        return float(m.group(1)), m.group(2).strip(), "", ""
+
+    m = QTY_COUNT_M_THREAD.match(line)
     if m:
         return float(m.group(1)), m.group(2).strip(), "", ""
 

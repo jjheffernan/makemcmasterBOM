@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "skills": {
+    "after-hours": {
+      "source": "jjheffernan/heff-skills",
+      "sourceType": "github",
+      "skillPath": "skills/after-hours-loop/SKILL.md",
+      "computedHash": "e5e3c94b4c25eaf751cf43cfbad5fe4c62072d0ff7b1b56af88c3d9b9697bc16"
+    },
+    "after-hours-handoff": {
+      "source": "jjheffernan/heff-skills",
+      "sourceType": "github",
+      "skillPath": "skills/after-hours-handoff/SKILL.md",
+      "computedHash": "5d80b29446ef4cbb8b169caefc7edfad12f7bb90ac0bcaa4333090bc116b8e48"
+    },
+    "after-hours-stop": {
+      "source": "jjheffernan/heff-skills",
+      "sourceType": "github",
+      "skillPath": "skills/after-hours-stop/SKILL.md",
+      "computedHash": "5ba5c6e721b6c81af3982d636bec52a4545c3e119d65f61c5421a8572544896a"
+    }
+  }
+}

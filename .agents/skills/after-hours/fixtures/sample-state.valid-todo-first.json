@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "startedAt": "2026-07-13T22:00:00Z",
+  "sources": [
+    {
+      "type": "todo-md",
+      "config": "section Now"
+    }
+  ],
+  "queue": [
+    {
+      "id": "todo:now-1",
+      "title": "Ship dry-run docs",
+      "source": "todo-md",
+      "executor": "docs-digest",
+      "ref": "TODO.md",
+      "status": "open",
+      "outcomeKind": "doc-artifact"
+    }
+  ],
+  "prs": [],
+  "maxPrs": 2,
+  "tick": 0,
+  "priority": "todo-first",
+  "baseBranch": "main",
+  "consecutiveBlocked": 0
+}

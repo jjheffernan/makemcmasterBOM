@@ -214,11 +214,22 @@ def classify_mcmaster_eligibility(part: Part) -> tuple[McMasterStatus, str]:
     return "possible", ""
 
 
+def _singularize_fastener_terms(text: str) -> str:
+    """Normalize plural BOM fastener words for category routing."""
+    return re.sub(
+        r"\b(screw|bolt|nut|washer|stud|insert)s\b",
+        r"\1",
+        text,
+        flags=re.I,
+    )
+
+
 def normalize_hardware_name(name: str, specification: str = "") -> str:
     spec = _clean_specification(specification)
     combined = f"{name} {spec}".strip()
     combined = _strip_makerworld_name_noise(combined)
     combined = re.sub(r"\s+", " ", combined)
+    combined = _singularize_fastener_terms(combined)
     combined = re.sub(
         r"\b(printed|3d\s*print|makerworld|optional|recommended)\b",
         "",

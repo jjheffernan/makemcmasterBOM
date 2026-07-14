@@ -1,0 +1,23 @@
+{
+  "repo": "owner/name",
+  "baseBranch": "main",
+  "packageManager": "auto",
+  "testCommand": "",
+  "todoPath": "TODO.md",
+  "statePath": ".cursor/after-hours-loop.state.json",
+  "morningBriefPath": ".cursor/after-hours-morning-brief.md",
+  "cloudLedgerPath": null,
+  "runsPath": null,
+  "draftPrs": true,
+  "maxPrs": 3,
+  "allowSkipTests": false,
+  "allowEmptyQueue": false,
+  "maxConsecutiveBlocked": 3,
+  "babysitCi": false,
+  "stopOnCiRed": false,
+  "safety": {
+    "pathDenylist": [".env", ".env.*", "**/*secret*", "**/*credential*"],
+    "stopOnAuthWeakening": true,
+    "stopOnDirtyTree": true
+  }
+}

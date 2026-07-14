@@ -1,0 +1,14 @@
+---
+description: Pointer for /after-hours — follow the installed after-hours skill (not always-on overnight).
+alwaysApply: false
+---
+
+# after-hours (optional rule)
+
+When the user runs **`/after-hours`**, **`/after-hours-loop`**, or **`/loop`** with after-hours / overnight AFK instructions, load and follow:
+
+`.agents/skills/after-hours/SKILL.md`
+
+Night Sources preset: `.cursor/after-hours-Sources.txt`
+
+Do **not** treat this rule as a standing overnight mandate. The loop only runs when the user (or an explicit Cursor Automation) invokes it. Stop phrases: `stop after-hours`, `stop loop`, `/after-hours stop`.

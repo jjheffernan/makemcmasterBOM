@@ -26,6 +26,8 @@ https://www.mcmaster.com/products/screws/socket-head-screws-2~/steel-socket-head
 
 Plain category search example: `https://www.mcmaster.com/products/screws/socket-head-screws/?searchQuery=...`
 
+Filtered browse facet names align with McMaster's public catalog filter model (documented in [McMaster adapter § Public catalog](mcmaster.md#public-catalog-navigation)).
+
 See [McMaster adapter](mcmaster.md) for tier order and [Vendor adapters](vendors.md) for the cross-site template.
 
 ---

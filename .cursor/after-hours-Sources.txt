@@ -1,0 +1,8 @@
+# Paste into chat to arm (or dry-run with --dry-run).
+# Prefer todo-md until GitHub issues carry ready-for-agent + Agent Briefs.
+
+/after-hours 45m
+Sources:
+  - todo-md: section "Now"
+maxPrs: 3
+priority: todo-first

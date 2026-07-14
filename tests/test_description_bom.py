@@ -187,3 +187,23 @@ def test_inferred_description_loses_merge_to_embedded():
         description_explicit=False,
     )
     assert merged[0].notes == "MakerWorld BOM (embedded)"
+
+
+def test_runon_bill_of_materials_bom_parenthetical():
+    text = (FIXTURES / "description_openmanet_bom.txt").read_text()
+    result = parse_description_bom(text)
+    assert result.from_explicit_section
+    names = " ".join(p.original_name.lower() for p in result.parts)
+    assert len(result.parts) >= 10
+    assert "raspberry pi" in names
+    assert "m3 screw" in names
+    assert "m2.5 screw" in names
+    assert "heat set" in names
+    assert not any(p.original_name.lower() == "https" for p in result.parts)
+    screws = [p for p in result.parts if "m3 screw" in p.original_name.lower()]
+    assert screws and screws[0].quantity == 14
+
+    matched = match_parts(result.parts)
+    m3_screws = next(p for p in matched if "m3 screw" in p.original_name.lower())
+    assert m3_screws.mcmaster_url
+    assert m3_screws.match_tier in {"filtered_browse", "category_search", "catalog", "rule"}

@@ -383,7 +383,7 @@ async def scrape_project(
     else:
         warnings.append(
             "No bill of materials found on this project. "
-            "Upload a BOM file manually or pick a model with Maker's Supply / BOM enabled."
+            "Upload a BOM file manually or use a project whose description lists hardware."
         )
         if on_progress:
             on_progress(

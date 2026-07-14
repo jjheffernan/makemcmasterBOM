@@ -37,9 +37,9 @@ https://www.mcmaster.com/products/screws/?searchQuery=M5+hex+bolt
 
 Routes from `data/mcmaster_categories.json` via `classify_category()`.
 
-### Filtered browse (Parse / live-site inspired)
+### Filtered browse (live-site inspired)
 
-McMaster encodes facets as **path segments**, not query parameters:
+McMaster encodes facets as **path segments**, not query parameters. The facet naming (`system-of-measurement~metric`, `thread-size~m3`, …) matches the public catalog filter model — see [Public catalog navigation](#public-catalog-navigation) below.
 
 ```
 {categoryBrowseRoot}{facet~value/}…
@@ -94,7 +94,76 @@ API responses are **never** returned to the browser; guardrail tests scan for cr
 
 ### Mapping API specs to verification
 
-API `Specifications[]` with `Attribute` / `Values` mirrors what Parse exposes as product `specs`. Future work: cross-check `hardware_spec.py` extractions against API attributes (Thread Size, Length, System of Measurement).
+API `Specifications[]` with `Attribute` / `Values` mirrors product `specs` on the public catalog detail table. Future work: cross-check `hardware_spec.py` extractions against API attributes (Thread Size, Length, System of Measurement).
+
+## Public catalog navigation
+
+McMaster-Carr does **not** publish a public developer API for catalog search. The website itself follows a predictable multi-step flow — search → category tiles → filters → product families → SKU rows — that third-party wrappers and our offline matcher both approximate. This repo does **not** call any hosted catalog proxy; we document the flow because it names the navigation IDs, facet shapes, and call order the live site uses — useful when debugging browse URLs or extending filtered browse.
+
+### Site flow steps
+
+| Step | Purpose | Key inputs | Key outputs |
+|------|---------|------------|-------------|
+| Search suggest | Type-ahead / term discovery | query text, result count | Ranked suggestions with optional part-number flag |
+| Search products | Free-text → category tiles | query text | `search_result_id`, category tiles with `product_outline_entry_id` or `product_family_id` |
+| Product filters | Facet options for a category | `search_result_id`, optional category/family IDs | Filter names (System of Measurement, Thread Size, Length, Material, …) and value IDs with product counts |
+| Product detail | Families or SKU rows | `search_result_id`, `product_outline_entry_id`; optional `product_set_id` | Without family ID: product family list. With family ID: part numbers, prices, spec objects |
+| Part lookup | Validate a SKU | part number | found/discontinued status, catalog page, parent family, product URL |
+
+### Typical call chain
+
+```mermaid
+flowchart LR
+  Q[BOM query text] --> SP[search products]
+  SP --> SRID[search_result_id]
+  SRID --> GF[product filters]
+  SRID --> GD1[product detail<br/>families only]
+  GD1 --> PSID[product_set_id]
+  PSID --> GD2[product detail<br/>SKU table]
+  GD2 --> SKU[part_number + price + specs]
+  PN[known SKU] --> GPN[part lookup]
+```
+
+1. **Search products** — map a phrase like `M3 socket head cap screw` to category tiles; retain `search_result_id` and a `product_outline_entry_id`.
+2. **Product filters** — list facets with value IDs and counts — same attributes we encode as path segments in `filters.py`.
+3. **Product detail** (families only) — list product families inside the category.
+4. **Product detail** (with `product_set_id`) — return table rows: part numbers, prices, spec objects.
+5. **Part lookup** — confirm a pasted SKU exists and is current (closest the public site offers to availability).
+
+Search suggest is optional — ranked autocomplete for UI search boxes, not needed for BOM line matching.
+
+### Mapping site flow → this repo
+
+| Site step / field | Our equivalent | Module / data |
+|-------------------|----------------|---------------|
+| Search → category tile | `classify_category()` + category route | `mcmaster_categories.json`, `category_router.py` |
+| Filter facet names/values | Path segments `facet~value/` | `filters.py`, `finish_browse.py` |
+| `product_outline_entry_id` / browse root | `browse_roots` URL prefix | `mcmaster_browse_roots.json` |
+| Product detail table | `ProductPresentations` JSON | `browse_parse.py`, `browse_scrape.py` |
+| Part lookup / catalog status | Tier 3 SKU extract + optional API enrich | `part_numbers.py`, `api.py`, `enrichment.py` |
+| `search_result_id` threading | Not stored — we build static filtered URLs offline | `tiers.py` tier 4 |
+| Hosted catalog HTTP | Not used | — |
+
+When tier 4 (`filtered_browse`) fires, we skip the search step and jump straight to a **pre-built filtered browse URL** derived from BOM specs. Optional live browse (`MCMASTER_BROWSE_RESOLVE_ENABLED`) then loads the same `ProductPresentations` JSON the site uses server-side.
+
+### Public site vs official API vs our defaults
+
+| | Public catalog (browser) | Official Product Information API | This repo (default) |
+|---|--------------------------|----------------------------------|---------------------|
+| **Auth** | None (session cookies) | Client cert + B2B account | None |
+| **Search / categories** | Site search UI | Subscribe per part only | Curated `mcmaster_catalog.json` + rules |
+| **Filters** | Category facet picker | Specs on subscribed parts | Offline facet paths in URLs |
+| **SKU + price** | Product detail table | `GET /products/{partNumber}/price` | Browse resolve or catalog hit |
+| **Part validation** | Part-number lookup page | `GET /products/{partNumber}` | Regex tier 3 + optional API |
+| **Stock / availability** | Discontinued flag only | Product status field | `mcmaster_product_status` when API enabled |
+| **Rate limits** | Site / polite scraping | McMaster subscription caps | `RATE_LIMIT_OUTBOUND_MIN_INTERVAL` |
+| **CI / offline** | Requires network | Requires credentials | Fully offline tiers |
+
+Common integration patterns this flow supports: filterable part pickers (facet APIs), BOM SKU validation (part lookup), and price monitoring (fixed product family). Our curated catalog + filtered browse URLs cover the same user-facing goal without live navigation on every import.
+
+### Validating offline data against the live site
+
+Use optional browse resolve (`MCMASTER_BROWSE_RESOLVE_ENABLED=1`), `scripts/mcmaster_browse_example.py`, or the monthly taxonomy crawl to confirm `mcmaster_categories.json` routes and browse-root slugs still match McMaster's public navigation before committing offline data changes.
 
 ## Browse table resolution (optional live)
 
@@ -164,15 +233,15 @@ After `match_part()`:
 | `import_from_url` / `import_from_file` | Yes | If `MCMASTER_API_ENABLED` | If `MCMASTER_BROWSE_RESOLVE_ENABLED` |
 | `04_match_mcmaster.ipynb` | Yes | No | No |
 
-## Compare: three McMaster data sources
+## Compare: McMaster data sources
 
 | Approach | Auth | Best for | This repo |
 |----------|------|----------|-----------|
-| **Official API** | Client cert + account | Production ERP, prices, CAD links | Optional `api.py` |
+| **Curated catalog + rules** | None | MVP, CI, predictable matching | **Default** — `tiers.py` tiers 1–5 |
 | **Public browse JSON** | None (browser session) | Discovering SKUs from filters | Optional `browse_fetch.py` |
-| **Curated catalog + rules** | None | MVP, CI, predictable matching | Default |
+| **Official API** | Client cert + account | Production ERP, prices, CAD links | Optional `api.py` |
 
-Third-party wrappers (e.g. [Parse McMaster API](https://parse.bot/marketplace/01062b86-4335-4593-bd6a-23bb41400b48/mcmaster-com-api)) offer hosted search/filter/detail — we reimplemented the **filter URL grammar** and **table JSON shape** in-house to avoid external API keys and to keep the template self-contained.
+We reimplemented the site's **filter URL grammar** and **product table JSON shape** in-house so the template stays self-contained and CI stays offline. When McMaster's public UI changes, compare live browse output against `browse_parse.py` fixtures and the monthly taxonomy crawl — see [Public catalog navigation](#public-catalog-navigation).
 
 ## Module map
 

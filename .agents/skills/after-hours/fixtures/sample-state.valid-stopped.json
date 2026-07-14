@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "startedAt": "2026-07-13T22:00:00Z",
+  "stoppedAt": "2026-07-13T23:15:00Z",
+  "stopReason": "budget",
+  "stopDetail": "maxPrs",
+  "sources": [
+    {
+      "type": "github-issues",
+      "config": "label ready-for-agent limit 5"
+    }
+  ],
+  "queue": [
+    {
+      "id": "github:42",
+      "title": "Fix login redirect",
+      "source": "github-issues",
+      "executor": "pr-slice",
+      "ref": "https://github.com/example/app/issues/42",
+      "status": "done",
+      "granularity": "single-pr",
+      "outcomeKind": "draft-pr"
+    }
+  ],
+  "prs": [
+    {
+      "url": "https://github.com/example/app/pull/99",
+      "itemId": "github:42",
+      "branch": "after-hours/fix-login-redirect",
+      "draft": true
+    }
+  ],
+  "maxPrs": 1,
+  "tick": 1,
+  "priority": "github-first",
+  "baseBranch": "main",
+  "consecutiveBlocked": 0,
+  "megaPr": false
+}

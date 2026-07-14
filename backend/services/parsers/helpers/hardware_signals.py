@@ -117,7 +117,7 @@ FASTENER_PREFIXES: frozenset[str] = frozenset(
 
 FASTENER_TYPE_RE = re.compile(
     r"\b("
-    r"screw|bolt|nut|washer|stud|fastener|standoff|rivet|pin|insert|rod"
+    r"screws?|bolts?|nuts?|washers?|studs?|fasteners?|standoffs?|rivets?|pins?|inserts?|rods?"
     r")\b",
     re.I,
 )
@@ -221,6 +221,8 @@ def has_fastener_prefix(text: str) -> bool:
 
 def has_fastener_suffix(text: str) -> bool:
     """True when text ends with or contains a known fastener type word."""
+    if FASTENER_TYPE_RE.search(text):
+        return True
     lower = text.lower()
     return any(
         re.search(rf"\b{re.escape(term)}\b", lower)

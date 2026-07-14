@@ -32,7 +32,7 @@ def find_section_lines(
             in_section = True
             continue
         if in_section:
-            if expand_line and (len(line) > 120 or len(re.findall(r"\bpcs\b", line, re.I)) > 1):
+            if expand_line:
                 bom_lines.extend(expand_line(line))
             else:
                 bom_lines.append(line)

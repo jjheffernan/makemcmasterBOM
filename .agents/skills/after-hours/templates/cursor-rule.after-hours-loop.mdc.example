@@ -1,0 +1,18 @@
+<!--
+  Optional Cursor rule — NOT always-on overnight.
+  Copy to your project as: .cursor/rules/after-hours-loop.mdc
+  Keep alwaysApply: false so it only applies when you (or the picker) attach it
+  for /after-hours triggers — it does not arm a coding loop by itself.
+-->
+---
+description: Pointer for /after-hours — follow the installed after-hours-loop skill (not always-on overnight).
+alwaysApply: false
+---
+
+# after-hours-loop (optional rule)
+
+When the user runs **`/after-hours`**, **`/after-hours-loop`**, or **`/loop`** with after-hours / overnight AFK instructions, load and follow:
+
+`.agents/skills/after-hours-loop/SKILL.md`
+
+Do **not** treat this rule as a standing overnight mandate. The loop only runs when the user (or an explicit Cursor Automation) invokes it. Stop phrases: `stop after-hours`, `stop loop`, `/after-hours stop`.

@@ -46,7 +46,9 @@ def test_extract_metric_sizes_includes_catalog(size):
     "text",
     [
         "hex bolt",
+        "hex bolts",
         "socket head cap screw",
+        "M3 screws",
         "M3 nut",
         "flat washer",
     ],

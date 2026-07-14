@@ -68,7 +68,57 @@ refreshes monthly without per-import crawl load.
 
 ---
 
+## Branching (after-hours)
+
+| Branch | Role |
+|--------|------|
+| **`main`** | Semi-stable usable MVP. Prefer daylight merges only. |
+| **`dev`** | Working master for next major hardening / matcher work via `/after-hours`. Draft PRs target `dev`. |
+
+Config: `.cursor/after-hours-loop.config.json` (`baseBranch: dev`, `testCommand: pytest`). Skills: `.agents/skills/after-hours*`.
+
+Night kickoff (see [TODO.md](TODO.md)):
+
+```text
+/after-hours 45m
+Sources:
+  - todo-md: section "Now"
+maxPrs: 3
+priority: todo-first
+```
+
+Stop: `stop after-hours` / `stop loop`.
+
+### Dry-run workflow analysis (2026-07-13)
+
+First `/after-hours --dry-run` against default night Sources **stopped** before any queue execute:
+
+| Check | Result | Fix applied |
+|-------|--------|-------------|
+| Config | missing → now seeded | `.cursor/after-hours-loop.config.json` |
+| `gh` auth | pass | — |
+| Clean tree | fail (`stopOnDirtyTree`) | commit WIP + skill install before arming |
+| `baseBranch` `dev` | missing | create local `dev` after commit |
+| `github-issues` `ready-for-agent` | empty (no issues, no label) | prefer **`todo-md`** for v1 night; GitHub optional later |
+| `todo-md` section `Now` | missing | add [TODO.md](TODO.md) with AFK-safe security slices |
+
+**Source strategy:** GitHub-first fails empty tonight. Agent-ready backlog lives in **TODO Now** (security slices with verification commands). Matcher expansion and auth stay **Later** (HITL / larger scope).
+
+**In-flight foundation on `dev`:** OpenMANET-style description BOM parsing + plural fastener routing (tests offline green). That is the base for Phase 10 PRs, not overnight “finish the mess.”
+
+Would-be queue after Sources fix (dry-run print):
+
+| id | title | executor | ready? | risk |
+|----|-------|----------|--------|------|
+| `todo:now-strict-hostname-url-validation-ssrf` | Strict hostname URL validation (SSRF) | `pr-slice` | ready (explicit acceptance) | medium |
+| `todo:now-cap-and-rate-limit-post-api-bom-sync-pricing` | Cap and rate-limit sync-pricing | `pr-slice` | ready | medium |
+| `todo:now-upload-size-limit-on-post-api-import-file` | Upload size limit on import file | `pr-slice` | ready | low |
+
+---
+
 ## Phase 10 — Backlog
+
+Track overnight-ready checkboxes in [TODO.md](TODO.md). Summary below.
 
 ### McMaster matching
 
@@ -89,10 +139,15 @@ refreshes monthly without per-import crawl load.
 
 ### Security (see [docs/security.md](docs/security.md))
 
+Overnight **Now** (see TODO):
+
 - [ ] Strict hostname URL validation (McMaster + MakerWorld) — block SSRF / private IPs
 - [ ] Rate-limit and cap `POST /api/bom/sync-pricing`
-- [ ] Trusted-proxy handling for `X-Forwarded-For` rate-limit keys
 - [ ] Upload size limits on `POST /api/import/file`
+
+Daylight / Later:
+
+- [ ] Trusted-proxy handling for `X-Forwarded-For` rate-limit keys
 - [ ] `http(s)`-only external links in BOM editor (+ optional API validation on save)
 - [ ] API authentication before any public deployment
 

@@ -72,13 +72,15 @@ See [McMaster adapter](mcmaster.md) for tier details, filter URL grammar, offici
 
 ## External references (not dependencies)
 
-We **do not** install these packages; we studied their approaches:
+We **do not** install these packages or call Parse at runtime; we studied their approaches:
 
 | Source | What we adopted |
 |--------|-----------------|
 | [McMaster Product Information API](https://www.mcmaster.com/help/api/) | B2B client in `vendors/mcmaster/api.py` — login, subscribe, specs, price |
 | [mcmaster-scraper](https://github.com/thedjchi/mcmaster-scraper) | Archived at `docs/archive/mcmaster-scraper-v0.2.1/` — Playwright logic migrated to `browse_scrape.py`; parser in `browse_parse.py` |
-| [Parse McMaster API](https://parse.bot/marketplace/01062b86-4335-4593-bd6a-23bb41400b48/mcmaster-com-api) | Search → filters → product detail flow; inspired facet naming |
+| Public catalog navigation | Search → filters → product detail → SKU table; facet IDs mirror our filtered browse paths. Full flow: [McMaster adapter § Public catalog](mcmaster.md#public-catalog-navigation) |
+
+**Site flow at a glance:** search suggest (autocomplete), search products (category tiles + `search_result_id`), product filters (thread/length/material facets), product detail (families then part numbers), part lookup (SKU validation).
 
 ## Configuration
 

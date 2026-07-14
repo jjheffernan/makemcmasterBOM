@@ -92,13 +92,13 @@ def _kind_from_text(text: str) -> FastenerKind:
     lower = text.lower()
     if BEARING_DESIGNATION_RE.search(lower):
         return "bearing"
-    if re.search(r"\b(?:hex\s+)?nut\b|\b(?:nylock|nyloc)\b", lower):
+    if re.search(r"\b(?:hex\s+)?nuts?\b|\b(?:nylock|nyloc)\b", lower):
         return "nut"
-    if re.search(r"\bwasher\b", lower):
+    if re.search(r"\bwashers?\b", lower):
         return "washer"
-    if re.search(r"\binsert\b", lower):
+    if re.search(r"\binserts?\b", lower):
         return "insert"
-    if re.search(r"\b(?:screw|bolt|stud)\b", lower):
+    if re.search(r"\b(?:screw|screws|bolt|bolts|stud|studs)\b", lower):
         return "screw"
     return "unknown"
 
@@ -148,11 +148,11 @@ def extract_fastener_specs(text: str) -> list[MetricFastenerSpec]:
             )
         )
 
-    # Bare metric thread + nut/washer (e.g. "M3 Nut", "M4 washer")
+    # Bare metric thread + nut/washer/screw (e.g. "M3 Nut", "M4 washer", "M3 screws")
     diameter_only = METRIC_THREAD_RE.search(text)
     if diameter_only:
         kind = _kind_from_text(text)
-        if kind in {"nut", "washer"}:
+        if kind in {"nut", "washer", "screw"}:
             diameter = float(diameter_only.group(1))
             if not any(s.diameter_mm == diameter and s.kind == kind for s in found):
                 add(_spec_from_metric_match(diameter, None, text))
