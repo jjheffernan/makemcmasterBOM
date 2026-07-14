@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from typing import Literal
+
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel
 
 from backend import config
@@ -10,10 +12,21 @@ from backend.models.project import Project, ProjectHistoryItem
 from backend.rate_limit import check_sync_pricing_rate_limit
 from backend.services.parsers.helpers.spec_metadata import SPEC_HINTS, normalize_part_specification
 from backend.services.parsers.helpers.specification_checks import check_parts_specifications
-from backend.services.pipeline import parts_to_csv
+from backend.services.pipeline import parts_to_csv, parts_to_tsv, parts_to_xlsx
 from backend.services.vendors.mcmaster.urls import is_mcmaster_url
 
 router = APIRouter(prefix="/bom", tags=["bom"])
+
+ExportFormat = Literal["csv", "tsv", "xlsx"]
+
+_EXPORT_HANDLERS: dict[ExportFormat, tuple[str, str]] = {
+    "csv": ("text/csv", "csv"),
+    "tsv": ("text/tab-separated-values", "tsv"),
+    "xlsx": (
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "xlsx",
+    ),
+}
 
 
 class UpdateBomRequest(BaseModel):
@@ -159,15 +172,26 @@ async def update_bom(project_id: str, body: UpdateBomRequest) -> Project:
 
 
 @router.get("/{project_id}/export")
-async def export_csv(project_id: str) -> Response:
+async def export_bom(
+    project_id: str,
+    format: ExportFormat = Query("csv"),
+) -> Response:
     project = get(project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
 
-    csv_content = parts_to_csv(project.parts)
-    filename = f"{project.title or 'bom'}.csv".replace(" ", "_")
+    media_type, ext = _EXPORT_HANDLERS[format]
+    if format == "csv":
+        content: str | bytes = parts_to_csv(project.parts)
+    elif format == "tsv":
+        content = parts_to_tsv(project.parts)
+    else:
+        content = parts_to_xlsx(project.parts)
+
+    stem = (project.title or "bom").replace(" ", "_")
+    filename = f"{stem}.{ext}"
     return Response(
-        content=csv_content,
-        media_type="text/csv",
+        content=content,
+        media_type=media_type,
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )

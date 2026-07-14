@@ -443,8 +443,19 @@ export async function updateProject(
   return res.json();
 }
 
+export type BomExportFormat = "csv" | "tsv" | "xlsx";
+
+export function exportBomUrl(
+  projectId: string,
+  format: BomExportFormat = "csv",
+): string {
+  const params = format === "csv" ? "" : `?format=${format}`;
+  return `/api/bom/${projectId}/export${params}`;
+}
+
+/** @deprecated Prefer exportBomUrl — kept for callers that always want CSV. */
 export function exportCsvUrl(projectId: string): string {
-  return `/api/bom/${projectId}/export`;
+  return exportBomUrl(projectId, "csv");
 }
 
 export async function fetchBomHistory(): Promise<BomHistoryResponse> {

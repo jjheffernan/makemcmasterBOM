@@ -304,20 +304,24 @@ List recently imported projects (in-memory store, last 5).
 
 ## `GET /api/bom/{project_id}/export`
 
-Download the current parts list as CSV.
+Download the current parts list. Query `format` (default `csv`):
 
-**Response** `200`
+| `format` | Content-Type | Filename |
+|----------|--------------|----------|
+| `csv` | `text/csv` | `{title}.csv` |
+| `tsv` | `text/tab-separated-values` | `{title}.tsv` |
+| `xlsx` | `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` | `{title}.xlsx` |
 
-- Content-Type: `text/csv`
-- Content-Disposition: `attachment; filename="{title}.csv"`
+**Response** `200` — attachment body in the requested format.
 
 **Errors**
 
 | Status | Cause |
 |--------|-------|
 | `404` | Unknown `project_id` |
+| `422` | Invalid `format` |
 
-**Handler:** `bom_router.export_csv` → `pipeline.parts_to_csv`
+**Handler:** `bom_router.export_bom` → `pipeline.parts_to_csv` / `parts_to_tsv` / `parts_to_xlsx`
 
 ---
 
