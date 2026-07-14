@@ -483,9 +483,12 @@ def _with_match_notes(part: Part) -> Part:
     return part.model_copy(update=updates)
 
 
-def match_part(part: Part) -> Part:
+def match_part(part: Part, *, guess_mode: str = "lazy") -> Part:
     preliminary_status, preliminary_reason = classify_mcmaster_eligibility(part)
     query = build_search_query(part)
+    mode = (guess_mode or "lazy").strip().lower()
+    if mode not in {"exact", "lazy"}:
+        mode = "lazy"
 
     if preliminary_status == "not_applicable":
         return _with_match_notes(
@@ -514,6 +517,7 @@ def match_part(part: Part) -> Part:
         candidates,
         query=query,
         part=part,
+        max_wider_scope=0 if mode == "exact" else 3,
     )
 
     if primary is None or primary.link.tier in {"site_search", "not_applicable"}:
@@ -553,6 +557,8 @@ def match_part(part: Part) -> Part:
         query=query,
         specification=part.specification,
     )
+    if mode == "exact":
+        alternatives = [a for a in alternatives if a.guess_scope == "same_size"]
 
     final_status = resolve_match_status(
         confidence,
@@ -653,8 +659,8 @@ def match_part(part: Part) -> Part:
     )
 
 
-def match_parts(parts: list[Part]) -> list[Part]:
-    return [match_part(p) for p in parts]
+def match_parts(parts: list[Part], *, guess_mode: str = "lazy") -> list[Part]:
+    return [match_part(p, guess_mode=guess_mode) for p in parts]
 
 
 def summarize_mcmaster_coverage(parts: list[Part]) -> dict[str, int]:
