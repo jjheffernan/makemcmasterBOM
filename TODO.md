@@ -1,59 +1,84 @@
 # TODO — after-hours queue
 
-Agent-ready overnight work for `/after-hours`. Keep **Now** thin (≤ `maxPrs`) and acceptance testable. Vague / product-decision items stay in **Later**.
+Agent-ready overnight work for `/after-hours`. Target branch: **`dev`**.
 
-Target branch for draft PRs: **`dev`** (semi-stable **`main`** stays merge-only / daylight).
+Plan: [docs/plans/engineer-density-v1.md](docs/plans/engineer-density-v1.md)
 
 ---
 
 ## Now
 
-AFK-safe Phase 10 security slices. Each item is one draft PR.
+- [ ] Custodial maturity (LICENSE, CHANGELOG, gitignore, AGENTS.md)
+  - Acceptance: see feature-spec slice A
+  - verification: `test -f LICENSE && test -f CHANGELOG.md && test -f AGENTS.md`
+  - risk: low
 
 - [ ] Strict hostname URL validation (SSRF)
-  - Files: `backend/services/vendors/mcmaster/urls.py` (`is_mcmaster_url`), `backend/services/scraper.py` (`normalize_makerworld_url`)
-  - Acceptance: parse hostname; allow only `*.mcmaster.com` / `*.makerworld.com` (and www variants as needed); reject private/link-local IPs and non-http(s) schemes; keep existing happy-path URLs green
-  - verification: `pytest tests/test_guardrails.py tests/test_urls.py -q` (add `tests/test_urls.py` if missing)
+  - Acceptance: see feature-spec slice B
+  - verification: `pytest tests/test_guardrails.py tests/test_urls.py -q`
   - risk: medium
 
-- [ ] Cap and rate-limit `POST /api/bom/sync-pricing`
-  - Files: `backend/routers/bom_router.py`, `backend/rate_limit.py`
-  - Acceptance: rate limit + max parts per request; re-validate every `mcmaster_url` with the strict hostname helper from the SSRF slice (or temporary shared allowlist if that PR is not yet merged — document dependency in PR body)
+- [ ] Upload size limit on import file
+  - Acceptance: see feature-spec slice C
+  - verification: `pytest -q -k 'import or upload'`
+  - risk: low
+
+- [ ] Cap and rate-limit sync-pricing
+  - Acceptance: see feature-spec slice D
   - verification: `pytest -q -k sync_pricing`
   - risk: medium
 
-- [ ] Upload size limit on `POST /api/import/file`
-  - Files: `backend/routers/import_router.py`
-  - Acceptance: reject oversized uploads with HTTP 413 before full `file.read()`; document limit in `docs/security.md`
-  - verification: `pytest -q -k import`
+- [ ] Matching preferences settings (local)
+  - Acceptance: see feature-spec slice E
+  - verification: `cd frontend && npm run build`
+  - risk: medium
+
+- [ ] Exact vs lazy guess wiring
+  - Acceptance: see feature-spec slice F
+  - verification: `pytest -q -k 'guess or length or alternative'`
+  - risk: medium
+
+- [ ] Export pack (CSV/TSV/XLSX, no new deps)
+  - Acceptance: see feature-spec slice G
+  - verification: `pytest -q -k export`
   - risk: low
+
+- [ ] Multi-site ingestion scaffold (no live other sites)
+  - Acceptance: see feature-spec slice H
+  - verification: `pytest -q -k site_adapter`
+  - risk: low
+
+- [ ] Golden BOM fixture harness + corpus seed
+  - Acceptance: see feature-spec slice I
+  - verification: `pytest tests/test_golden_boms.py -q`
+  - risk: medium
+
+- [ ] Engineer UI density
+  - Acceptance: see feature-spec slice J
+  - verification: `cd frontend && npm run build`
+  - risk: medium
+
+- [ ] Docs pass for v1 surfaces
+  - Acceptance: see feature-spec slice K
+  - verification: `rg -n 'Settings|export|golden|SiteAdapter' docs/ PLAN.md`
+  - risk: low
+
+- [ ] Bolt-length algorithm regressions
+  - Acceptance: see feature-spec slice L
+  - verification: `pytest tests/test_hardware_terms.py tests/test_description_bom.py -q`
+  - risk: medium
 
 ---
 
-## Later
+## Later (deps review)
 
-Daylight / larger / HITL — do not pull into overnight Sources until sliced with Agent Briefs.
-
-### Matching
-
-- [ ] Filtered browse roots for `hex_bolt`, `threaded_rod`, `set_screw`
-- [ ] Expand matcher categories beyond Fastening (Power Transmission, Sealing, pipe fittings)
-- [ ] Cross-check `hardware_spec.py` vs McMaster API `Specifications[]`
-- [ ] Promote high-value taxonomy families into `mcmaster_categories.json`
-
-### Frontend & E2E
-
-- [ ] Frontend component tests (Vitest / RTL)
-- [ ] E2E browser import smoke (`@integration` gated)
-
-### Ops & security (needs product choices)
-
-- [ ] Trusted-proxy handling for `X-Forwarded-For` rate-limit keys
-- [ ] `http(s)`-only external links in BOM editor (+ optional API validation)
-- [ ] API authentication before any public deployment
-- [ ] Persistent project store if multi-user needed
-- [ ] Live SMTP / GitHub dispatch smoke tests
-
-### Docs
-
-- [ ] Notebook refresh when Phase 10 matcher categories land
+- [ ] Google Docs / Sheets export (OAuth)
+- [ ] PDF export (new packaging)
+- [ ] Frontend Vitest / RTL
+- [ ] Live multi-site adapters (Printables, etc.)
+- [ ] Theme overhaul beyond density
+- [ ] Filtered browse roots for hex_bolt / threaded_rod / set_screw
+- [ ] Expand matcher beyond Fastening
+- [ ] API authentication for public deploy
+- [ ] Trusted-proxy X-Forwarded-For handling
+- [ ] Persistent multi-user project store

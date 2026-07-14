@@ -9,7 +9,7 @@
   "cloudLedgerPath": null,
   "runsPath": null,
   "draftPrs": true,
-  "maxPrs": 3,
+  "maxPrs": 12,
   "allowSkipTests": false,
   "allowEmptyQueue": false,
   "maxConsecutiveBlocked": 3,
