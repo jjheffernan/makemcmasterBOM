@@ -26,17 +26,44 @@ data/*
 .env
 .env.*
 
-# IDE
+# IDE / OS
 .idea/
 .vscode/
 *.swp
+*.swo
+*~
 .DS_Store
+Thumbs.db
+.AppleDouble
+.LSOverride
 
-# Test
-.pytest_cache/
-.cache/
-.coverage
-htmlcov/
+# Editors / agents (local only)
+.cursor/*.log
 .cursor/after-hours-loop.state.json
 .cursor/after-hours-morning-brief.md
 .cursor/after-hours-runs/
+!.cursor/after-hours-loop.config.json
+!.cursor/after-hours-Sources.txt
+!.cursor/rules/
+
+# Test / coverage / typecheck
+.pytest_cache/
+.cache/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+
+# Build / packaging extras
+*.egg
+.Python
+pip-wheel-metadata/
+
+# Local notebooks / secrets leftovers
+*.pem
+*.key
+secrets/
+.secrets/
