@@ -34,10 +34,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  exportCsvUrl,
+  exportBomUrl,
   getProject,
   updateProject,
   validateSpecifications,
+  type BomExportFormat,
   type McMasterStatus,
   type Part,
   type Project,
@@ -99,6 +100,7 @@ export function BomEditorPage() {
   const [project, setProject] = useState<Project | null>(
     (location.state as { project?: Project } | null)?.project ?? null,
   );
+  const [exportFormat, setExportFormat] = useState<BomExportFormat>("csv");
   const [parts, setParts] = useState<Part[]>(
     normalizePartsOrder(project?.parts ?? []),
   );
@@ -755,14 +757,31 @@ export function BomEditorPage() {
             <Button variant="outline" onClick={handleSave} disabled={saving}>
               {saving ? "Saving…" : "Save"}
             </Button>
-            <a
-              href={exportCsvUrl(projectId)}
-              download
-              className={buttonVariants({ variant: "outline" })}
-            >
-              <Download className="h-4 w-4" />
-              Export CSV
-            </a>
+            <div className="inline-flex items-stretch">
+              <a
+                href={exportBomUrl(projectId, exportFormat)}
+                download
+                className={cn(
+                  buttonVariants({ variant: "outline" }),
+                  "rounded-r-none border-r-0",
+                )}
+              >
+                <Download className="h-4 w-4" />
+                Export
+              </a>
+              <Select
+                value={exportFormat}
+                onChange={(e) =>
+                  setExportFormat(e.target.value as BomExportFormat)
+                }
+                className={cn(compactSelect, "w-[4.75rem] rounded-l-none")}
+                aria-label="Export format"
+              >
+                <option value="csv">CSV</option>
+                <option value="tsv">TSV</option>
+                <option value="xlsx">XLSX</option>
+              </Select>
+            </div>
           </div>
         </CardHeader>
         <CardContent>

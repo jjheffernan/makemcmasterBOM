@@ -380,9 +380,39 @@ async def import_from_url(
     return _finalize_project(project, on_progress)
 
 
-def parts_to_csv(parts: list) -> str:
+def _parts_dataframe(parts: list) -> pd.DataFrame:
     rows = [p.model_dump() if hasattr(p, "model_dump") else p for p in parts]
-    df = pd.DataFrame(rows)
+    return pd.DataFrame(rows)
+
+
+def _excel_cell(value: object) -> object:
+    """openpyxl only accepts scalars — stringify nested Part fields."""
+    if value is None:
+        return ""
+    if isinstance(value, float) and pd.isna(value):
+        return ""
+    if isinstance(value, (str, int, float, bool)):
+        return value
+    return str(value)
+
+
+def parts_to_csv(parts: list) -> str:
     buffer = io.StringIO()
-    df.to_csv(buffer, index=False)
+    _parts_dataframe(parts).to_csv(buffer, index=False)
+    return buffer.getvalue()
+
+
+def parts_to_tsv(parts: list) -> str:
+    buffer = io.StringIO()
+    _parts_dataframe(parts).to_csv(buffer, index=False, sep="\t")
+    return buffer.getvalue()
+
+
+def parts_to_xlsx(parts: list) -> bytes:
+    df = _parts_dataframe(parts)
+    for col in df.columns:
+        if df[col].dtype == object:
+            df[col] = df[col].map(_excel_cell)
+    buffer = io.BytesIO()
+    df.to_excel(buffer, index=False, engine="openpyxl")
     return buffer.getvalue()
