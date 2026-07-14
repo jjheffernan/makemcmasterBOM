@@ -1,0 +1,31 @@
+{
+  "parser": "description",
+  "from_explicit_section": true,
+  "parts": [
+    {
+      "original_name": "(4) 1/4-20 x 1\" hex bolts",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "(8) 1/4\" flat washers",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "(4) 1/4-20 nylock nuts",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "608ZZ bearings",
+      "quantity": 2.0,
+      "specification": ""
+    },
+    {
+      "original_name": "Assembly notes follow",
+      "quantity": 1.0,
+      "specification": ""
+    }
+  ]
+}

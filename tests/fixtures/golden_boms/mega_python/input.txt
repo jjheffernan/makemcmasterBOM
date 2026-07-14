@@ -1,0 +1,193 @@
+Notice!
+This is
+only
+compatible with the original AMS. Please view
+my other designs
+for designs supporting other AMS systems, there are plenty.
+Buy Mega Python hardware kit
+You can now buy the Mega Python hardware kit from our partner VisionToCreate3D, shipping worldwide.
+VisionToCreate3D (EU)
+The hardware kit means you don't have to source any hardware from elsewhere so you get all required hardware:
+Fasteners: A full assortment of M3 socket head screws in various lengths.
+Bearings: All required 608-ZZ and 693-ZZ bearings.
+PTFE Tubing: The necessary 2.5mm inner diameter PTFE tubing for your build.
+Cable Extensions: Molex Picoblade 1.25mm 7-pin and 8-pin extensions for seamless integration.
+Mega Python AMS has a strict non-commercial license, it can only be sold with licensing through Hume Beam Engineering Solutions.
+Discord Support
+Please do not send me direct messages here, I have notifications turned off as I get so many requests here and elsewhere so it's possible I miss your message. Instead, please join our Discord server for suggestions and technical support. Thanks!
+If you need any help with the build or want to leave feedback you can join us on Discord:
+Discord - Python Mod Support
+Our server is named “QIDI Tech 3D Printers” so don't get confused when you join as it was initially setup for that brand of printers but we've expanded it to other brands and 3D printing in general as well as channels for some of my mods, it's where I generally hang out.
+Welcome!
+Intro
+Mega Python is the big brother of Python, a highly reliable and fully modular AMS system for the Bambu Lab X1/P1 series. It can be used with two to 16 spool slots, daisy chaining AMS units is possible, just like stock AMS. The sections are joined with dovetail joints and M3 socket heads. It has a built in wall mount and the spool holders are tilted back so it can just as easily be installed on a wall.
+The Mega Python wall mount is compatible with the Honeycomb Storage Wall.
+It supports spools up to 3 Kg with a maximum diameter of 310 mm and width of 120 mm, useful for print farms and for others who like to use larger spools. It's a bit more advanced as it uses more gears and bearings and involves extending the feeder cables but more on that later.
+It also supports smaller spools of course, even tiny 250 g sample spools, same as normal Python.
+Upgrading from Python
+For those wanting to “upgrade” from the standard sized Python AMS, these printed parts are identical so you don't have to reprint them:
+m3-wafer-head-gear-side-print-4pcs-1.02.3mf
+m3-wafer-head-top-side-print-4pcs-1.02.3mf
+spool-gear-135t-print-4pcs-1.02.3mf
+spool-holder-top-print-4pcs-1.02.3mf
+The version numbers do not match, however, the parts are the same.
+FAQ and Technical Specs
+“Does this work like an AMS?”
+Absolutely, it works just like the stock AMS except the spools are sitting in spool holders, driven by double helical gears rather than on top of rollers. This highly increases the reliability and versatility.
+“Can I use multiple Mega Python?”
+Absolutely, you can daisy chain up to four of them for a 16 spool AMS.
+“Can I hot plug an AMS to a printer?”
+Normally this works fine but to be sure please
+shut down
+your printer before plugging in Mega Python (or a stock AMS for that matter!), it is much safer for the electronics. It avoids electricity spikes that can potentially happen if there is a poor connection between the AMS bus cable (black cable from printer to AMS) and the AMS power board, which in turn can damage the AMS main board.
+Hot-plugging can actually damage the electronics (AMS main board) so plug everything in
+before
+you boot up the printer.
+“Do I need a stock AMS?”
+Yes. You use those parts and transfer over to Mega Python. All of the parts can be bought individually but it might be cheaper to just get an AMS rather than sourcing the parts individually, I haven't compared the prices.
+“How large is Mega Python?”
+Mega Python is huge. However, it is modular so you can use for example two or three modules only to slim it down. But for a full four spool setup the dimensions are:
+644 mm (width) x 320mm (depth) x 322 mm (height)
+including spool holders and front feeders (full install).
+Using large 3 Kg spools it is even taller and deeper, with the
+maximum
+allowed spool diameter (310 mm) the space requirements are 644 (w) mm x 420 (d) mm x 365 (h) mm.
+Each module adds or subtracts 161 mm from the width as it is modular.
+“Can I place Mega Python on top of the printer?”
+It is quite large and heavy, especially with large spools so I recommend placing it next to the printer or wall mounting it.
+“Do I need to use an enclosure?”
+It depends on which material you print, how long your prints are and the humidity of where you live. It doesn't have to be a fancy enclosure, you could just stick it in a large airtight container and drill holes for the PTFE tubes and cables, it works just as well.
+There is no offical Mega Python enclosure yet but it might come depending on how requested it is.
+“Does it support RFID tags?”
+Mega Python fully supports the Bambu Lab spool RFID tags in all four spool slots.
+“One feeder does not engage / disengage the front roller.”
+This is almost always due to a misalignment of the feeder.
+Make sure you use 2.5 mm ID (inner diameter) PTFE tubing as per the BOM, if you use standard 2.0 mm ID it can be too tight.
+“Can I use “AMS Savers / Filament Guides" with Mega Python?”
+Absolutely, all AMS Savers and so called Filament Guides are supported.
+“Can I get the source design files in step format?”
+The main Mega Python step files are not available publicly. However, some files are available in step format, please view the remix tab.
+BOM - Bill of Materials
+You can print Mega Python in just about any filament you like.
+I recommend placing the AMS next to the printer or wall mounting it.
+Around (?) Kg of filament is required at the recommended print settings for the full build including four spool holders.
+I've printed most of the test builds in Prusament ASA, PLA and eSUN PLA+, both brands and filament types work great. PETG is also a great option.
+Filament
+eSUN PLA+
+eSUN PETG
+Prusament Galaxy Black
+Fasteners
+You need quite a few M3 socket heads but you don’t have to use them in all screw locations if you don’t want to. However, here is a list of all screw locations and specs:
+Left front side and left rear sides against first modules: 13 x M3-16 mm
+First middle module against left rear side (inside out): 2 x M3-16 mm
+Front and middle modules against each other: 36 x M3-16 mm
+Rear modules against each other: 6 x M3-16 mm
+Fourth front and middle modules against right side: 10 x M3-16 mm
+Fourth rear module against right side: 2 x M3-16 mm
+Right sides against fourth modules: 2 x M3-16 mm
+28T and 29T gears against front modules / gear blocks: 8 x M3-16 mm
+Four adjustable front roller holders against front modules / roller block: 8 x M3-25 mm
+Four front roller sleeves: 4 x M3-16 mm
+AMS filament hub / motor: 4 x M3-12 mm
+Four spool holders: 20 x M3-25 mm
+Attaching the main PCB holder: 2 x M3-12 mm
+You can use 18 mm screws in place of the 16 mm screws in most locations in case you run out of certain screw lengths.
+To summarize, the following M3 socket heads are needed:
+6 x M3-12 mm
+75 x M3-16 mm
+28 x M3-25 mm
+If you don't have any at home it's best to grab the kit below, it will have everything you need for this build and more:
+150 pcs M3 Hex Socket Head Kit
+Cable Extensions
+For a full 4 spool bay Mega Python with RFID capability, two of the feeder cables (7-pin) and both RFID cables (8-pin) need to be extended. You can of course cut and splice in cables between the connectors as this will be the cheapest and possibly easiest depending on your skill, or you can buy extensions.
+I use genuine Molex Picoblade 1.25mm cable extensions myself but you might find them cheaper on AliExpress or Amazon, keep in mind most are just male-male cables and not extensions though so those won't work. Search for Molex Picoblade 1.25mm.
+If you want genuine Molex Picoblade, I recommend you get them from Mouser:
+Molex Picoblade 7-pin (225 mm extension, 2 pcs required)
+Molex Picoblade 8-pin (225 mm extension, 2 pcs required)
+Keep in mind that with these extensions you must unpin and reverse the wire order else they will not function in the AMS. But it's very easy, I'll guide you through it in the assembly guide later.
+Bearings
+For the spool holders you also need 8 x 608-ZZ bearings:
+608-ZZ bearings (or 608-RS)
+You also need 12 x 693-ZZ bearings for the front drive gears sleeves and the 28T and 29T gears.
+693-ZZ bearings
+PTFE tubes
+You need about 2 m PTFE tube to cut to length. I recommend the stock Bambu PTFE tube which has an inner diameter of 2.5 mm and an outer diameter of 4.0 mm. Go for the AMS Hub / Custom Cut which is a single piece 4 m tube.
+Bambu Lab PTFE Tube 4 m
+AMS hub cable (1500 mm)
+As Mega Python is quite large I recommend using the longer hub cable that comes with the AMS hub, it can be bought individually as well:
+Bambu Bus Cable (select 6-pin, 1500 mm)
+Optional
+I highly recommend these Nano Coated Helical Extruder Gears from FYSETC, I use them for all my Bambu printers, they're inexpensive and offer a number of improvements of the stock gears:
+Extruder Gear for Bambu X1/P1P/P1S CNC Nano Coating
+(Alternative Source)
+I've also heard great things of the new BigTreeTech Panda Extruder but I've not tried it personally yet, you can get it including the Revo hotend as well:
+BigTreeTech Panda Extruder
+Although not required these PEO/PEI/PEY bed sheets are great, I have most options myself, it gives a quite cool look on the first layer. There are a few shops offering different plates:
+Build Plate PEO/PEI/PEY Spring Steel Sheet (Super 3D)
+Build Plate PEO/PEI/PEY Spring Steel Sheet (IdeaFormer)
+The Hex Tools are superb for any 3D printer, I've had mine for years. They are particularly useful for the Mega Python assembly.
+Hex Tools (1.5 mm - 3.0 mm)
+Tools
+I'm using a simple tool for cutting the PTFE tube, you can use a knife as well. I also use a fine file for cleaning up the parts. And if you go for the optional heated inserts, a soldering iron is needed. A short hex key for 2.5 mm is useful as well.
+Warranty
+Mega Python does not void your warranty but be careful, especially with the AMS main board, use an antistatic wrist band. Although the mod is completely reversible and you can't tell the parts have been installed in Mega Python, I take no responsibility and you're on your own. Be careful and take it slow, read this page twice before you start.
+Support
+All my designs and mods on MakerWorld are free to use and remix. They have a non-commercial license. If you enjoy this or any of my other designs you can send me a small donation using the link below. Thanks :)
+https://www.paypal.me/humebeamengineering
+Before Printing Mega Python
+Make sure you dial in flow correctly before you start so that you are not overextruding. The problem then is you can't join the dovetail joints and assembly properly.
+The Bambu Lab printers usually do a pretty good with automatic flow calibration but it's best to confirm flow anyway, sometimes it is inaccurate. There are ways to do manual flow calibrations directly from Bambu Studio and Orca Slicer so you can use those.
+Once you have done that, print these dovetail test joints, more info here:
+Python  - Test Pieces
+Print Settings
+All parts
+print without supports and I recommend using 3 walls and an infill of around 15%. Print all parts in the direction I have set them.
+There are individual 3mf files posted or you can download one of the full sets:
+coming soon
+These can be loaded in Bambu Studio or you can print them directly from Bambu Handy.
+Main 
+parts:
+
+Keep in mind that differently from the normal Python, Mega Python uses reverse direction for the two middle modules, this is for RFID support in all spool bays, so that the smaller 1 Kg RFID spools always are close enough to the RFID boards for a reading.
+So it's important you print exactly these files.
+front-left-print-2pcs-1.02.3mf
+front-right-print-2pcs-1.02.3mf
+middle-module-print-4pcs-1.02.3mf
+rear-left-and-right-print-2pcs-1.02.3mf
+rear-pcb-print-1pc-1.02.3mf
+rear-motor-print-1pc-1.02.3mf
+main-pcb-base-print-1pc-1.02.3mf
+front-roller-holder-left-print-2pcs-1.02.3mf
+front-roller-holder-right-print-2pcs-1.02.3mf
+drive-gear-sleeve-adapter-print-4pcs-1.02.3mf
+gear-block-print-8pcs-1.02.3mf
+roller-block-print-8pcs-1.02.3mf
+front-gear-29t-hard-print-4pcs-1.02.3mf
+front-gear-29t-tpu-print-4pcs-1.02.3mf
+rear-gear-28t-hard-print-4pcs-1.02.3mf
+rear-gear-28t-tpu-print-4pcs-1.02.3mf
+Notice: The the front and rear gears also have a “solid” one piece option if you don't have any TPU, see the Optional Prints folder. These gears are placed between the the large spool gear and the small drive gear and uses a 693-ZZ bearing pressed in. It then attaches through the front modules with an M3 socket head and the gear block on the other side, fully screw them in but ensure they do not bind. I recommend using TPU 95-98A, not softer.
+Tip:
+I do not recommend printing the drive sleeves in TPU for Mega Python, the front and middle gears are enough in TPU. The drive gear sleeves are pretty long so it's good that they are in hard filament. But if you still want to, use
+rigid
+TPU like shore 98A.
+Sides:
+left-side-front-print-1pc-1.02.3mf
+left-side-rear-print-1pc-1.02.3mf
+right-side-front-print-1pc-1.02.3mf
+right-side-rear-print-1pc-1.02.3mf
+For the left and right front parts, the Mega Python logo and text is “hidden” in the first layer. Here you can use the Paint Bucket tool to paint the logo and text. Make sure you select the
+paint button icon and edge detection
+.
+Spool holders:
+m3-wafer-head-gear-side-print-4pcs-1.02.3mf
+m3-wafer-head-top-side-print-4pcs-1.02.3mf
+spool-gear-135t-print-4pcs-1.02.3mf
+adaptive-spool-holder-bottom-2mm-1.02.3mf
+adaptive-spool-holder-core-standard-45-60mm-1.02.3mf
+adaptive-spool-holder-core-xl-60-75mm-1.02.3mf
+spool-holder-top-print-4pcs-1.02.3mf
+threaded-rod-print-4pcs-1.02.3mf
+Notice: The threaded rod is quite tall and thin, make sure your bed adhesion is spot on. You may want to print these one at a time.
+Use dry filament.
+View the Assembly Guide, it's available as a PDF.

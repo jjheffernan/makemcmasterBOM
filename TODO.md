@@ -48,7 +48,7 @@ Plan: [docs/plans/engineer-density-v1.md](docs/plans/engineer-density-v1.md)
   - verification: `pytest -q -k site_adapter`
   - risk: low
 
-- [ ] Golden BOM fixture harness + corpus seed
+- [x] Golden BOM fixture harness + corpus seed
   - Acceptance: see feature-spec slice I
   - verification: `pytest tests/test_golden_boms.py -q`
   - risk: medium

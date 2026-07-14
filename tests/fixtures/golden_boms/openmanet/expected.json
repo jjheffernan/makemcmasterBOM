@@ -1,0 +1,76 @@
+{
+  "parser": "description",
+  "from_explicit_section": true,
+  "parts": [
+    {
+      "original_name": "Raspberry Pi 4 Model B (1 GB or greater)",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "SSD Card",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "Wio WM6180 Wi-Fi HaLow mini PCIe Module",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "WM1302 Pi Hat",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "CAZN RJ45 ethernet port https",
+      "quantity": 1.0,
+      "specification": "//s.click."
+    },
+    {
+      "original_name": "External Antenna 868/915 MHz 2 dBi SMA https",
+      "quantity": 1.0,
+      "specification": "//sunkworkstec.com/products/foul-weather-whip-antenna-v2"
+    },
+    {
+      "original_name": "UF.L to SMA-K 1.13 mm Cable (120 mm)",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "WaveShare 3S UPS (for 18650 batteries)",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "3 18650 Rechargeable Batteries",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "M3 screws",
+      "quantity": 14.0,
+      "specification": ""
+    },
+    {
+      "original_name": "M3 bolts",
+      "quantity": 4.0,
+      "specification": ""
+    },
+    {
+      "original_name": "M3 5x5 heat set threaded inserts",
+      "quantity": 10.0,
+      "specification": ""
+    },
+    {
+      "original_name": "M2.5 screws",
+      "quantity": 8.0,
+      "specification": ""
+    },
+    {
+      "original_name": "M2.5 5x3.5 heat set threaded inserts",
+      "quantity": 8.0,
+      "specification": ""
+    }
+  ]
+}

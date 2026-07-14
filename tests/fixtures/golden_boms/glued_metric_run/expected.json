@@ -1,0 +1,26 @@
+{
+  "parser": "description",
+  "from_explicit_section": true,
+  "parts": [
+    {
+      "original_name": "M3x8 socket head screws",
+      "quantity": 8.0,
+      "specification": ""
+    },
+    {
+      "original_name": "M3x12 socket head screws",
+      "quantity": 4.0,
+      "specification": ""
+    },
+    {
+      "original_name": "M3 washers",
+      "quantity": 10.0,
+      "specification": ""
+    },
+    {
+      "original_name": "M3 hex nuts",
+      "quantity": 6.0,
+      "specification": ""
+    }
+  ]
+}

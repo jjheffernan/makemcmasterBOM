@@ -1,0 +1,21 @@
+{
+  "parser": "description",
+  "from_explicit_section": false,
+  "parts": [
+    {
+      "original_name": "M5x20 button head screw",
+      "quantity": 2.0,
+      "specification": ""
+    },
+    {
+      "original_name": "M5 lock washer",
+      "quantity": 2.0,
+      "specification": ""
+    },
+    {
+      "original_name": "M5 T-nut",
+      "quantity": 1.0,
+      "specification": ""
+    }
+  ]
+}

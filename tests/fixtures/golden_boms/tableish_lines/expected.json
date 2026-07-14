@@ -1,0 +1,26 @@
+{
+  "parser": "description",
+  "from_explicit_section": true,
+  "parts": [
+    {
+      "original_name": "M3 heat-set inserts M3x5x5",
+      "quantity": 14.0,
+      "specification": ""
+    },
+    {
+      "original_name": "M2.5 screws 8mm",
+      "quantity": 8.0,
+      "specification": ""
+    },
+    {
+      "original_name": "Raspberry Pi 4 (non McMaster)",
+      "quantity": 1.0,
+      "specification": ""
+    },
+    {
+      "original_name": "PTFE tube 4mm OD",
+      "quantity": 1.0,
+      "specification": ""
+    }
+  ]
+}
