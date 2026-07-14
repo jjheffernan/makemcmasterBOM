@@ -27,6 +27,12 @@ METRIC_SIZE_SEPARATE_LENGTH_MM = re.compile(
     re.I,
 )
 
+# M3 10mm / M3 10 mm screw — length immediately after diameter label
+METRIC_SIZE_SPACE_LENGTH_MM = re.compile(
+    r"\bM\s*(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)\s*mm\b",
+    re.I,
+)
+
 # Trailing length after fastener word: socket head screw 16 mm
 FASTENER_TRAILING_LENGTH_MM = re.compile(
     r"\b(?:screw|screws|bolt|bolts|stud|studs)\s+(\d+(?:\.\d+)?)\s*mm\b",
@@ -148,14 +154,25 @@ def extract_fastener_specs(text: str) -> list[MetricFastenerSpec]:
             )
         )
 
+    for match in METRIC_SIZE_SPACE_LENGTH_MM.finditer(text):
+        add(
+            _spec_from_metric_match(
+                float(match.group(1)),
+                float(match.group(2)),
+                match.group(0),
+            )
+        )
+
     # Bare metric thread + nut/washer/screw (e.g. "M3 Nut", "M4 washer", "M3 screws")
     diameter_only = METRIC_THREAD_RE.search(text)
     if diameter_only:
         kind = _kind_from_text(text)
         if kind in {"nut", "washer", "screw"}:
             diameter = float(diameter_only.group(1))
+            # Prefer a length-bearing extract over diameter-only for the same kind
             if not any(s.diameter_mm == diameter and s.kind == kind for s in found):
-                add(_spec_from_metric_match(diameter, None, text))
+                if not any(s.diameter_mm == diameter and s.length_mm is not None for s in found):
+                    add(_spec_from_metric_match(diameter, None, text))
 
     # Diameter from M-label + trailing screw length (e.g. after normalization)
     diameter_match = METRIC_THREAD_RE.search(text)

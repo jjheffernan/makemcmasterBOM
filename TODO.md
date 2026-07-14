@@ -63,7 +63,7 @@ Plan: [docs/plans/engineer-density-v1.md](docs/plans/engineer-density-v1.md)
   - verification: `rg -n 'Settings|export|golden|SiteAdapter' docs/ PLAN.md`
   - risk: low
 
-- [ ] Bolt-length algorithm regressions
+- [x] Bolt-length algorithm regressions
   - Acceptance: see feature-spec slice L
   - verification: `pytest tests/test_hardware_terms.py tests/test_description_bom.py -q`
   - risk: medium
