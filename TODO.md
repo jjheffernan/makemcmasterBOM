@@ -8,7 +8,7 @@ Plan: [docs/plans/engineer-density-v1.md](docs/plans/engineer-density-v1.md)
 
 ## Now
 
-- [ ] Custodial maturity (LICENSE, CHANGELOG, gitignore, AGENTS.md)
+- [x] Custodial maturity (LICENSE, CHANGELOG, gitignore, AGENTS.md)
   - Acceptance: see feature-spec slice A
   - verification: `test -f LICENSE && test -f CHANGELOG.md && test -f AGENTS.md`
   - risk: low
